@@ -5,6 +5,7 @@ import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, Divider, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { birthdayLabel } from '@/lib/dates';
+import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type Role } from '@/lib/types';
 
@@ -27,13 +28,40 @@ function SettingRow({ icon, label, value }: { icon: IconName; label: string; val
 
 export default function MeScreen() {
   const store = useStore();
+  const auth = useAuth();
+  const live = !auth.demo && !!auth.profile;
   const isInstructor = store.role === 'instructor';
   const me = isInstructor ? store.instructor(store.meId) : undefined;
   const myClientRecord = store.clients.find((c) => c.id === 'me');
 
   return (
     <Screen title="Me">
-      {/* Preview switch, only for this early build */}
+      {live && auth.profile ? (
+        <Card tone="plain" style={[styles.profile, { marginBottom: Spacing.md }]}>
+          <Avatar name={auth.profile.display_name} size={64} ring />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text variant="title">{auth.profile.display_name}</Text>
+            <Text variant="small" color="textSecondary">
+              {auth.profile.handle ? `@${auth.profile.handle} · ` : ''}
+              {auth.profile.role === 'instructor' ? 'Instructor' : 'Client'} · {auth.session?.user.email}
+            </Text>
+          </View>
+        </Card>
+      ) : null}
+
+      {live ? (
+        <Card tone="warn" style={{ gap: 4, marginBottom: Spacing.xl }}>
+          <Text variant="smallStrong" color="warnDeep">
+            You&apos;re signed in for real
+          </Text>
+          <Text variant="small" color="warnDeep">
+            Your account is saved. The rest of the app still shows sample people until the next build step.
+          </Text>
+        </Card>
+      ) : null}
+
+      {/* Preview switch, demo only */}
+      {auth.demo ? (
       <Card tone="surface" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
         <Text variant="caption" color="textMuted">
           PREVIEW MODE
@@ -62,8 +90,9 @@ export default function MeScreen() {
           Switch sides to see the app the way clients and instructors will.
         </Text>
       </Card>
+      ) : null}
 
-      {isInstructor && me ? (
+      {live ? null : isInstructor && me ? (
         <Card tone="plain" style={styles.profile}>
           <Avatar name={me.name} size={64} ring />
           <View style={{ flex: 1, gap: 4 }}>
@@ -129,6 +158,12 @@ export default function MeScreen() {
       <Text variant="small" color="textMuted" align="center" style={{ marginTop: Spacing.xl }}>
         Your birthday shows as month and day only, and only to instructors you follow.
       </Text>
+
+      {auth.demo ? (
+        <Button kind="outline" label="Exit demo" onPress={auth.exitDemo} style={{ marginTop: Spacing.xl }} />
+      ) : (
+        <Button kind="outline" icon="log-out-outline" label="Sign out" onPress={auth.signOut} style={{ marginTop: Spacing.xl }} />
+      )}
     </Screen>
   );
 }

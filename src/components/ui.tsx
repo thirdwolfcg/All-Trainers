@@ -4,7 +4,9 @@ import {
   Pressable,
   StyleSheet,
   Text as RNText,
+  TextInput,
   View,
+  type TextInputProps,
   type StyleProp,
   type TextProps as RNTextProps,
   type TextStyle,
@@ -93,13 +95,14 @@ export function Card({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
-  tone?: 'surface' | 'plain' | 'purple' | 'blush';
+  tone?: 'surface' | 'plain' | 'purple' | 'blush' | 'warn';
 }) {
   const toneStyle = {
     surface: { backgroundColor: Colors.surface, borderColor: Colors.surface },
     plain: { backgroundColor: Colors.background, borderColor: Colors.border },
     purple: { backgroundColor: Colors.primarySoft, borderColor: Colors.primarySoft },
     blush: { backgroundColor: Colors.blush, borderColor: Colors.blush },
+    warn: { backgroundColor: Colors.warn, borderColor: Colors.warn },
   }[tone];
 
   if (onPress) {
@@ -261,5 +264,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xs,
+  },
+});
+
+/* ---------- Text field ---------- */
+
+export function Field({
+  label,
+  hint,
+  error,
+  ...input
+}: TextInputProps & { label: string; hint?: string; error?: string }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text variant="caption" color="textMuted">
+        {label.toUpperCase()}
+      </Text>
+      <TextInput
+        placeholderTextColor={Colors.textMuted}
+        {...input}
+        style={[fieldStyles.input, error ? { borderColor: Colors.blushDeep } : null, input.style]}
+      />
+      {error ? (
+        <Text variant="small" color="blushDeep">
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="small" color="textMuted">
+          {hint}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+const fieldStyles = StyleSheet.create({
+  input: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    minHeight: 48,
+    fontSize: 15,
+    color: Colors.text,
   },
 });

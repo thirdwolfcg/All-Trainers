@@ -13,7 +13,9 @@ npx expo start          # press w for web, i for iOS simulator, a for Android
 
 On a phone, install Expo Go and scan the QR code.
 
-The app runs on sample data right now (everything in `src/data/sample.ts` is made up). Use **Me, then Preview mode** to switch between the client view and the instructor view.
+Accounts are real (Supabase). The screens after sign-in still show sample data from `src/data/sample.ts` until the live data step is done. Tap **Peek at the demo first** on the welcome screen to click around without an account, and use **Me, then Preview mode** to switch between the client and instructor views.
+
+The `.env` file holds the Supabase project URL and publishable key. Both are meant to ship inside the app. Never add the service_role or secret key to this repo.
 
 ## Stack
 
@@ -61,10 +63,11 @@ Done in this first pass (sample data, no backend yet):
 - [x] Private client notes for instructors
 - [x] DMs
 - [x] Supabase schema with row level security
+- [x] Sign up, sign in and sign out (Supabase auth), onboarding with role, profile and birthday
+- [x] Demo mode from the welcome screen, so anyone can click around without an account
 
 Still to do for Phase 1:
 
-- [ ] Sign up and sign in (Supabase auth), onboarding with role and birthday
 - [ ] Swap the in-memory store for Supabase queries
 - [ ] Photo posts (Supabase storage)
 - [ ] Push notifications for new classes, subs, cancellations and messages
