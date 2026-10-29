@@ -1,56 +1,87 @@
-# Welcome to your Expo app 👋
+# All Trainers (working name)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An instructor-first fitness app. Clients follow their favorite instructors and see where they're teaching this week, across every studio. Instructors get one schedule, an automatic client list, birthday reminders, a class tracker and DMs.
 
-## Get started
+Launch market is Denver.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # press w for web, i for iOS simulator, a for Android
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+On a phone, install Expo Go and scan the QR code.
 
-### Other setup steps
+The app runs on sample data right now (everything in `src/data/sample.ts` is made up). Use **Me, then Preview mode** to switch between the client view and the instructor view.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Stack
 
-## Learn more
+| Piece | Choice | Why |
+| --- | --- | --- |
+| App | Expo SDK 58, React Native, Expo Router, TypeScript | One codebase for iPhone, Android and web |
+| Backend | Supabase (Postgres, auth, storage, realtime) | Managed, free tier covers launch, row level security |
+| Push | Expo push notifications | Works with Expo builds on both stores |
+| Payments | RevenueCat for in-app subscriptions, Stripe on web | Apple and Google require their billing for digital content |
+| Calendar | .ics files and a per-instructor calendar feed | Works with Apple and Google Calendar without special API agreements |
 
-To learn more about developing your project with Expo, look at the following resources:
+## Where things live
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+src/app/                 screens (every file is a route)
+  (tabs)/index.tsx       Home for clients, "My week" for instructors
+  (tabs)/activity.tsx    Class tracker for clients, client list for instructors
+  (tabs)/messages.tsx    Inbox
+  (tabs)/me.tsx          Profile, settings, preview switch
+  instructor/[id].tsx    Public instructor profile, weekly schedule, feed
+  client/[id].tsx        Instructor's view of one client, private notes
+  chat/[id].tsx          DM thread
+  schedule/new.tsx       Instructor adds a class
+src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
+src/constants/theme.ts   colors, type, spacing
+src/lib/                 types, dates, calendar, in-memory store
+src/data/sample.ts       made-up instructors, studios, classes, clients
+supabase/migrations/     database schema with row level security
+```
 
-## Join the community
+## Phase 1 status
 
-Join our community of developers creating universal apps.
+Done in this first pass (sample data, no backend yet):
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [x] Design system: white, soft purple, gray
+- [x] Client home: this week's classes from followed instructors, day picker, search by name, studio, neighborhood or style
+- [x] Follow and unfollow, and a follow adds the client to the instructor's list
+- [x] Instructor profile with weekly schedule across studios and a feed (updates, recipes, playlist links)
+- [x] Premium posts locked for non-subscribers
+- [x] Book at studio (links out) and add to calendar (.ics on web, Google Calendar on phones)
+- [x] Class tracker by instructor and by studio, with "I went"
+- [x] Instructor week view: add a class, mark "need a sub", cancel
+- [x] Birthday alerts on the instructor's week
+- [x] Client list with class counts, premium and birthday tags
+- [x] Private client notes for instructors
+- [x] DMs
+- [x] Supabase schema with row level security
+
+Still to do for Phase 1:
+
+- [ ] Sign up and sign in (Supabase auth), onboarding with role and birthday
+- [ ] Swap the in-memory store for Supabase queries
+- [ ] Photo posts (Supabase storage)
+- [ ] Push notifications for new classes, subs, cancellations and messages
+- [ ] Native iPhone calendar and a subscribable calendar feed per instructor
+- [ ] Premium subscriptions through RevenueCat and Stripe, server webhooks writing `premium_subscriptions`
+- [ ] App icon, splash screen and final name
+
+## Decisions for David to review
+
+1. **Stack.** Everything above. Easier to change now than later.
+2. **Privacy.** Birthdays are stored as month and day only, in a private table. Instructors see them only for their own followers, through `instructor_client_list()`. Client notes are visible to the instructor only.
+3. **Premium access** is written by the server only (webhooks), never by the app.
+4. **Attendance** is self-reported by clients ("I went") or logged by instructors. No studio check-in data until there are API agreements (Mindbody and others).
+5. **Instructor billing.** Founding instructors are free (`instructor_plans.plan = 'founding'`) until a date we set, then move to a paid plan.
+
+## Open product questions
+
+- Playlist access sits in premium. Sharing a Spotify or Apple Music link is normal, but putting it behind a paywall needs a closer look against those services' terms before launch.
+- Price of client premium, and the instructor's share.
+- Final app name.
