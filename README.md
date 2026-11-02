@@ -17,6 +17,10 @@ Accounts are real (Supabase). The screens after sign-in still show sample data f
 
 The `.env` file holds the Supabase project URL and publishable key. Both are meant to ship inside the app. Never add the service_role or secret key to this repo.
 
+## Web preview
+
+The latest build runs at **https://thirdwolfcg.github.io/All-Trainers/** (GitHub Pages, `gh-pages` branch). To update it, run `scripts/deploy-web-preview.sh`.
+
 ## Stack
 
 | Piece | Choice | Why |
