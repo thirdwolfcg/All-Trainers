@@ -13,11 +13,12 @@ import {
   buildConversations,
   buildMayaClients,
   buildPosts,
+  buildSubRequests,
   instructors,
   studios,
 } from '@/data/sample';
 
-import type { AttendanceEntry, ClassSession, Client, Conversation, Instructor, Post, Role, Studio } from './types';
+import type { AttendanceEntry, ClassSession, Client, Conversation, Instructor, Post, Role, Studio, SubRequest } from './types';
 
 type Store = {
   role: Role;
@@ -42,6 +43,15 @@ type Store = {
   addClass: (c: Omit<ClassSession, 'id' | 'status'>) => void;
   setClassStatus: (id: string, status: ClassSession['status']) => void;
 
+  subRequests: SubRequest[];
+  /** Instructors who teach at a studio (from their schedules), never including `excludeId`. */
+  teachersAt: (studioId: string, excludeId?: string) => Instructor[];
+  /** Ask another instructor to cover a class. Only allowed when they teach at the same studio. */
+  requestSub: (classId: string, toInstructorId: string) => { error?: string };
+  respondToSub: (requestId: string, accept: boolean) => void;
+  /** Stop looking for a sub: cancels pending asks and puts the class back to normal. */
+  withdrawSub: (classId: string) => void;
+
   conversationWith: (instructorId: string, clientId: string) => Conversation;
   sendMessage: (conversationId: string, body: string) => void;
 
@@ -61,6 +71,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState(() => buildConversations(now));
   const [following, setFollowing] = useState(() => new Set(['maya', 'jordan', 'priya']));
   const [premium] = useState(() => new Set(['maya']));
+  const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
 
   const meId = role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
 
@@ -137,6 +148,64 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
       },
 
+      subRequests,
+
+      teachersAt(studioId, excludeId) {
+        const ids = new Set(classes.filter((c) => c.studioId === studioId).map((c) => c.instructorId));
+        if (excludeId) ids.delete(excludeId);
+        return instructors.filter((i) => ids.has(i.id));
+      },
+
+      requestSub(classId, toInstructorId) {
+        const session = classes.find((c) => c.id === classId);
+        if (!session) return { error: 'Class not found.' };
+        // Same rule the database enforces: only instructors who teach at this studio.
+        const eligible = classes.some((c) => c.studioId === session.studioId && c.instructorId === toInstructorId);
+        if (!eligible || toInstructorId === session.instructorId) {
+          return { error: 'You can only ask instructors who teach at this studio.' };
+        }
+        setSubRequests((prev) =>
+          prev.some((r) => r.classId === classId && r.toInstructorId === toInstructorId && r.status === 'pending')
+            ? prev
+            : [
+                ...prev,
+                {
+                  id: `sr${Date.now()}`,
+                  classId,
+                  fromInstructorId: session.instructorId,
+                  toInstructorId,
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+        );
+        setClasses((prev) => prev.map((c) => (c.id === classId && c.status === 'scheduled' ? { ...c, status: 'sub_needed' } : c)));
+        return {};
+      },
+
+      respondToSub(requestId, accept) {
+        const req = subRequests.find((r) => r.id === requestId);
+        if (!req) return;
+        setSubRequests((prev) =>
+          prev.map((r) => {
+            if (r.id === requestId) return { ...r, status: accept ? 'accepted' : 'declined' };
+            // Once someone says yes, the other asks for that class close out.
+            if (accept && r.classId === req.classId && r.status === 'pending') return { ...r, status: 'cancelled' };
+            return r;
+          }),
+        );
+        if (accept) {
+          setClasses((prev) =>
+            prev.map((c) => (c.id === req.classId ? { ...c, status: 'subbed', subInstructorId: req.toInstructorId, note: undefined } : c)),
+          );
+        }
+      },
+
+      withdrawSub(classId) {
+        setSubRequests((prev) => prev.map((r) => (r.classId === classId && r.status === 'pending' ? { ...r, status: 'cancelled' } : r)));
+        setClasses((prev) => prev.map((c) => (c.id === classId ? { ...c, status: 'scheduled', note: undefined } : c)));
+      },
+
       conversationWith(instructorId, clientId) {
         const found = conversations.find((c) => c.instructorId === instructorId && c.clientId === clientId);
         if (found) return found;
@@ -163,7 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, classes, posts, clients, attendance, conversations, following, premium]);
+  }, [role, meId, classes, posts, clients, attendance, conversations, following, premium, subRequests]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

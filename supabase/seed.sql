@@ -1,7 +1,7 @@
 -- All Trainers: test data for the Supabase project.
 --
 -- HOW TO RUN: Supabase dashboard, SQL Editor, paste this whole file, Run.
--- Needs migrations 0001 and 0002 to have been run first.
+-- Needs migrations 0001, 0002 and 0003 to have been run first.
 -- Safe to run again: it deletes the previous test data first.
 --
 -- Every test account uses an @alltrainers.test email and the password below.
@@ -147,7 +147,7 @@ from (values
   ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000001', 'Reformer Flow',      'pilates',  0, time '17:30', 50, 'scheduled',  null),
   ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000005', 'Barre Burn',         'barre',    1, time '06:00', 50, 'scheduled',  null),
   ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000001', 'Jumpboard Cardio',   'pilates',  2, time '12:00', 45, 'scheduled',  null),
-  ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000001', 'Reformer Flow',      'pilates',  4, time '18:00', 50, 'sub_needed', 'Looking for a sub, may change'),
+  ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000001', 'Reformer Flow',      'pilates',  4, time '18:00', 50, 'scheduled',  null),
   ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000005', 'Sculpt + Stretch',   'barre',    5, time '09:30', 50, 'scheduled',  null),
   -- Jordan
   ('11111111-0000-4000-8000-000000000002', '33333333-0000-4000-8000-000000000002', 'Throwback Ride',     'cycle',    0, time '18:00', 45, 'scheduled',  null),
@@ -165,6 +165,13 @@ from (values
   ('11111111-0000-4000-8000-000000000005', '33333333-0000-4000-8000-000000000005', 'Barre Classic',      'barre',    2, time '09:00', 50, 'scheduled',  null),
   ('11111111-0000-4000-8000-000000000005', '33333333-0000-4000-8000-000000000005', 'Pop Sculpt',         'dance',    4, time '12:00', 45, 'scheduled',  null)
 ) as c(i, s, title, style, d, t, m, status, note);
+
+-- A sub request waiting on Maya: Sasha also teaches at Pointe Barre Co.,
+-- so she can ask Maya to cover her Pop Sculpt class there.
+insert into public.sub_requests (class_id, from_instructor_id, to_instructor_id, created_at)
+select id, '11111111-0000-4000-8000-000000000005', '11111111-0000-4000-8000-000000000001', now() - interval '2 hours'
+from public.classes
+where instructor_id = '11111111-0000-4000-8000-000000000005' and title = 'Pop Sculpt';
 
 -- ---------------------------------------------------------------------------
 -- Follows (each follow puts the client on that instructor's list)

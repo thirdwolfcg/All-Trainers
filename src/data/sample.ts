@@ -6,6 +6,7 @@
 import { addDays, startOfDay } from '@/lib/dates';
 import type {
   AttendanceEntry,
+  SubRequest,
   Birthday,
   ClassSession,
   Client,
@@ -111,7 +112,7 @@ const slots: Slot[] = [
   { instructorId: 'maya', studioId: 'lumen', title: 'Reformer Flow', style: 'pilates', dayOffset: 0, hour: 17, minute: 30 },
   { instructorId: 'maya', studioId: 'pointe', title: 'Barre Burn', style: 'barre', dayOffset: 1, hour: 6 },
   { instructorId: 'maya', studioId: 'lumen', title: 'Jumpboard Cardio', style: 'pilates', dayOffset: 2, hour: 12, duration: 45 },
-  { instructorId: 'maya', studioId: 'lumen', title: 'Reformer Flow', style: 'pilates', dayOffset: 4, hour: 18, status: 'sub_needed', note: 'Looking for a sub, may change' },
+  { instructorId: 'maya', studioId: 'lumen', title: 'Reformer Flow', style: 'pilates', dayOffset: 4, hour: 18 },
   { instructorId: 'maya', studioId: 'pointe', title: 'Sculpt + Stretch', style: 'barre', dayOffset: 5, hour: 9, minute: 30 },
   { instructorId: 'jordan', studioId: 'spoke', title: 'Throwback Ride', style: 'cycle', dayOffset: 0, hour: 18, duration: 45 },
   { instructorId: 'jordan', studioId: 'spoke', title: 'Rhythm 45', style: 'cycle', dayOffset: 2, hour: 6, duration: 45 },
@@ -231,6 +232,20 @@ export function buildConversations(now = new Date()): Conversation[] {
       instructorId: 'maya',
       clientId: 'k1',
       messages: [{ id: 'm5', senderId: 'k1', body: 'Can I book a private next week?', sentAt: mins(45) }],
+    },
+  ];
+}
+
+/** Sasha also teaches at Pointe Barre Co., so she can ask Maya to cover her class there. */
+export function buildSubRequests(now = new Date()): SubRequest[] {
+  return [
+    {
+      id: 'sr1',
+      classId: 'c16', // Sasha's Pop Sculpt at Pointe Barre Co.
+      fromInstructorId: 'sasha',
+      toInstructorId: 'maya',
+      status: 'pending',
+      createdAt: new Date(now.getTime() - 2 * 3600000).toISOString(),
     },
   ];
 }

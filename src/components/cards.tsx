@@ -17,6 +17,17 @@ function clock(d: Date) {
   return { time: `${h}:${m}`, meridiem: d.getHours() < 12 ? 'AM' : 'PM' };
 }
 
+function subLabel(session: ClassSession, ownerName: string, store: ReturnType<typeof useStore>) {
+  if (session.status !== 'subbed') {
+    if (store.role === 'instructor' && store.meId === session.instructorId) return 'Looking for a sub';
+    return session.note ?? 'Might have a sub';
+  }
+  const sub = session.subInstructorId ? store.instructor(session.subInstructorId) : undefined;
+  if (!sub) return 'Sub locked in';
+  if (store.role === 'instructor' && store.meId === sub.id) return `You're covering for ${ownerName.split(' ')[0]}`;
+  return `${sub.name.split(' ')[0]} is subbing`;
+}
+
 /* ---------- One class in a schedule ---------- */
 
 export function ClassCard({ session, showInstructor = true }: { session: ClassSession; showInstructor?: boolean }) {
@@ -69,13 +80,7 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
             <Chip
               tone={session.status === 'subbed' ? 'mint' : 'warn'}
               icon={cancelled ? 'close-circle-outline' : 'swap-horizontal'}
-              label={
-                cancelled
-                  ? (session.note ?? 'Cancelled')
-                  : session.status === 'subbed'
-                    ? 'Sub locked in'
-                    : (session.note ?? 'Might have a sub')
-              }
+              label={cancelled ? (session.note ?? 'Cancelled') : subLabel(session, instructor.name, store)}
             />
           </View>
         ) : null}

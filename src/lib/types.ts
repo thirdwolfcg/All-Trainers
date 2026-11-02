@@ -54,6 +54,19 @@ export type ClassSession = {
   note?: string;
   /** Optional deep link to this exact class, shown first when present. */
   bookingUrl?: string;
+  /** The instructor covering this class once a sub is confirmed. */
+  subInstructorId?: string;
+};
+
+export type SubRequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
+
+export type SubRequest = {
+  id: string;
+  classId: string;
+  fromInstructorId: string;
+  toInstructorId: string;
+  status: SubRequestStatus;
+  createdAt: string; // ISO
 };
 
 export type PostKind = 'photo' | 'recipe' | 'playlist' | 'note';

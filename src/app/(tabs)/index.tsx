@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ClassCard, InstructorRow } from '@/components/cards';
+import { SubSheet } from '@/components/sub-sheet';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -168,9 +169,14 @@ function InstructorWeek() {
   const store = useStore();
   const me = store.instructor(store.meId)!;
   const today = startOfDay(new Date());
+  // My classes, plus any I'm covering for someone else
   const mine = store.classes.filter(
-    (c) => c.instructorId === me.id && new Date(c.startsAt) >= today && new Date(c.startsAt) < addDays(today, 7),
+    (c) =>
+      (c.instructorId === me.id || c.subInstructorId === me.id) &&
+      new Date(c.startsAt) >= today &&
+      new Date(c.startsAt) < addDays(today, 7),
   );
+  const asksForMe = store.subRequests.filter((r) => r.toInstructorId === me.id && r.status === 'pending');
   const studiosThisWeek = new Set(mine.map((c) => c.studioId)).size;
 
   const soonBirthdays = store.clients
@@ -220,6 +226,39 @@ function InstructorWeek() {
         </Card>
       ) : null}
 
+      {asksForMe.length ? (
+        <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+          <View style={styles.inline}>
+            <Icon name="swap-horizontal" size={18} color="primaryDeep" />
+            <Text variant="eyebrow" color="primaryDeep">
+              Can you cover?
+            </Text>
+          </View>
+          {asksForMe.map((r) => {
+            const cls = store.classes.find((c) => c.id === r.classId);
+            const from = store.instructor(r.fromInstructorId);
+            const studio = cls ? store.studio(cls.studioId) : undefined;
+            if (!cls || !from || !studio) return null;
+            const start = new Date(cls.startsAt);
+            return (
+              <View key={r.id} style={{ gap: Spacing.sm }}>
+                <View style={styles.inline}>
+                  <Avatar name={from.name} size={32} />
+                  <Text variant="body" style={{ flex: 1 }}>
+                    <Text variant="bodyStrong">{from.name.split(' ')[0]}</Text> needs a sub for {cls.title} at {studio.name},{' '}
+                    {dayLabel(start)} at {start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </Text>
+                </View>
+                <View style={[styles.inline, { justifyContent: 'flex-end', gap: Spacing.sm }]}>
+                  <Button size="sm" kind="outline" label="Can't" onPress={() => store.respondToSub(r.id, false)} />
+                  <Button size="sm" kind="primary" label="I got you" onPress={() => store.respondToSub(r.id, true)} />
+                </View>
+              </View>
+            );
+          })}
+        </Card>
+      ) : null}
+
       <Button kind="primary" icon="add" label="Add a class" onPress={() => router.push('/schedule/new')} style={{ marginBottom: Spacing.xl }} />
 
       {byDay.length ? (
@@ -229,7 +268,7 @@ function InstructorWeek() {
             {g.classes.map((c) => (
               <View key={c.id}>
                 <ClassCard session={c} showInstructor={false} />
-                <InstructorClassActions session={c} />
+                {c.instructorId === me.id ? <InstructorClassActions session={c} /> : null}
               </View>
             ))}
           </View>
@@ -243,6 +282,8 @@ function InstructorWeek() {
 
 function InstructorClassActions({ session }: { session: ClassSession }) {
   const store = useStore();
+  const [findingSub, setFindingSub] = useState(false);
+
   if (session.status === 'cancelled') {
     return (
       <View style={styles.instructorActions}>
@@ -253,11 +294,15 @@ function InstructorClassActions({ session }: { session: ClassSession }) {
   return (
     <View style={styles.instructorActions}>
       {session.status === 'sub_needed' ? (
-        <Button size="sm" kind="ghost" icon="checkmark" label="Sub found" onPress={() => store.setClassStatus(session.id, 'subbed')} />
-      ) : (
-        <Button size="sm" kind="ghost" icon="swap-horizontal" label="Need a sub" onPress={() => store.setClassStatus(session.id, 'sub_needed')} />
-      )}
+        <>
+          <Button size="sm" kind="ghost" icon="people-outline" label="Find a sub" onPress={() => setFindingSub(true)} />
+          <Button size="sm" kind="ghost" label="Never mind" onPress={() => store.withdrawSub(session.id)} />
+        </>
+      ) : session.status === 'scheduled' ? (
+        <Button size="sm" kind="ghost" icon="swap-horizontal" label="Need a sub" onPress={() => setFindingSub(true)} />
+      ) : null}
       <Button size="sm" kind="ghost" icon="close" label="Cancel my class" onPress={() => store.setClassStatus(session.id, 'cancelled')} />
+      {findingSub ? <SubSheet session={session} open={findingSub} onClose={() => setFindingSub(false)} /> : null}
     </View>
   );
 }
@@ -279,5 +324,5 @@ const styles = StyleSheet.create({
   dayTab: { paddingVertical: Spacing.md, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1 },
   dayTabActive: { borderBottomColor: Colors.primary },
   inline: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  instructorActions: { flexDirection: 'row', gap: Spacing.xs, justifyContent: 'flex-end', marginTop: -Spacing.sm, marginBottom: Spacing.sm },
+  instructorActions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.xs, justifyContent: 'flex-end', marginTop: -Spacing.sm, marginBottom: Spacing.sm },
 });
