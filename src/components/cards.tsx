@@ -144,6 +144,16 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
             {session.description}
           </Text>
         ) : null}
+        {!cancelled ? (
+          <Text
+            variant="smallStrong"
+            color="primary"
+            accessibilityRole="link"
+            accessibilityLabel={`Class details for ${session.title}`}
+            onPress={() => router.push({ pathname: '/class/[id]', params: { id: session.id } })}>
+            Class details ›
+          </Text>
+        ) : null}
 
         {session.status !== 'scheduled' ? (
           <View style={{ flexDirection: 'row', marginTop: 4 }}>
