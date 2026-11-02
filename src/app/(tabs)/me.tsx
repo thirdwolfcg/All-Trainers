@@ -12,20 +12,27 @@ import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type Role } from '@/lib/types';
 
-function SettingRow({ icon, label, value }: { icon: IconName; label: string; value?: string }) {
-  return (
-    <View style={styles.setting}>
+/** A settings line. Ones that don't work yet say so instead of pretending to be tappable. */
+function SettingRow({ icon, label, value, onPress }: { icon: IconName; label: string; value?: string; onPress?: () => void }) {
+  const body = (
+    <>
       <Icon name={icon} size={20} color="textSecondary" />
       <Text variant="body" style={{ flex: 1 }}>
         {label}
       </Text>
       {value ? (
-        <Text variant="small" color="textMuted">
+        <Text variant="small" color="textSecondary">
           {value}
         </Text>
       ) : null}
-      <Icon name="chevron-forward" size={16} color="textMuted" />
-    </View>
+      {onPress ? <Icon name="chevron-forward" size={16} color="textSecondary" /> : <Chip label="Soon" />}
+    </>
+  );
+  if (!onPress) return <View style={styles.setting}>{body}</View>;
+  return (
+    <Pressable onPress={onPress} style={styles.setting} accessibilityRole="button">
+      {body}
+    </Pressable>
   );
 }
 
@@ -67,7 +74,7 @@ export default function MeScreen() {
       {/* Preview switch, demo only */}
       {auth.demo ? (
       <Card tone="surface" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-        <Text variant="caption" color="textMuted">
+        <Text variant="caption" color="textSecondary">
           PREVIEW MODE
         </Text>
         <View style={styles.segment}>
@@ -155,9 +162,11 @@ export default function MeScreen() {
       <Card tone="plain" style={{ paddingVertical: Spacing.xs }}>
         {isInstructor ? (
           <>
-            <SettingRow icon="calendar-outline" label="Calendar sync" value="Google" />
+            <SettingRow icon="qr-code-outline" label="My QR code" onPress={() => router.push('/qr')} />
             <Divider />
-            <SettingRow icon="diamond-outline" label="Premium for my clients" value="Set up" />
+            <SettingRow icon="calendar-outline" label="Calendar sync" />
+            <Divider />
+            <SettingRow icon="diamond-outline" label="Premium for my clients" />
             <Divider />
             <SettingRow icon="card-outline" label="My plan" value={me?.isFounding ? 'Founding, free' : 'Standard'} />
           </>
@@ -169,18 +178,18 @@ export default function MeScreen() {
               value={myClientRecord?.birthday ? birthdayLabel(myClientRecord.birthday) : 'Add'}
             />
             <Divider />
-            <SettingRow icon="calendar-outline" label="Calendar sync" value="Google" />
+            <SettingRow icon="calendar-outline" label="Calendar sync" />
             <Divider />
             <SettingRow icon="diamond-outline" label="Premium memberships" value={`${store.premium.size}`} />
           </>
         )}
         <Divider />
-        <SettingRow icon="notifications-outline" label="Notifications" value="On" />
+        <SettingRow icon="notifications-outline" label="Notifications" />
         <Divider />
         <SettingRow icon="shield-checkmark-outline" label="Privacy" />
       </Card>
 
-      <Text variant="small" color="textMuted" align="center" style={{ marginTop: Spacing.xl }}>
+      <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.xl }}>
         Your birthday shows as month and day only, and only to instructors you follow.
       </Text>
 

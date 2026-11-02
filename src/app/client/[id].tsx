@@ -108,7 +108,7 @@ export default function ClientDetail() {
         />
         <View style={styles.row}>
           <Icon name="lock-closed-outline" size={14} color="textMuted" />
-          <Text variant="small" color="textMuted" style={{ flex: 1 }}>
+          <Text variant="small" color="textSecondary" style={{ flex: 1 }}>
             Only you can see these notes. {client.name.split(' ')[0]} can&apos;t.
           </Text>
         </View>

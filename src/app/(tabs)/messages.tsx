@@ -42,7 +42,7 @@ export default function MessagesScreen() {
                     <Text variant="heading" style={{ flex: 1 }}>
                       {nameFor(otherId)}
                     </Text>
-                    <Text variant="small" color="textMuted">
+                    <Text variant="small" color="textSecondary">
                       {relativeTime(last.sentAt)}
                     </Text>
                   </View>

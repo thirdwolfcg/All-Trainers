@@ -38,6 +38,8 @@ export default function Onboarding() {
   const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [tiktok, setTiktok] = useState('');
   const [teach, setTeach] = useState<Style[]>([]);
   const [month, setMonth] = useState<number | null>(null);
   const [day, setDay] = useState('');
@@ -60,6 +62,8 @@ export default function Onboarding() {
       bio: isInstructor ? bio : undefined,
       styles: isInstructor ? teach : [],
       neighborhood,
+      instagram: isInstructor ? instagram : undefined,
+      tiktok: isInstructor ? tiktok : undefined,
       birthday: withBirthday && month && dayOk ? { month, day: dayNum } : undefined,
     });
     setBusy(false);
@@ -108,7 +112,7 @@ export default function Onboarding() {
                 hint="Lowercase letters, numbers, dots and underscores. Match your Instagram if you can."
               />
               <View style={{ gap: 6 }}>
-                <Text variant="caption" color="textMuted">
+                <Text variant="caption" color="textSecondary">
                   WHAT YOU TEACH
                 </Text>
                 <View style={styles.wrap}>
@@ -122,6 +126,22 @@ export default function Onboarding() {
                   ))}
                 </View>
               </View>
+              <Field
+                label="Instagram"
+                value={instagram}
+                onChangeText={(t) => setInstagram(t.replace(/[^A-Za-z0-9_.@]/g, ''))}
+                placeholder="@yourhandle"
+                autoCapitalize="none"
+                hint="Optional. Shows on your profile so clients can find you."
+              />
+              <Field
+                label="TikTok"
+                value={tiktok}
+                onChangeText={(t) => setTiktok(t.replace(/[^A-Za-z0-9_.@]/g, ''))}
+                placeholder="@yourhandle"
+                autoCapitalize="none"
+                hint="Optional."
+              />
               <Field label="Bio" value={bio} onChangeText={setBio} placeholder="Your vibe in a sentence or two" multiline style={{ minHeight: 88, paddingTop: 12, textAlignVertical: 'top' }} />
             </>
           ) : null}
@@ -144,7 +164,7 @@ export default function Onboarding() {
 
   return (
     <Screen title="When's your birthday?" subtitle="So your instructors can celebrate you. We only ask for the month and day.">
-      <Text variant="caption" color="textMuted" style={{ marginBottom: Spacing.sm }}>
+      <Text variant="caption" color="textSecondary" style={{ marginBottom: Spacing.sm }}>
         MONTH
       </Text>
       <View style={[styles.wrap, { marginBottom: Spacing.xl }]}>

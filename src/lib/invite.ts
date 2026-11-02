@@ -1,16 +1,15 @@
 import { Linking, Platform, Share } from 'react-native';
 
-/**
- * TODO before launch: replace with the real sign-up link (web page or app store
- * link) once the app has a domain. The ref parameter credits whoever sent the
- * invite, for example toward a founding-instructor perk or a client reward.
- */
-export const INVITE_BASE_URL = 'https://example.com/join';
+import { PUBLIC_APP_URL, followUrl } from './links';
 
+/**
+ * Invite links open the app's web address (see links.ts). With an instructor,
+ * they open that instructor's follow page. The ref parameter credits whoever
+ * sent the invite, for example toward a founding-instructor perk or a client reward.
+ */
 export function inviteLink(params: { ref: string; instructor?: string }) {
-  const q = new URLSearchParams({ ref: params.ref });
-  if (params.instructor) q.set('i', params.instructor);
-  return `${INVITE_BASE_URL}?${q.toString()}`;
+  const q = new URLSearchParams({ ref: params.ref }).toString();
+  return params.instructor ? `${followUrl(params.instructor)}?${q}` : `${PUBLIC_APP_URL}/welcome?${q}`;
 }
 
 const first = (name: string) => name.split(' ')[0];

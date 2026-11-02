@@ -20,6 +20,9 @@ export type Instructor = {
   styles: Style[];
   neighborhood: string;
   isFounding: boolean;
+  /** Handles without the @ */
+  instagram?: string;
+  tiktok?: string;
 };
 
 export type BookingPlatform = 'studio' | 'mindbody' | 'classpass' | 'other';
@@ -52,6 +55,8 @@ export type ClassSession = {
   durationMin: number;
   status: ClassStatus;
   note?: string;
+  /** What the class is about: vibe, level, what to bring. */
+  description?: string;
   /** Optional deep link to this exact class, shown first when present. */
   bookingUrl?: string;
   /** The instructor covering this class once a sub is confirmed. */

@@ -33,6 +33,11 @@ type Store = {
   attendance: AttendanceEntry[];
   conversations: Conversation[];
 
+  instructorByHandle: (handle: string) => Instructor | undefined;
+  /** Someone scanned an instructor's QR code before signing in: follow them once inside. */
+  pendingFollow: string | null;
+  setPendingFollow: (instructorId: string | null) => void;
+
   following: Set<string>;
   premium: Set<string>; // instructors the client has premium with
   toggleFollow: (instructorId: string) => void;
@@ -49,6 +54,8 @@ type Store = {
   /** Ask another instructor to cover a class. Only allowed when they teach at the same studio. */
   requestSub: (classId: string, toInstructorId: string) => { error?: string };
   respondToSub: (requestId: string, accept: boolean) => void;
+  /** Take back a "can't": the ask goes back to waiting, as long as the class still needs a sub. */
+  undoSubDecline: (requestId: string) => void;
   /** Stop looking for a sub: cancels pending asks and puts the class back to normal. */
   withdrawSub: (classId: string) => void;
 
@@ -72,6 +79,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [following, setFollowing] = useState(() => new Set(['maya', 'jordan', 'priya']));
   const [premium] = useState(() => new Set(['maya']));
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
+  const [pendingFollow, setPendingFollow] = useState<string | null>(null);
 
   const meId = role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
 
@@ -86,6 +94,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructors,
       studios,
       classes,
+      instructorByHandle: (handle) => instructors.find((i) => i.handle.toLowerCase() === handle.replace(/^@/, '').toLowerCase()),
+      pendingFollow,
+      setPendingFollow,
       posts,
       clients,
       attendance,
@@ -186,6 +197,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       respondToSub(requestId, accept) {
         const req = subRequests.find((r) => r.id === requestId);
         if (!req) return;
+        const cls = classes.find((c) => c.id === req.classId);
+        if (accept && cls && cls.status !== 'scheduled' && cls.status !== 'sub_needed') return;
         setSubRequests((prev) =>
           prev.map((r) => {
             if (r.id === requestId) return { ...r, status: accept ? 'accepted' : 'declined' };
@@ -199,6 +212,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             prev.map((c) => (c.id === req.classId ? { ...c, status: 'subbed', subInstructorId: req.toInstructorId, note: undefined } : c)),
           );
         }
+      },
+
+      undoSubDecline(requestId) {
+        const req = subRequests.find((r) => r.id === requestId);
+        const cls = req ? classes.find((c) => c.id === req.classId) : undefined;
+        if (!req || req.status !== 'declined' || cls?.status !== 'sub_needed') return;
+        setSubRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, status: 'pending' } : r)));
       },
 
       withdrawSub(classId) {
@@ -232,7 +252,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, classes, posts, clients, attendance, conversations, following, premium, subRequests]);
+  }, [role, meId, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

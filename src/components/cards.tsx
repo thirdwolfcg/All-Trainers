@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addToCalendar } from '@/lib/calendar';
 import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { useToast } from '@/lib/toast';
 import { StyleLabels, type ClassSession, type Instructor, type Post } from '@/lib/types';
 
 import { BookingSheet } from './booking-sheet';
@@ -15,6 +16,72 @@ function clock(d: Date) {
   const h = d.getHours() % 12 || 12;
   const m = d.getMinutes().toString().padStart(2, '0');
   return { time: `${h}:${m}`, meridiem: d.getHours() < 12 ? 'AM' : 'PM' };
+}
+
+/** Follow or unfollow with a confirmation message, and Undo after an unfollow. */
+export function useFollowToggle() {
+  const store = useStore();
+  const toast = useToast();
+  return (instructor: Instructor) => {
+    const first = instructor.name.split(' ')[0];
+    const wasFollowing = store.following.has(instructor.id);
+    store.toggleFollow(instructor.id);
+    if (wasFollowing) {
+      toast(`Unfollowed ${first}`, { label: 'Undo', onPress: () => store.toggleFollow(instructor.id) });
+    } else {
+      toast(`Following ${first}. Their classes show up on your home screen now.`);
+    }
+  };
+}
+
+/** Book it, Add to cal, or I went, depending on whether the class has started. Used on cards and the class page. */
+export function ClassActions({ session, size = 'sm' }: { session: ClassSession; size?: 'sm' | 'md' }) {
+  const store = useStore();
+  const toast = useToast();
+  const [booking, setBooking] = useState(false);
+  const instructor = store.instructor(session.instructorId);
+  const studio = store.studio(session.studioId);
+  if (!instructor || !studio || store.role !== 'client' || session.status === 'cancelled') return null;
+
+  const hasStarted = new Date(session.startsAt).getTime() <= Date.now();
+  const went = store.attended(session.id);
+  const first = instructor.name.split(' ')[0];
+
+  return (
+    <View style={styles.actions}>
+      {hasStarted ? (
+        <Button
+          size={size}
+          kind={went ? 'soft' : 'outline'}
+          icon={went ? 'checkmark-circle' : 'checkmark-circle-outline'}
+          label={went ? 'You went' : 'I went'}
+          onPress={() => {
+            store.toggleAttended(session);
+            if (!went) {
+              const total = store.attendance.filter((a) => a.clientId === 'me' && a.instructorId === instructor.id).length + 1;
+              toast(`Logged. That's ${total} with ${first}.`, { label: 'Undo', onPress: () => store.toggleAttended(session) });
+            }
+          }}
+        />
+      ) : (
+        <>
+          <Button size={size} kind="ink" label="Book it" onPress={() => setBooking(true)} />
+          <Button
+            size={size}
+            kind="outline"
+            label="Add to cal"
+            onPress={async () => {
+              await addToCalendar(session, instructor, studio);
+              toast(Platform.OS === 'web' ? 'Calendar file downloaded. Open it to add the class.' : 'Opening your calendar…');
+            }}
+          />
+        </>
+      )}
+      {booking ? (
+        <BookingSheet open={booking} onClose={() => setBooking(false)} session={session} instructor={instructor} studio={studio} />
+      ) : null}
+    </View>
+  );
 }
 
 function subLabel(session: ClassSession, ownerName: string, store: ReturnType<typeof useStore>) {
@@ -32,20 +99,18 @@ function subLabel(session: ClassSession, ownerName: string, store: ReturnType<ty
 
 export function ClassCard({ session, showInstructor = true }: { session: ClassSession; showInstructor?: boolean }) {
   const store = useStore();
-  const [booking, setBooking] = useState(false);
   const instructor = store.instructor(session.instructorId);
   const studio = store.studio(session.studioId);
   if (!instructor || !studio) return null;
 
   const start = new Date(session.startsAt);
   const { time, meridiem } = clock(start);
-  const hasStarted = start.getTime() <= Date.now();
   const cancelled = session.status === 'cancelled';
-  const went = store.attended(session.id);
-  const isClient = store.role === 'client';
 
   return (
-    <Row style={[styles.classRow, cancelled && { opacity: 0.55 }]}>
+    <Row
+      onPress={() => router.push({ pathname: '/class/[id]', params: { id: session.id } })}
+      style={[styles.classRow, cancelled && { opacity: 0.55 }]}>
       <View style={styles.timeCol}>
         <Text variant="title" style={cancelled && styles.struck}>
           {time}
@@ -74,6 +139,11 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
           ) : null}
           {studio.name} · {StyleLabels[session.style]}
         </Text>
+        {session.description && !cancelled ? (
+          <Text variant="small" color="textSecondary" numberOfLines={2}>
+            {session.description}
+          </Text>
+        ) : null}
 
         {session.status !== 'scheduled' ? (
           <View style={{ flexDirection: 'row', marginTop: 4 }}>
@@ -85,29 +155,8 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
           </View>
         ) : null}
 
-        {isClient && !cancelled ? (
-          <View style={styles.actions}>
-            {hasStarted ? (
-              <Button
-                size="sm"
-                kind={went ? 'soft' : 'outline'}
-                icon={went ? 'checkmark-circle' : 'checkmark-circle-outline'}
-                label={went ? 'You went' : 'I went'}
-                onPress={() => store.toggleAttended(session)}
-              />
-            ) : (
-              <>
-                <Button size="sm" kind="ink" label="Book it" onPress={() => setBooking(true)} />
-                <Button size="sm" kind="outline" label="Add to cal" onPress={() => addToCalendar(session, instructor, studio)} />
-              </>
-            )}
-          </View>
-        ) : null}
+        <ClassActions session={session} />
       </View>
-
-      {booking ? (
-        <BookingSheet open={booking} onClose={() => setBooking(false)} session={session} instructor={instructor} studio={studio} />
-      ) : null}
     </Row>
   );
 }
@@ -116,6 +165,7 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
 
 export function InstructorRow({ instructor }: { instructor: Instructor }) {
   const store = useStore();
+  const toggleFollow = useFollowToggle();
   const isFollowing = store.following.has(instructor.id);
   const upcoming = store.classes.filter(
     (c) => c.instructorId === instructor.id && c.status !== 'cancelled' && new Date(c.startsAt).getTime() > Date.now(),
@@ -142,7 +192,8 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
         size="sm"
         kind={isFollowing ? 'soft' : 'primary'}
         label={isFollowing ? 'Following' : 'Follow'}
-        onPress={() => store.toggleFollow(instructor.id)}
+        onPress={() => toggleFollow(instructor)}
+        accessibilityLabel={isFollowing ? `Unfollow ${instructor.name}` : `Follow ${instructor.name}`}
       />
     </Row>
   );

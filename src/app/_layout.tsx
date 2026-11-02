@@ -4,7 +4,7 @@ import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { useFonts } from 'expo-font';
-import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Colors, FontFamily } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { StoreProvider, useStore } from '@/lib/store';
+import { ToastProvider, useToast } from '@/lib/toast';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -50,10 +51,26 @@ function Navigator() {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
 
-  if (loading) return null;
-
   const signedIn = !!session;
   const inApp = demo || (signedIn && !!profile);
+  const toast = useToast();
+
+  // Someone scanned an instructor's QR code before they had an account:
+  // once they're in as a client, follow that instructor and show their week.
+  useEffect(() => {
+    const pending = store.pendingFollow;
+    if (!pending || !inApp) return;
+    store.setPendingFollow(null);
+    const instructor = store.instructor(pending);
+    if (!instructor || store.role !== 'client') return;
+    if (!store.following.has(pending)) store.toggleFollow(pending);
+    setTimeout(() => {
+      router.push({ pathname: '/instructor/[id]', params: { id: pending } });
+      toast(`You're following ${instructor.name.split(' ')[0]}. Welcome in.`);
+    }, 0);
+  }, [inApp, store, toast]);
+
+  if (loading) return null;
 
   return (
     <Stack
@@ -64,6 +81,9 @@ function Navigator() {
         headerBackTitle: 'Back',
         contentStyle: { backgroundColor: Colors.background },
       }}>
+      {/* Open to everyone: where instructor QR codes and shared links land */}
+      <Stack.Screen name="follow/[handle]" options={{ headerShown: false }} />
+
       <Stack.Protected guard={!signedIn && !demo} redirectTo={profile || demo ? '/' : '/onboarding'}>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="sign-up" options={{ title: '' }} />
@@ -77,6 +97,8 @@ function Navigator() {
       <Stack.Protected guard={inApp} redirectTo={signedIn ? '/onboarding' : '/welcome'}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="instructor/[id]" options={{ title: '' }} />
+        <Stack.Screen name="class/[id]" options={{ title: '' }} />
+        <Stack.Screen name="qr" options={{ title: 'My QR code' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Messages' }} />
         <Stack.Screen name="client/[id]" options={{ title: 'Client' }} />
         <Stack.Screen name="schedule/new" options={{ title: 'Add a class', presentation: 'modal' }} />
@@ -91,8 +113,10 @@ export default function RootLayout() {
       <AuthProvider>
         <StoreProvider>
           <ThemeProvider value={theme}>
-            <StatusBar style="dark" />
-            <Navigator />
+            <ToastProvider>
+              <StatusBar style="dark" />
+              <Navigator />
+            </ToastProvider>
           </ThemeProvider>
         </StoreProvider>
       </AuthProvider>

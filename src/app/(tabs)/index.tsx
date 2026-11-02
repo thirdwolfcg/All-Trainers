@@ -1,18 +1,17 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ClassCard, InstructorRow } from '@/components/cards';
-import { InviteCard } from '@/components/invite-card';
-import { SubSheet } from '@/components/sub-sheet';
+import { ConfirmSheet } from '@/components/confirm-sheet';
+import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { Screen } from '@/components/screen';
-import { Avatar, Button, Card, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
+import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addDays, dayLabel, daysUntilBirthday, isSameDay, shortDay, startOfDay } from '@/lib/dates';
-import { instructorInviteMessage } from '@/lib/invite';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type ClassSession, type Style } from '@/lib/types';
+import { useToast } from '@/lib/toast';
 
 export default function HomeScreen() {
   const { role } = useStore();
@@ -41,9 +40,11 @@ function DayTabs({ selected, onSelect, counts }: { selected: Date; onSelect: (d:
             accessibilityState={{ selected: active }}
             accessibilityLabel={`${dayLabel(d)}, ${counts[i]} classes`}
             style={[styles.dayTab, active && styles.dayTabActive]}>
-            <Text variant={active ? 'bodyStrong' : 'body'} color={active ? 'text' : busy ? 'textSecondary' : 'textMuted'}>
+            <Text variant={active ? 'bodyStrong' : 'body'} color={active ? 'text' : 'textSecondary'}>
               {i === 0 ? 'Today' : `${shortDay(d)} ${d.getDate()}`}
             </Text>
+            {/* A dot under days when your people are teaching */}
+            <View style={[styles.dayDot, { opacity: busy ? 1 : 0 }]} />
           </Pressable>
         );
       })}
@@ -53,15 +54,11 @@ function DayTabs({ selected, onSelect, counts }: { selected: Date; onSelect: (d:
 
 /* ---------- Client home ---------- */
 
-const allStyles: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
-
 function ClientHome() {
   const store = useStore();
   const me = useMe();
   const firstName = me.name.split(' ')[0];
   const [day, setDay] = useState(() => startOfDay(new Date()));
-  const [query, setQuery] = useState('');
-  const [style, setStyle] = useState<Style | null>(null);
 
   const followedClasses = useMemo(
     () => store.classes.filter((c) => store.following.has(c.instructorId)),
@@ -76,101 +73,57 @@ function ClientHome() {
   }, [followedClasses]);
 
   const dayClasses = followedClasses.filter((c) => isSameDay(new Date(c.startsAt), day));
-  const tonight = counts[0];
-
-  const searching = query.trim().length > 0 || style !== null;
-  const q = query.trim().toLowerCase();
-  const results = store.instructors.filter((i) => {
-    const matchesText =
-      !q ||
-      i.name.toLowerCase().includes(q) ||
-      i.handle.toLowerCase().includes(q) ||
-      i.neighborhood.toLowerCase().includes(q) ||
-      store.classes.some((c) => c.instructorId === i.id && (store.studio(c.studioId)?.name.toLowerCase().includes(q) ?? false));
-    return matchesText && (!style || i.styles.includes(style));
-  });
-
-  const discover = store.instructors.filter((i) => !store.following.has(i.id));
+  const today = counts[0];
+  const suggestions = store.instructors.filter((i) => !store.following.has(i.id)).slice(0, 3);
+  const followingCount = store.following.size;
 
   return (
     <Screen
       eyebrow={todayEyebrow()}
       title="Where we sweating today?"
       subtitle={
-        tonight
-          ? `hiii ${firstName}. ${tonight === 1 ? 'One of your people is' : `${tonight} of your people are`} teaching today.`
-          : `hiii ${firstName}. Here's where your people are teaching this week.`
+        followingCount === 0
+          ? `hiii ${firstName}. Follow a few instructors and their classes land right here.`
+          : today
+            ? `hiii ${firstName}. ${today === 1 ? 'One of your people is' : `${today} of your people are`} teaching today.`
+            : `hiii ${firstName}. Here's where your people are teaching this week.`
       }>
-      <View style={styles.search}>
+      <Pressable
+        onPress={() => router.push('/discover')}
+        style={styles.findButton}
+        accessibilityRole="button"
+        accessibilityLabel="Find instructors to follow">
         <Icon name="search" size={18} color="textSecondary" />
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Find your people, studios, neighborhoods"
-          placeholderTextColor={Colors.textMuted}
-          style={styles.searchInput}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-          accessibilityLabel="Search"
-        />
-        {query ? (
-          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
-            <Icon name="close-circle" size={18} color="textSecondary" />
-          </Pressable>
-        ) : null}
-      </View>
+        <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
+          Find instructors to follow
+        </Text>
+        <Icon name="arrow-forward" size={18} color="primary" />
+      </Pressable>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {allStyles.map((s) => (
-          <Chip key={s} label={StyleLabels[s]} selected={style === s} onPress={() => setStyle(style === s ? null : s)} />
-        ))}
-      </ScrollView>
-
-      {searching ? (
-        <View>
-          <SectionHeader title={`${results.length} ${results.length === 1 ? 'match' : 'matches'}`} />
-          {results.length ? (
-            results.map((i) => <InstructorRow key={i.id} instructor={i} />)
-          ) : (
-            <EmptyState icon="search" title="No one yet" body="Try another name, studio or style. Denver's list grows every week." />
-          )}
-        </View>
+      {followingCount === 0 ? (
+        <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
       ) : (
         <>
-          <SectionHeader title="Your people" />
+          <SectionHeader title={`Your people · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
           <DayTabs selected={day} onSelect={setDay} counts={counts} />
-
           <View style={{ marginBottom: Spacing.xxl }}>
-            {store.following.size === 0 ? (
-              <EmptyState icon="heart-outline" title="Follow your faves" body="Their classes show up here, every studio, one feed." />
-            ) : dayClasses.length ? (
+            {dayClasses.length ? (
               dayClasses.map((c) => <ClassCard key={c.id} session={c} />)
             ) : (
-              <EmptyState icon="cafe-outline" title="Rest day energy" body="None of your people are teaching. Pick another day or find someone new." />
+              <EmptyState icon="cafe-outline" title="Rest day energy" body="None of your people are teaching that day. Pick another day or find someone new." />
             )}
           </View>
-
-          {discover.length ? (
-            <>
-              <SectionHeader title="Fresh faces in Denver" />
-              {discover.map((i) => (
-                <InstructorRow key={i.id} instructor={i} />
-              ))}
-            </>
-          ) : null}
-
-          <InviteCard
-            eyebrow="Your fave not on here?"
-            title="Get them on All Trainers"
-            body="Text your instructor an invite. Founding instructors join free, and you'll never chase their IG stories again."
-            message={instructorInviteMessage({ fromName: me.name, refId: me.refId })}
-            icon="heart-outline"
-            textLabel="Text my instructor"
-            style={{ marginTop: Spacing.xxl }}
-          />
         </>
       )}
+
+      {suggestions.length ? (
+        <>
+          <SectionHeader title="Fresh faces in Denver" action="See all" onAction={() => router.push('/discover')} />
+          {suggestions.map((i) => (
+            <InstructorRow key={i.id} instructor={i} />
+          ))}
+        </>
+      ) : null}
     </Screen>
   );
 }
@@ -188,7 +141,16 @@ function InstructorWeek() {
       new Date(c.startsAt) >= today &&
       new Date(c.startsAt) < addDays(today, 7),
   );
-  const asksForMe = store.subRequests.filter((r) => r.toInstructorId === me.id && r.status === 'pending');
+  // Open asks, plus ones I said no to that still need a sub (so a mis-tap can be taken back)
+  const asksForMe = store.subRequests.filter((r) => {
+    if (r.toInstructorId !== me.id) return false;
+    if (r.status === 'pending') return true;
+    return r.status === 'declined' && store.classes.find((c) => c.id === r.classId)?.status === 'sub_needed';
+  });
+  const toast = useToast();
+  const [confirmAsk, setConfirmAsk] = useState<string | null>(null);
+  const askToConfirm = confirmAsk ? store.subRequests.find((r) => r.id === confirmAsk) : undefined;
+  const classToConfirm = askToConfirm ? store.classes.find((c) => c.id === askToConfirm.classId) : undefined;
   const studiosThisWeek = new Set(mine.map((c) => c.studioId)).size;
 
   const soonBirthdays = store.clients
@@ -205,7 +167,14 @@ function InstructorWeek() {
       eyebrow={todayEyebrow()}
       title={`hiii ${me.name.split(' ')[0]}`}
       subtitle={`${mine.length} classes, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`}
-      right={<Avatar name={me.name} size={52} ring />}>
+      right={
+        <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
+          <Icon name="qr-code-outline" size={22} color="primary" />
+          <Text variant="eyebrow" color="primary" style={{ fontSize: 9 }}>
+            My QR
+          </Text>
+        </Pressable>
+      }>
       {soonBirthdays.length ? (
         <Card tone="blush" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
           <View style={styles.inline}>
@@ -252,24 +221,65 @@ function InstructorWeek() {
             const studio = cls ? store.studio(cls.studioId) : undefined;
             if (!cls || !from || !studio) return null;
             const start = new Date(cls.startsAt);
+            const fromFirst = from.name.split(' ')[0];
+            const declined = r.status === 'declined';
             return (
-              <View key={r.id} style={{ gap: Spacing.sm }}>
-                <View style={styles.inline}>
+              <View key={r.id} style={{ gap: Spacing.sm, opacity: declined ? 0.8 : 1 }}>
+                <Pressable
+                  style={styles.inline}
+                  onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })}
+                  accessibilityRole="link">
                   <Avatar name={from.name} size={32} />
                   <Text variant="body" style={{ flex: 1 }}>
-                    <Text variant="bodyStrong">{from.name.split(' ')[0]}</Text> needs a sub for {cls.title} at {studio.name},{' '}
+                    <Text variant="bodyStrong">{fromFirst}</Text> needs a sub for {cls.title} at {studio.name},{' '}
                     {dayLabel(start)} at {start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                   </Text>
-                </View>
-                <View style={[styles.inline, { justifyContent: 'flex-end', gap: Spacing.sm }]}>
-                  <Button size="sm" kind="outline" label="Can't" onPress={() => store.respondToSub(r.id, false)} />
-                  <Button size="sm" kind="primary" label="I got you" onPress={() => store.respondToSub(r.id, true)} />
-                </View>
+                </Pressable>
+                {declined ? (
+                  <View style={[styles.inline, { justifyContent: 'space-between', gap: Spacing.sm }]}>
+                    <Text variant="small" color="textSecondary" style={{ flex: 1 }}>
+                      You said you can&apos;t. Changed your mind?
+                    </Text>
+                    <Button size="sm" kind="outline" label="Undo" onPress={() => store.undoSubDecline(r.id)} />
+                    <Button size="sm" kind="primary" label="I got you" onPress={() => setConfirmAsk(r.id)} />
+                  </View>
+                ) : (
+                  <View style={[styles.inline, { justifyContent: 'flex-end', gap: Spacing.sm }]}>
+                    <Button
+                      size="sm"
+                      kind="outline"
+                      label="Can't"
+                      onPress={() => {
+                        store.respondToSub(r.id, false);
+                        toast(`Told ${fromFirst} you can't make it.`, { label: 'Undo', onPress: () => store.undoSubDecline(r.id) });
+                      }}
+                    />
+                    <Button size="sm" kind="primary" label="I got you" onPress={() => setConfirmAsk(r.id)} />
+                  </View>
+                )}
               </View>
             );
           })}
         </Card>
       ) : null}
+
+      <ConfirmSheet
+        open={!!askToConfirm && !!classToConfirm}
+        title={`Cover ${classToConfirm?.title ?? 'this class'}?`}
+        body={
+          classToConfirm
+            ? `${dayLabel(new Date(classToConfirm.startsAt))} at ${new Date(classToConfirm.startsAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}, ${store.studio(classToConfirm.studioId)?.name}. It goes on your schedule and their clients will see you're subbing.`
+            : ''
+        }
+        confirmLabel="I got you"
+        cancelLabel="Not yet"
+        onConfirm={() => {
+          if (!askToConfirm) return;
+          store.respondToSub(askToConfirm.id, true);
+          toast(`You're covering ${classToConfirm?.title}. It's on your week now.`);
+        }}
+        onClose={() => setConfirmAsk(null)}
+      />
 
       <Button kind="primary" icon="add" label="Add a class" onPress={() => router.push('/schedule/new')} style={{ marginBottom: Spacing.xl }} />
 
@@ -292,35 +302,18 @@ function InstructorWeek() {
   );
 }
 
-function InstructorClassActions({ session }: { session: ClassSession }) {
-  const store = useStore();
-  const [findingSub, setFindingSub] = useState(false);
-
-  if (session.status === 'cancelled') {
-    return (
-      <View style={styles.instructorActions}>
-        <Button size="sm" kind="ghost" label="Bring it back" onPress={() => store.setClassStatus(session.id, 'scheduled')} />
-      </View>
-    );
-  }
-  return (
-    <View style={styles.instructorActions}>
-      {session.status === 'sub_needed' ? (
-        <>
-          <Button size="sm" kind="ghost" icon="people-outline" label="Find a sub" onPress={() => setFindingSub(true)} />
-          <Button size="sm" kind="ghost" label="Never mind" onPress={() => store.withdrawSub(session.id)} />
-        </>
-      ) : session.status === 'scheduled' ? (
-        <Button size="sm" kind="ghost" icon="swap-horizontal" label="Need a sub" onPress={() => setFindingSub(true)} />
-      ) : null}
-      <Button size="sm" kind="ghost" icon="close" label="Cancel my class" onPress={() => store.setClassStatus(session.id, 'cancelled')} />
-      {findingSub ? <SubSheet session={session} open={findingSub} onClose={() => setFindingSub(false)} /> : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  search: {
+  qrButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  findButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
@@ -328,13 +321,13 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderStrong,
     borderRadius: Radius.sm,
     paddingHorizontal: Spacing.lg,
-    height: 48,
+    minHeight: 52,
+    marginBottom: Spacing.xl,
   },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.text, height: '100%' },
-  chips: { gap: Spacing.sm, paddingVertical: Spacing.md, marginBottom: Spacing.lg },
   dayTabs: { flexGrow: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   dayTab: { paddingVertical: Spacing.md, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1 },
   dayTabActive: { borderBottomColor: Colors.primary },
+  dayDot: { alignSelf: 'center', width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primary, marginTop: 4 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   instructorActions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.xs, justifyContent: 'flex-end', marginTop: -Spacing.sm, marginBottom: Spacing.sm },
 });

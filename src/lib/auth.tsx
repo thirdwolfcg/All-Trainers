@@ -12,6 +12,8 @@ export type Profile = {
   bio: string | null;
   styles: Style[];
   neighborhood: string | null;
+  instagram_handle: string | null;
+  tiktok_handle: string | null;
 };
 
 export type NewProfile = {
@@ -21,6 +23,8 @@ export type NewProfile = {
   bio?: string;
   styles?: Style[];
   neighborhood?: string;
+  instagram?: string;
+  tiktok?: string;
   birthday?: { month: number; day: number };
 };
 
@@ -54,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from('profiles')
-      .select('id, role, display_name, handle, bio, styles, neighborhood')
+      .select('id, role, display_name, handle, bio, styles, neighborhood, instagram_handle, tiktok_handle')
       .eq('id', userId)
       .maybeSingle();
     setProfile((data as Profile | null) ?? null);
@@ -116,6 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: p.bio?.trim() || null,
           styles: p.styles ?? [],
           neighborhood: p.neighborhood?.trim() || null,
+          instagram_handle: p.instagram?.trim().replace(/^@/, '') || null,
+          tiktok_handle: p.tiktok?.trim().replace(/^@/, '') || null,
         });
         if (error) return { error: friendlyError(error.message) };
 

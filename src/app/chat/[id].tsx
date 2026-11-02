@@ -53,7 +53,7 @@ export default function ChatScreen() {
                     {m.body}
                   </Text>
                 </View>
-                <Text variant="small" color="textMuted" style={{ marginTop: 2 }}>
+                <Text variant="small" color="textSecondary" style={{ marginTop: 2 }}>
                   {timeLabel(new Date(m.sentAt))}
                 </Text>
               </View>

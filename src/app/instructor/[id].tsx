@@ -1,13 +1,16 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { ClassCard, PostCard } from '@/components/cards';
+import { ClassCard, PostCard, useFollowToggle } from '@/components/cards';
+import { SocialLinks } from '@/components/social-links';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
 import { addDays, dayLabel, isSameDay, startOfDay } from '@/lib/dates';
 import { bringAFriendMessage, shareInvite, textInvite } from '@/lib/invite';
+import { followUrl } from '@/lib/links';
+import { useToast } from '@/lib/toast';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
@@ -15,6 +18,8 @@ import { StyleLabels } from '@/lib/types';
 export default function InstructorProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const store = useStore();
+  const toast = useToast();
+  const toggleFollow = useFollowToggle();
   const me = useMe();
   const [tab, setTab] = useState<'schedule' | 'feed'>('schedule');
   const instructor = store.instructor(id);
@@ -42,6 +47,7 @@ export default function InstructorProfile() {
     .filter((g) => g.classes.length);
 
   const hasPremium = store.premium.has(instructor.id);
+  const isOwnProfile = store.role === 'instructor' && store.meId === instructor.id;
 
   return (
     <>
@@ -62,6 +68,7 @@ export default function InstructorProfile() {
               </Text>
             </View>
           </View>
+          <SocialLinks instructor={instructor} />
           <Text variant="quote" color="text">
             “{instructor.bio}”
           </Text>
@@ -78,18 +85,36 @@ export default function InstructorProfile() {
                 kind={isFollowing ? 'soft' : 'primary'}
                 icon={isFollowing ? 'checkmark' : 'add'}
                 label={isFollowing ? 'Following' : 'Follow'}
-                onPress={() => store.toggleFollow(instructor.id)}
+                onPress={() => toggleFollow(instructor)}
+                accessibilityLabel={isFollowing ? `Unfollow ${instructor.name}` : `Follow ${instructor.name}`}
                 style={{ flex: 1 }}
               />
               <Button
                 kind="outline"
                 icon="chatbubble-outline"
                 label="Message"
-                disabled={!isFollowing}
                 onPress={() => {
+                  // Messaging is for followers, so a message follows them too (and says so).
+                  if (!isFollowing) {
+                    store.toggleFollow(instructor.id);
+                    toast(`Followed ${instructor.name.split(' ')[0]} so you can message them.`);
+                  }
                   const conv = store.conversationWith(instructor.id, store.meId);
                   router.push({ pathname: '/chat/[id]', params: { id: conv.id } });
                 }}
+                style={{ flex: 1 }}
+              />
+            </View>
+          ) : null}
+
+          {isOwnProfile ? (
+            <View style={styles.buttons}>
+              <Button kind="primary" icon="qr-code-outline" label="My QR code" onPress={() => router.push('/qr')} style={{ flex: 1 }} />
+              <Button
+                kind="outline"
+                icon="share-outline"
+                label="Share my link"
+                onPress={() => shareInvite(`Follow me on All Trainers to see where I'm teaching this week: ${followUrl(instructor.handle)}`)}
                 style={{ flex: 1 }}
               />
             </View>
@@ -112,8 +137,9 @@ export default function InstructorProfile() {
                     instructorName: instructor.name,
                     instructorHandle: instructor.handle,
                   });
-                  // Phones: open Messages. Web: the share sheet is the friendlier default.
-                  textInvite(message).catch(() => shareInvite(message));
+                  // Phones: open Messages. Web: the share sheet works on laptops too.
+                  if (Platform.OS === 'web') shareInvite(message);
+                  else textInvite(message);
                 }}
               />
             </View>

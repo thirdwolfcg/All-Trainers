@@ -22,7 +22,7 @@ function Bar({ label, sub, value, max }: { label: string; sub?: string; value: n
         <View style={{ flex: 1 }}>
           <Text variant="bodyStrong">{label}</Text>
           {sub ? (
-            <Text variant="small" color="textMuted">
+            <Text variant="small" color="textSecondary">
               {sub}
             </Text>
           ) : null}

@@ -1,7 +1,7 @@
 -- All Trainers: test data for the Supabase project.
 --
 -- HOW TO RUN: Supabase dashboard, SQL Editor, paste this whole file, Run.
--- Needs migrations 0001, 0002 and 0003 to have been run first.
+-- Needs migrations 0001 through 0005 to have been run first, in order.
 -- Safe to run again: it deletes the previous test data first.
 --
 -- Every test account uses an @alltrainers.test email and the password below.
@@ -93,6 +93,12 @@ insert into public.profiles (id, role, display_name, handle, bio, styles, neighb
   ('22222222-0000-4000-8000-000000000006', 'client', 'Amara Okafor',   null, null, '{}', 'Baker'),
   ('22222222-0000-4000-8000-000000000007', 'client', 'Jules Romero',   null, null, '{}', 'Sloan''s Lake');
 
+-- Social handles
+update public.profiles set instagram_handle = 'mayamoves', tiktok_handle = 'mayamoves' where id = '11111111-0000-4000-8000-000000000001';
+update public.profiles set instagram_handle = 'jordanrides' where id = '11111111-0000-4000-8000-000000000002';
+update public.profiles set instagram_handle = 'priya.flows', tiktok_handle = 'priyaflows' where id = '11111111-0000-4000-8000-000000000003';
+update public.profiles set tiktok_handle = 'sashabarre' where id = '11111111-0000-4000-8000-000000000005';
+
 -- Birthdays (month and day only), spread so some show up this week
 insert into public.profile_private (user_id, birthday_month, birthday_day)
 select id::uuid, extract(month from pg_temp.day(n))::smallint, extract(day from pg_temp.day(n))::smallint
@@ -165,6 +171,27 @@ from (values
   ('11111111-0000-4000-8000-000000000005', '33333333-0000-4000-8000-000000000005', 'Barre Classic',      'barre',    2, time '09:00', 50, 'scheduled',  null),
   ('11111111-0000-4000-8000-000000000005', '33333333-0000-4000-8000-000000000005', 'Pop Sculpt',         'dance',    4, time '12:00', 45, 'scheduled',  null)
 ) as c(i, s, title, style, d, t, m, status, note);
+
+-- What each class is about
+update public.classes c set description = d.description
+from (values
+  ('Reformer Flow',      'A full-body reformer class that moves from footwork to arms to core without stopping. All levels, modifications always. Grip socks required.'),
+  ('Barre Burn',         'Small pulses, big shakes. Barre work for legs and glutes with a cardio finisher. Bring grip socks and water.'),
+  ('Jumpboard Cardio',   'Reformer meets cardio. 45 minutes of jumping, low impact on the joints, high impact on the heart rate. Some reformer experience helps.'),
+  ('Sculpt + Stretch',   'Light weights and a long stretch to end the week right. Great for beginners and sore bodies.'),
+  ('Throwback Ride',     'Rhythm ride to 2000s hits. Expect choreography, a lot of singing and zero judgment. Clip-in shoes provided.'),
+  ('Rhythm 45',          'Beat-based ride with climbs and sprints. Intermediate, but go at your own pace.'),
+  ('HIIT Express',       'Thirty minutes of intervals with bodyweight and dumbbells. Quick, sweaty, done before lunch is over.'),
+  ('Pop Diva Ride',      'All-diva playlist, all the key changes. Bring your loudest energy.'),
+  ('Vinyasa 60',         'Breath-led flow with sun salutations, standing balance and a long savasana. All levels.'),
+  ('Yin + Sound',        'Long, supported holds with a live sound bath. Deeply chill, no experience needed. Mats and props provided.'),
+  ('Candlelight Flow',   'Slow evening flow by candlelight. Gentle, grounding and a little bit romantic.'),
+  ('Lift Lab',           'Learn the big lifts: squat, hinge, press. Small group, lots of form coaching. Beginners very welcome.'),
+  ('Full Body Strength', 'Strength circuits with dumbbells and kettlebells. Bring a towel and water.'),
+  ('Barre Classic',      'Traditional barre: posture, port de bras, thighs and seat. No dance experience needed.'),
+  ('Pop Sculpt',         'Dance-inspired sculpt to pop hits. Light weights, big fun, a little choreography.')
+) as d(title, description)
+where c.title = d.title and c.instructor_id::text like '11111111-%';
 
 -- A sub request waiting on Maya: Sasha also teaches at Pointe Barre Co.,
 -- so she can ask Maya to cover her Pop Sculpt class there.

@@ -67,6 +67,8 @@ export const instructors: Instructor[] = [
     styles: ['pilates', 'barre'],
     neighborhood: 'LoHi',
     isFounding: true,
+    instagram: 'mayamoves',
+    tiktok: 'mayamoves',
   },
   {
     id: 'jordan',
@@ -76,6 +78,7 @@ export const instructors: Instructor[] = [
     styles: ['cycle', 'hiit'],
     neighborhood: 'RiNo',
     isFounding: true,
+    instagram: 'jordanrides',
   },
   {
     id: 'priya',
@@ -85,6 +88,8 @@ export const instructors: Instructor[] = [
     styles: ['yoga'],
     neighborhood: 'Wash Park',
     isFounding: true,
+    instagram: 'priya.flows',
+    tiktok: 'priyaflows',
   },
   {
     id: 'theo',
@@ -103,10 +108,30 @@ export const instructors: Instructor[] = [
     styles: ['barre', 'dance'],
     neighborhood: 'Cherry Creek',
     isFounding: false,
+    tiktok: 'sashabarre',
   },
 ];
 
 type Slot = { instructorId: string; studioId: string; title: string; style: Style; dayOffset: number; hour: number; minute?: number; duration?: number; status?: ClassSession['status']; note?: string };
+
+/** What each class is about, by title. */
+const descriptions: Record<string, string> = {
+  'Reformer Flow': 'A full-body reformer class that moves from footwork to arms to core without stopping. All levels, modifications always. Grip socks required.',
+  'Barre Burn': 'Small pulses, big shakes. Barre work for legs and glutes with a cardio finisher. Bring grip socks and water.',
+  'Jumpboard Cardio': 'Reformer meets cardio. 45 minutes of jumping, low impact on the joints, high impact on the heart rate. Some reformer experience helps.',
+  'Sculpt + Stretch': 'Light weights and a long stretch to end the week right. Great for beginners and sore bodies.',
+  'Throwback Ride': 'Rhythm ride to 2000s hits. Expect choreography, a lot of singing and zero judgment. Clip-in shoes provided.',
+  'Rhythm 45': 'Beat-based ride with climbs and sprints. Intermediate, but go at your own pace.',
+  'HIIT Express': 'Thirty minutes of intervals with bodyweight and dumbbells. Quick, sweaty, done before lunch is over.',
+  'Pop Diva Ride': 'All-diva playlist, all the key changes. Bring your loudest energy.',
+  'Vinyasa 60': 'Breath-led flow with sun salutations, standing balance and a long savasana. All levels.',
+  'Yin + Sound': 'Long, supported holds with a live sound bath. Deeply chill, no experience needed. Mats and props provided.',
+  'Candlelight Flow': 'Slow evening flow by candlelight. Gentle, grounding and a little bit romantic.',
+  'Lift Lab': 'Learn the big lifts: squat, hinge, press. Small group, lots of form coaching. Beginners very welcome.',
+  'Full Body Strength': 'Strength circuits with dumbbells and kettlebells. Bring a towel and water.',
+  'Barre Classic': 'Traditional barre: posture, port de bras, thighs and seat. No dance experience needed.',
+  'Pop Sculpt': 'Dance-inspired sculpt to pop hits. Light weights, big fun, a little choreography.',
+};
 
 const slots: Slot[] = [
   { instructorId: 'maya', studioId: 'lumen', title: 'Reformer Flow', style: 'pilates', dayOffset: 0, hour: 17, minute: 30 },
@@ -124,7 +149,7 @@ const slots: Slot[] = [
   { instructorId: 'theo', studioId: 'forge', title: 'Lift Lab', style: 'strength', dayOffset: 1, hour: 17, minute: 30 },
   { instructorId: 'theo', studioId: 'forge', title: 'Full Body Strength', style: 'strength', dayOffset: 4, hour: 6, minute: 30 },
   { instructorId: 'sasha', studioId: 'pointe', title: 'Barre Classic', style: 'barre', dayOffset: 2, hour: 9 },
-  { instructorId: 'sasha', studioId: 'pointe', title: 'Pop Sculpt', style: 'dance', dayOffset: 4, hour: 12, duration: 45 },
+  { instructorId: 'sasha', studioId: 'pointe', title: 'Pop Sculpt', style: 'dance', dayOffset: 4, hour: 12, duration: 45, status: 'sub_needed' }, // Sasha asked Maya to cover
 ];
 
 export function buildClasses(now = new Date()): ClassSession[] {
@@ -142,6 +167,7 @@ export function buildClasses(now = new Date()): ClassSession[] {
       durationMin: s.duration ?? 50,
       status: s.status ?? 'scheduled',
       note: s.note,
+      description: descriptions[s.title],
     };
   });
 }

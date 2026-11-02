@@ -63,8 +63,14 @@ export default function SignUp() {
           autoComplete="new-password"
           textContentType="newPassword"
           error={error}
+          hint="At least 8 characters."
         />
         <Button label={busy ? 'Setting you up…' : 'Create account'} disabled={!valid || busy} onPress={submit} />
+        {!valid && (email || password) ? (
+          <Text variant="small" color="textSecondary" align="center">
+            {!/\S+@\S+\.\S+/.test(email) ? 'Add a valid email to keep going.' : 'Your password needs at least 8 characters.'}
+          </Text>
+        ) : null}
         <Button kind="ghost" label="I already have an account" onPress={() => router.replace('/sign-in')} />
       </View>
     </Screen>

@@ -47,7 +47,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0004 in order)
+supabase/migrations/     database schema with row level security (run 0001 through 0005 in order)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
 
@@ -74,6 +74,11 @@ Done in this first pass (sample data, no backend yet):
 - [x] Sub requests: ask only instructors who teach at the same studio (enforced in the database), accept or decline, class shows who is covering
 - [x] Invite coworkers by text message or share sheet when no one from the studio is on the app
 - [x] Client invites: invite a friend, invite an instructor who isn't on the app, and "bring a friend" from any instructor's profile
+- [x] Instructor QR code (follow page at `/follow/<handle>`, works signed out and follows after sign up)
+- [x] Discover tab for clients: search by name, @handle, studio, neighborhood or style
+- [x] Instagram and TikTok on instructor profiles
+- [x] Class detail page with "what to expect" descriptions
+- [x] Undo for unfollow, "I went", cancelled classes and "can't" on a sub ask; confirmation before cancelling a class or accepting a sub
 - [x] Demo mode from the welcome screen, so anyone can click around without an account
 
 Still to do for Phase 1:
@@ -84,7 +89,7 @@ Still to do for Phase 1:
 - [ ] Native iPhone calendar and a subscribable calendar feed per instructor
 - [ ] Premium subscriptions through RevenueCat and Stripe, server webhooks writing `premium_subscriptions`
 - [ ] App icon, splash screen and final name
-- [ ] Real invite link (`INVITE_BASE_URL` in `src/lib/invite.ts` is a placeholder) and push notifications for sub asks
+- [ ] Real domain for invite and QR links (`PUBLIC_APP_URL` in `src/lib/links.ts` points at the GitHub Pages preview) and push notifications for sub asks
 
 ## Decisions for David to review
 
