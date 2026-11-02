@@ -19,12 +19,42 @@ import type {
 export const ME_CLIENT_ID = 'me';
 export const ME_INSTRUCTOR_ID = 'maya';
 
+// Booking links point at each platform's home page in this demo. Instructors
+// paste the studio's real page on each platform when they add the studio.
+const CLASSPASS = 'https://classpass.com';
+const MINDBODY = 'https://www.mindbodyonline.com/explore';
+
 export const studios: Studio[] = [
-  { id: 'lumen', name: 'Lumen Reformer', neighborhood: 'LoHi', address: '1550 Boulder St', bookingUrl: 'https://example.com/lumen' },
-  { id: 'spoke', name: 'Spoke & Spin', neighborhood: 'RiNo', address: '3200 Larimer St', bookingUrl: 'https://example.com/spoke' },
-  { id: 'still', name: 'Stillwater Yoga', neighborhood: 'Wash Park', address: '700 S Downing St', bookingUrl: 'https://example.com/still' },
-  { id: 'forge', name: 'The Forge', neighborhood: 'Highlands', address: '3400 W 32nd Ave', bookingUrl: 'https://example.com/forge' },
-  { id: 'pointe', name: 'Pointe Barre Co.', neighborhood: 'Cherry Creek', address: '250 Columbine St', bookingUrl: 'https://example.com/pointe' },
+  {
+    id: 'lumen', name: 'Lumen Reformer', neighborhood: 'LoHi', address: '1550 Boulder St',
+    bookingLinks: [
+      { platform: 'studio', url: 'https://example.com/lumen', label: 'Lumen app' },
+      { platform: 'mindbody', url: MINDBODY },
+      { platform: 'classpass', url: CLASSPASS },
+    ],
+  },
+  {
+    id: 'spoke', name: 'Spoke & Spin', neighborhood: 'RiNo', address: '3200 Larimer St',
+    bookingLinks: [
+      { platform: 'studio', url: 'https://example.com/spoke', label: 'Spoke & Spin app' },
+      { platform: 'classpass', url: CLASSPASS },
+    ],
+  },
+  {
+    id: 'still', name: 'Stillwater Yoga', neighborhood: 'Wash Park', address: '700 S Downing St',
+    bookingLinks: [{ platform: 'mindbody', url: MINDBODY }],
+  },
+  {
+    id: 'forge', name: 'The Forge', neighborhood: 'Highlands', address: '3400 W 32nd Ave',
+    bookingLinks: [{ platform: 'studio', url: 'https://example.com/forge', label: 'The Forge website' }],
+  },
+  {
+    id: 'pointe', name: 'Pointe Barre Co.', neighborhood: 'Cherry Creek', address: '250 Columbine St',
+    bookingLinks: [
+      { platform: 'mindbody', url: MINDBODY },
+      { platform: 'classpass', url: CLASSPASS },
+    ],
+  },
 ];
 
 export const instructors: Instructor[] = [

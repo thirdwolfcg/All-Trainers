@@ -1,10 +1,16 @@
+import { Fraunces_400Regular_Italic } from '@expo-google-fonts/fraunces/400Regular_Italic';
+import { Fraunces_500Medium } from '@expo-google-fonts/fraunces/500Medium';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { Colors, FontFamily } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { StoreProvider, useStore } from '@/lib/store';
 
@@ -23,8 +29,17 @@ const theme = {
 };
 
 function Navigator() {
-  const { loading, session, profile, demo } = useAuth();
+  const { loading: authLoading, session, profile, demo } = useAuth();
   const store = useStore();
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_500Medium,
+    Fraunces_400Regular_Italic,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+  // Never block the app on fonts: fall back to system fonts if they fail.
+  const loading = authLoading || (!fontsLoaded && !fontError);
 
   // Signed-in users see the side of the app that matches their account.
   useEffect(() => {
@@ -45,7 +60,7 @@ function Navigator() {
       screenOptions={{
         headerShadowVisible: false,
         headerTintColor: Colors.primaryDeep,
-        headerTitleStyle: { color: Colors.text, fontWeight: '600' },
+        headerTitleStyle: { color: Colors.text, fontFamily: FontFamily.serif, fontSize: 18 },
         headerBackTitle: 'Back',
         contentStyle: { backgroundColor: Colors.background },
       }}>

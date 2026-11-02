@@ -43,7 +43,8 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security
+supabase/migrations/     database schema with row level security (run 0001, then 0002)
+supabase/seed.sql        test accounts and data (run after the migrations)
 ```
 
 ## Phase 1 status
@@ -64,6 +65,8 @@ Done in this first pass (sample data, no backend yet):
 - [x] DMs
 - [x] Supabase schema with row level security
 - [x] Sign up, sign in and sign out (Supabase auth), onboarding with role, profile and birthday
+- [x] Studio Editorial look (Fraunces and Inter, plum, hairline rows) with a playful Gen Z voice
+- [x] Book it opens a choice of where to book: the studio's own app or site, Mindbody or ClassPass (`studio_booking_links`)
 - [x] Demo mode from the welcome screen, so anyone can click around without an account
 
 Still to do for Phase 1:

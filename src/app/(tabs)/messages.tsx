@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Avatar, Card, EmptyState, Text } from '@/components/ui';
+import { Avatar, Row, EmptyState, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
@@ -22,19 +22,18 @@ export default function MessagesScreen() {
       : (store.instructor(otherId)?.name ?? 'Instructor');
 
   return (
-    <Screen title="Messages" subtitle={isInstructor ? 'Your clients, all in one inbox.' : 'Slide into your instructor’s DMs. Respectfully.'}>
+    <Screen eyebrow="DMs" title="Messages" subtitle={isInstructor ? 'Your clients, all in one inbox.' : 'Slide into your instructor’s DMs. Respectfully.'}>
       {mine.length === 0 ? (
-        <EmptyState icon="chatbubbles-outline" title="No messages yet" body="Start a chat from an instructor's profile." />
+        <EmptyState icon="chatbubbles-outline" title="Quiet in here" body="Start a chat from an instructor's profile. They don't bite." />
       ) : (
-        <View style={{ gap: Spacing.sm }}>
+        <View>
           {mine.map((c) => {
             const otherId = isInstructor ? c.clientId : c.instructorId;
             const last = c.messages.at(-1)!;
             const unread = last.senderId !== store.meId;
             return (
-              <Card
+              <Row
                 key={c.id}
-                tone="plain"
                 onPress={() => router.push({ pathname: '/chat/[id]', params: { id: c.id } })}
                 style={styles.row}>
                 <Avatar name={nameFor(otherId)} size={48} />
@@ -52,7 +51,7 @@ export default function MessagesScreen() {
                     {last.body}
                   </Text>
                 </View>
-              </Card>
+              </Row>
             );
           })}
         </View>

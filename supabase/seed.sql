@@ -1,6 +1,7 @@
 -- All Trainers: test data for the Supabase project.
 --
 -- HOW TO RUN: Supabase dashboard, SQL Editor, paste this whole file, Run.
+-- Needs migrations 0001 and 0002 to have been run first.
 -- Safe to run again: it deletes the previous test data first.
 --
 -- Every test account uses an @alltrainers.test email and the password below.
@@ -122,13 +123,25 @@ insert into public.studios (id, name, address, neighborhood, website_url, create
   ('33333333-0000-4000-8000-000000000004', 'The Forge',        '3400 W 32nd Ave',  'Highlands',    'https://example.com/forge',  '11111111-0000-4000-8000-000000000004'),
   ('33333333-0000-4000-8000-000000000005', 'Pointe Barre Co.', '250 Columbine St', 'Cherry Creek', 'https://example.com/pointe', '11111111-0000-4000-8000-000000000005');
 
+-- Where to book each studio (platform home pages stand in for real studio pages)
+insert into public.studio_booking_links (studio_id, platform, url, label, created_by) values
+  ('33333333-0000-4000-8000-000000000001', 'studio',    'https://example.com/lumen',              'Lumen app',          '11111111-0000-4000-8000-000000000001'),
+  ('33333333-0000-4000-8000-000000000001', 'mindbody',  'https://www.mindbodyonline.com/explore', null,                 '11111111-0000-4000-8000-000000000001'),
+  ('33333333-0000-4000-8000-000000000001', 'classpass', 'https://classpass.com',                  null,                 '11111111-0000-4000-8000-000000000001'),
+  ('33333333-0000-4000-8000-000000000002', 'studio',    'https://example.com/spoke',              'Spoke & Spin app',   '11111111-0000-4000-8000-000000000002'),
+  ('33333333-0000-4000-8000-000000000002', 'classpass', 'https://classpass.com',                  null,                 '11111111-0000-4000-8000-000000000002'),
+  ('33333333-0000-4000-8000-000000000003', 'mindbody',  'https://www.mindbodyonline.com/explore', null,                 '11111111-0000-4000-8000-000000000003'),
+  ('33333333-0000-4000-8000-000000000004', 'studio',    'https://example.com/forge',              'The Forge website',  '11111111-0000-4000-8000-000000000004'),
+  ('33333333-0000-4000-8000-000000000005', 'mindbody',  'https://www.mindbodyonline.com/explore', null,                 '11111111-0000-4000-8000-000000000005'),
+  ('33333333-0000-4000-8000-000000000005', 'classpass', 'https://classpass.com',                  null,                 '11111111-0000-4000-8000-000000000005');
+
 -- ---------------------------------------------------------------------------
 -- This week's classes
 -- ---------------------------------------------------------------------------
 insert into public.classes (instructor_id, studio_id, title, style, starts_at, ends_at, booking_url, status, note)
 select i::uuid, s::uuid, title, style,
        pg_temp.at(d, t), pg_temp.at(d, t) + make_interval(mins => m),
-       'https://example.com/book', status, note
+       null, status, note
 from (values
   -- Maya
   ('11111111-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000001', 'Reformer Flow',      'pilates',  0, time '17:30', 50, 'scheduled',  null),

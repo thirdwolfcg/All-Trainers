@@ -23,7 +23,7 @@ export default function SignIn() {
   };
 
   return (
-    <Screen title="Welcome back" subtitle="Your people missed you." padTop={false}>
+    <Screen eyebrow="Sign in" title="You're back" subtitle="Your people missed you." padTop={false}>
       <View style={{ gap: Spacing.lg }}>
         <Field
           label="Email"
@@ -46,7 +46,7 @@ export default function SignIn() {
           error={error}
           onSubmitEditing={submit}
         />
-        <Button label={busy ? 'Signing in…' : 'Sign in'} disabled={!email || !password || busy} onPress={submit} />
+        <Button label={busy ? 'One sec…' : 'Sign in'} disabled={!email || !password || busy} onPress={submit} />
         <Button kind="ghost" label="New here? Create an account" onPress={() => router.replace('/sign-up')} />
       </View>
     </Screen>

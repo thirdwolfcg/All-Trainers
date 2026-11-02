@@ -8,6 +8,7 @@ import { Text } from './ui';
 
 /** Page wrapper: white background, safe area, centered column on wide screens. */
 export function Screen({
+  eyebrow,
   title,
   subtitle,
   right,
@@ -15,6 +16,7 @@ export function Screen({
   scroll = true,
   padTop = true,
 }: {
+  eyebrow?: string;
   title?: string;
   subtitle?: string;
   right?: ReactNode;
@@ -25,7 +27,12 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const header = title ? (
     <View style={styles.header}>
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: 6 }}>
+        {eyebrow ? (
+          <Text variant="eyebrow" color="textSecondary">
+            {eyebrow}
+          </Text>
+        ) : null}
         <Text variant="display">{title}</Text>
         {subtitle ? (
           <Text variant="body" color="textSecondary">
@@ -69,7 +76,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     flex: 1,
   },
   header: {

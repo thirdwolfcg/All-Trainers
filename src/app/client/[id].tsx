@@ -82,7 +82,7 @@ export default function ClientDetail() {
 
         {byStudio.size ? (
           <Card tone="plain" style={{ gap: Spacing.sm, marginBottom: Spacing.xl }}>
-            <Text variant="heading">Where they take your class</Text>
+            <Text variant="eyebrow" color="textSecondary">Where they take your class</Text>
             {[...byStudio.entries()].map(([sid, n]) => (
               <View key={sid} style={styles.row}>
                 <Icon name="location-outline" size={16} color="textSecondary" />

@@ -105,7 +105,7 @@ export default function NewClass() {
         ))}
       </View>
 
-      <Button label="Post class" icon="checkmark" disabled={!canSave} onPress={save} style={{ marginTop: Spacing.xxl }} />
+      <Button label="Post it" icon="checkmark" disabled={!canSave} onPress={save} style={{ marginTop: Spacing.xxl }} />
     </Screen>
   );
 }

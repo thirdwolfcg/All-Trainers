@@ -6,14 +6,14 @@ import {
   Text as RNText,
   TextInput,
   View,
-  type TextInputProps,
   type StyleProp,
+  type TextInputProps,
   type TextProps as RNTextProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
 
-import { AvatarTints, Colors, Fonts, Radius, Spacing, Type, type ColorName, type TypeName } from '@/constants/theme';
+import { AvatarTints, Colors, FontFamily, Radius, Spacing, Type, type ColorName, type TypeName } from '@/constants/theme';
 
 /* ---------- Text ---------- */
 
@@ -24,12 +24,7 @@ type TextProps = RNTextProps & {
 };
 
 export function Text({ variant = 'body', color = 'text', align, style, ...rest }: TextProps) {
-  return (
-    <RNText
-      {...rest}
-      style={[{ fontFamily: Fonts?.sans, color: Colors[color], textAlign: align }, Type[variant], style]}
-    />
-  );
+  return <RNText {...rest} style={[Type[variant], { color: Colors[color], textAlign: align }, style]} />;
 }
 
 /* ---------- Icon ---------- */
@@ -42,7 +37,7 @@ export function Icon({ name, size = 20, color = 'text' }: { name: IconName; size
 
 /* ---------- Button ---------- */
 
-type ButtonKind = 'primary' | 'soft' | 'outline' | 'ghost';
+type ButtonKind = 'primary' | 'ink' | 'soft' | 'outline' | 'ghost';
 
 type ButtonProps = {
   label: string;
@@ -57,11 +52,13 @@ type ButtonProps = {
 
 const buttonColors: Record<ButtonKind, { bg: string; fg: ColorName; border: string }> = {
   primary: { bg: Colors.primary, fg: 'onPrimary', border: Colors.primary },
+  ink: { bg: Colors.text, fg: 'onPrimary', border: Colors.text },
   soft: { bg: Colors.primarySoft, fg: 'primaryDeep', border: Colors.primarySoft },
-  outline: { bg: Colors.background, fg: 'text', border: Colors.border },
-  ghost: { bg: 'transparent', fg: 'primaryDeep', border: 'transparent' },
+  outline: { bg: Colors.background, fg: 'text', border: Colors.borderStrong },
+  ghost: { bg: 'transparent', fg: 'primary', border: 'transparent' },
 };
 
+/** Square-cornered, small-caps buttons in the editorial style. */
 export function Button({ label, onPress, kind = 'primary', icon, size = 'md', disabled, style, accessibilityLabel }: ButtonProps) {
   const c = buttonColors[kind];
   return (
@@ -73,13 +70,13 @@ export function Button({ label, onPress, kind = 'primary', icon, size = 'md', di
       style={({ pressed }) => [
         styles.button,
         size === 'sm' && styles.buttonSm,
-        { backgroundColor: c.bg, borderColor: c.border, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
+        { backgroundColor: c.bg, borderColor: c.border, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
         style,
       ]}>
-      {icon ? <Icon name={icon} size={size === 'sm' ? 15 : 18} color={c.fg} /> : null}
-      <Text variant={size === 'sm' ? 'smallStrong' : 'bodyStrong'} color={c.fg}>
-        {label}
-      </Text>
+      {icon ? <Icon name={icon} size={size === 'sm' ? 14 : 16} color={c.fg} /> : null}
+      <RNText style={[styles.buttonLabel, size === 'sm' && styles.buttonLabelSm, { color: Colors[c.fg] }]}>
+        {label.toUpperCase()}
+      </RNText>
     </Pressable>
   );
 }
@@ -107,14 +104,24 @@ export function Card({
 
   if (onPress) {
     return (
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [styles.card, toneStyle, pressed && { opacity: 0.9 }, style]}>
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.card, toneStyle, pressed && { opacity: 0.9 }, style]}>
         {children}
       </Pressable>
     );
   }
   return <View style={[styles.card, toneStyle, style]}>{children}</View>;
+}
+
+/** A list row separated by a hairline rule, the editorial alternative to a boxed card. */
+export function Row({ children, onPress, style }: { children: ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle> }) {
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }, style]}>
+        {children}
+      </Pressable>
+    );
+  }
+  return <View style={[styles.row, style]}>{children}</View>;
 }
 
 /* ---------- Avatar ---------- */
@@ -125,7 +132,7 @@ function tintFor(name: string) {
   return AvatarTints[h % AvatarTints.length];
 }
 
-export function Avatar({ name, size = 44, ring = false }: { name: string; size?: number; ring?: boolean }) {
+export function Avatar({ name, size = 44, ring = false, square = false }: { name: string; size?: number; ring?: boolean; square?: boolean }) {
   const tint = tintFor(name);
   const initials = name
     .split(' ')
@@ -137,13 +144,11 @@ export function Avatar({ name, size = 44, ring = false }: { name: string; size?:
     <View
       style={[
         styles.avatar,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: tint.bg },
-        ring && { borderWidth: 2, borderColor: Colors.primary },
+        { width: size, height: square ? size * 1.25 : size, borderRadius: square ? Radius.sm : size / 2, backgroundColor: tint.bg },
+        ring && { borderWidth: 1.5, borderColor: Colors.primary },
       ]}
       accessibilityLabel={name}>
-      <RNText style={{ color: tint.fg, fontWeight: '700', fontSize: size * 0.36, fontFamily: Fonts?.rounded }}>
-        {initials}
-      </RNText>
+      <RNText style={{ color: tint.fg, fontFamily: FontFamily.serif, fontSize: size * 0.38 }}>{initials}</RNText>
     </View>
   );
 }
@@ -161,19 +166,20 @@ export function Chip({
   selected?: boolean;
   onPress?: () => void;
   icon?: IconName;
-  tone?: 'default' | 'blush' | 'mint' | 'warn';
+  tone?: 'default' | 'blush' | 'mint' | 'warn' | 'plum';
 }) {
   const tones = {
     default: selected
-      ? { bg: Colors.primary, fg: 'onPrimary' as ColorName }
-      : { bg: Colors.surface, fg: 'textSecondary' as ColorName },
-    blush: { bg: Colors.blush, fg: 'blushDeep' as ColorName },
-    mint: { bg: Colors.mint, fg: 'mintDeep' as ColorName },
-    warn: { bg: Colors.warn, fg: 'warnDeep' as ColorName },
+      ? { bg: Colors.primary, fg: 'onPrimary' as ColorName, border: Colors.primary }
+      : { bg: Colors.background, fg: 'textSecondary' as ColorName, border: Colors.borderStrong },
+    blush: { bg: Colors.blush, fg: 'blushDeep' as ColorName, border: Colors.blush },
+    mint: { bg: Colors.mint, fg: 'mintDeep' as ColorName, border: Colors.mint },
+    warn: { bg: Colors.warn, fg: 'warnDeep' as ColorName, border: Colors.warn },
+    plum: { bg: Colors.primarySoft, fg: 'primaryDeep' as ColorName, border: Colors.primarySoft },
   }[tone];
 
   const content = (
-    <View style={[styles.chip, { backgroundColor: tones.bg }]}>
+    <View style={[styles.chip, { backgroundColor: tones.bg, borderColor: tones.border }]}>
       {icon ? <Icon name={icon} size={13} color={tones.fg} /> : null}
       <Text variant="smallStrong" color={tones.fg}>
         {label}
@@ -193,10 +199,12 @@ export function Chip({
 export function SectionHeader({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
   return (
     <View style={styles.sectionHeader}>
-      <Text variant="title">{title}</Text>
+      <Text variant="eyebrow" color="textSecondary">
+        {title}
+      </Text>
       {action ? (
         <Pressable onPress={onAction} hitSlop={8}>
-          <Text variant="smallStrong" color="primary">
+          <Text variant="eyebrow" color="primary">
             {action}
           </Text>
         </Pressable>
@@ -211,7 +219,7 @@ export function EmptyState({ icon, title, body }: { icon: IconName; title: strin
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
-        <Icon name={icon} size={24} color="primary" />
+        <Icon name={icon} size={22} color="primary" />
       </View>
       <Text variant="heading" align="center">
         {title}
@@ -227,19 +235,48 @@ export function Divider() {
   return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: Colors.border }} />;
 }
 
+/* ---------- Text field ---------- */
+
+export function Field({ label, hint, error, ...input }: TextInputProps & { label: string; hint?: string; error?: string }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text variant="eyebrow" color="textSecondary">
+        {label}
+      </Text>
+      <TextInput
+        placeholderTextColor={Colors.textMuted}
+        {...input}
+        style={[styles.input, error ? { borderColor: Colors.blushDeep } : null, input.style]}
+      />
+      {error ? (
+        <Text variant="small" color="blushDeep">
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="small" color="textSecondary">
+          {hint}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    paddingVertical: 13,
+    minHeight: 48,
     paddingHorizontal: Spacing.xl,
-    borderRadius: Radius.pill,
+    borderRadius: Radius.sm,
     borderWidth: 1,
   },
-  buttonSm: { paddingVertical: 8, paddingHorizontal: Spacing.lg },
+  buttonSm: { minHeight: 40, paddingHorizontal: Spacing.lg },
+  buttonLabel: { fontFamily: FontFamily.sansBold, fontSize: 13, letterSpacing: 0.8 },
+  buttonLabelSm: { fontSize: 12 },
   card: { borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1 },
+  row: { paddingVertical: Spacing.lg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   avatar: { alignItems: 'center', justifyContent: 'center' },
   chip: {
     flexDirection: 'row',
@@ -248,65 +285,33 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: Radius.pill,
+    borderWidth: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   empty: { alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xxl, paddingHorizontal: Spacing.xl },
   emptyIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: Colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
-});
-
-/* ---------- Text field ---------- */
-
-export function Field({
-  label,
-  hint,
-  error,
-  ...input
-}: TextInputProps & { label: string; hint?: string; error?: string }) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text variant="caption" color="textMuted">
-        {label.toUpperCase()}
-      </Text>
-      <TextInput
-        placeholderTextColor={Colors.textMuted}
-        {...input}
-        style={[fieldStyles.input, error ? { borderColor: Colors.blushDeep } : null, input.style]}
-      />
-      {error ? (
-        <Text variant="small" color="blushDeep">
-          {error}
-        </Text>
-      ) : hint ? (
-        <Text variant="small" color="textMuted">
-          {hint}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-const fieldStyles = StyleSheet.create({
   input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    backgroundColor: Colors.background,
+    borderRadius: Radius.sm,
     borderWidth: 1,
-    borderColor: Colors.surface,
+    borderColor: Colors.borderStrong,
     paddingHorizontal: Spacing.lg,
     minHeight: 48,
     fontSize: 15,
+    fontFamily: FontFamily.sans,
     color: Colors.text,
   },
 });

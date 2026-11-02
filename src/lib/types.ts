@@ -22,12 +22,22 @@ export type Instructor = {
   isFounding: boolean;
 };
 
+export type BookingPlatform = 'studio' | 'mindbody' | 'classpass' | 'other';
+
+export type BookingLink = {
+  platform: BookingPlatform;
+  url: string;
+  /** Shown instead of the default name, e.g. "Lumen app" */
+  label?: string;
+};
+
 export type Studio = {
   id: string;
   name: string;
   neighborhood: string;
   address: string;
-  bookingUrl?: string;
+  /** Where clients can book this studio's classes. Entered once, shared by every instructor who teaches there. */
+  bookingLinks: BookingLink[];
 };
 
 export type ClassStatus = 'scheduled' | 'cancelled' | 'sub_needed' | 'subbed';
@@ -42,6 +52,8 @@ export type ClassSession = {
   durationMin: number;
   status: ClassStatus;
   note?: string;
+  /** Optional deep link to this exact class, shown first when present. */
+  bookingUrl?: string;
 };
 
 export type PostKind = 'photo' | 'recipe' | 'playlist' | 'note';

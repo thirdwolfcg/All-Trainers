@@ -1,104 +1,109 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addToCalendar } from '@/lib/calendar';
-import { relativeTime, timeLabel } from '@/lib/dates';
+import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type ClassSession, type Instructor, type Post } from '@/lib/types';
 
-import { Avatar, Button, Card, Chip, Icon, Text, type IconName } from './ui';
+import { BookingSheet } from './booking-sheet';
+import { Avatar, Button, Chip, Icon, Row, Text, type IconName } from './ui';
+
+function clock(d: Date) {
+  const h = d.getHours() % 12 || 12;
+  const m = d.getMinutes().toString().padStart(2, '0');
+  return { time: `${h}:${m}`, meridiem: d.getHours() < 12 ? 'AM' : 'PM' };
+}
 
 /* ---------- One class in a schedule ---------- */
 
 export function ClassCard({ session, showInstructor = true }: { session: ClassSession; showInstructor?: boolean }) {
   const store = useStore();
+  const [booking, setBooking] = useState(false);
   const instructor = store.instructor(session.instructorId);
   const studio = store.studio(session.studioId);
   if (!instructor || !studio) return null;
 
   const start = new Date(session.startsAt);
+  const { time, meridiem } = clock(start);
   const hasStarted = start.getTime() <= Date.now();
   const cancelled = session.status === 'cancelled';
   const went = store.attended(session.id);
   const isClient = store.role === 'client';
 
   return (
-    <Card tone="plain" style={[styles.classCard, cancelled && { opacity: 0.6 }]}>
-      <View style={styles.classTop}>
-        <View style={styles.timeCol}>
-          <Text variant="bodyStrong">{timeLabel(start)}</Text>
-          <Text variant="small" color="textMuted">
-            {session.durationMin} min
-          </Text>
-        </View>
-
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text variant="heading" style={cancelled && { textDecorationLine: 'line-through' }}>
-            {session.title}
-          </Text>
-          <View style={styles.metaRow}>
-            <Icon name="location-outline" size={14} color="textSecondary" />
-            <Text variant="small" color="textSecondary">
-              {studio.name} · {studio.neighborhood}
-            </Text>
-          </View>
-          {showInstructor ? (
-            <Pressable
-              style={styles.metaRow}
-              onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}>
-              <Avatar name={instructor.name} size={20} />
-              <Text variant="smallStrong" color="primaryDeep">
-                {instructor.name}
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-
-        <Chip label={StyleLabels[session.style]} />
+    <Row style={[styles.classRow, cancelled && { opacity: 0.55 }]}>
+      <View style={styles.timeCol}>
+        <Text variant="title" style={cancelled && styles.struck}>
+          {time}
+        </Text>
+        <Text variant="eyebrow" color="textSecondary">
+          {meridiem} · {session.durationMin}M
+        </Text>
       </View>
 
-      {session.status !== 'scheduled' ? (
-        <View style={{ flexDirection: 'row' }}>
-          <Chip
-            tone={cancelled ? 'warn' : session.status === 'subbed' ? 'mint' : 'warn'}
-            icon={cancelled ? 'close-circle-outline' : 'swap-horizontal'}
-            label={session.note ?? (cancelled ? 'Cancelled' : session.status === 'subbed' ? 'Sub confirmed' : 'Sub needed')}
-          />
-        </View>
-      ) : null}
-
-      {isClient && !cancelled ? (
-        <View style={styles.actions}>
-          {hasStarted ? (
-            <Button
-              size="sm"
-              kind={went ? 'soft' : 'outline'}
-              icon={went ? 'checkmark-circle' : 'checkmark-circle-outline'}
-              label={went ? 'You went' : 'I went'}
-              onPress={() => store.toggleAttended(session)}
-            />
-          ) : (
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text variant="heading" style={cancelled && styles.struck}>
+          {session.title}
+        </Text>
+        <Text variant="small" color="textSecondary">
+          {showInstructor ? (
             <>
-              <Button
-                size="sm"
-                kind="primary"
-                icon="open-outline"
-                label="Book at studio"
-                onPress={() => studio.bookingUrl && Linking.openURL(studio.bookingUrl)}
-              />
-              <Button
-                size="sm"
-                kind="outline"
-                icon="calendar-outline"
-                label="Add to calendar"
-                onPress={() => addToCalendar(session, instructor, studio)}
-              />
+              with{' '}
+              <Text
+                variant="smallStrong"
+                color="primary"
+                onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}>
+                {instructor.name}
+              </Text>{' '}
+              at{' '}
             </>
-          )}
-        </View>
+          ) : null}
+          {studio.name} · {StyleLabels[session.style]}
+        </Text>
+
+        {session.status !== 'scheduled' ? (
+          <View style={{ flexDirection: 'row', marginTop: 4 }}>
+            <Chip
+              tone={session.status === 'subbed' ? 'mint' : 'warn'}
+              icon={cancelled ? 'close-circle-outline' : 'swap-horizontal'}
+              label={
+                cancelled
+                  ? (session.note ?? 'Cancelled')
+                  : session.status === 'subbed'
+                    ? 'Sub locked in'
+                    : (session.note ?? 'Might have a sub')
+              }
+            />
+          </View>
+        ) : null}
+
+        {isClient && !cancelled ? (
+          <View style={styles.actions}>
+            {hasStarted ? (
+              <Button
+                size="sm"
+                kind={went ? 'soft' : 'outline'}
+                icon={went ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                label={went ? 'You went' : 'I went'}
+                onPress={() => store.toggleAttended(session)}
+              />
+            ) : (
+              <>
+                <Button size="sm" kind="ink" label="Book it" onPress={() => setBooking(true)} />
+                <Button size="sm" kind="outline" label="Add to cal" onPress={() => addToCalendar(session, instructor, studio)} />
+              </>
+            )}
+          </View>
+        ) : null}
+      </View>
+
+      {booking ? (
+        <BookingSheet open={booking} onClose={() => setBooking(false)} session={session} instructor={instructor} studio={studio} />
       ) : null}
-    </Card>
+    </Row>
   );
 }
 
@@ -112,17 +117,19 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
   ).length;
 
   return (
-    <Card onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })} style={styles.instructorRow}>
+    <Row
+      onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}
+      style={styles.instructorRow}>
       <Avatar name={instructor.name} size={52} />
-      <View style={{ flex: 1, gap: 3 }}>
-        <View style={styles.metaRow}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={styles.inline}>
           <Text variant="heading">{instructor.name}</Text>
-          {instructor.isFounding ? <Icon name="sparkles" size={14} color="primary" /> : null}
+          {instructor.isFounding ? <Icon name="sparkles" size={13} color="primary" /> : null}
         </View>
         <Text variant="small" color="textSecondary">
           {instructor.styles.map((s) => StyleLabels[s]).join(' · ')} · {instructor.neighborhood}
         </Text>
-        <Text variant="small" color="textMuted">
+        <Text variant="small" color="textSecondary">
           {upcoming} {upcoming === 1 ? 'class' : 'classes'} this week
         </Text>
       </View>
@@ -132,7 +139,7 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
         label={isFollowing ? 'Following' : 'Follow'}
         onPress={() => store.toggleFollow(instructor.id)}
       />
-    </Card>
+    </Row>
   );
 }
 
@@ -161,12 +168,10 @@ export function PostCard({ post }: { post: Post }) {
   const unlocked = !post.isPremium || isOwner || (store.role === 'client' && store.premium.has(post.instructorId));
 
   return (
-    <Card tone="plain" style={{ gap: Spacing.md }}>
-      <View style={styles.metaRow}>
-        <View style={styles.postIcon}>
-          <Icon name={postIcons[post.kind]} size={16} color="primaryDeep" />
-        </View>
-        <Text variant="smallStrong" color="textSecondary">
+    <Row style={{ gap: Spacing.sm }}>
+      <View style={styles.inline}>
+        <Icon name={postIcons[post.kind]} size={14} color="primary" />
+        <Text variant="eyebrow" color="textSecondary">
           {postKindLabel[post.kind]} · {relativeTime(post.createdAt)}
         </Text>
         <View style={{ flex: 1 }} />
@@ -183,52 +188,44 @@ export function PostCard({ post }: { post: Post }) {
           {post.linkUrl ? (
             <Button
               size="sm"
-              kind="soft"
+              kind="outline"
               icon="open-outline"
               label={post.kind === 'playlist' ? 'Open playlist' : 'Open link'}
               onPress={() => Linking.openURL(post.linkUrl!)}
-              style={{ alignSelf: 'flex-start' }}
+              style={{ alignSelf: 'flex-start', marginTop: 4 }}
             />
           ) : null}
         </>
       ) : (
-        <View style={styles.locked}>
-          <Icon name="lock-closed" size={18} color="primaryDeep" />
+        <Pressable style={styles.locked} accessibilityRole="button">
+          <Icon name="lock-closed" size={16} color="primaryDeep" />
           <View style={{ flex: 1 }}>
             <Text variant="smallStrong" color="primaryDeep">
-              For {instructor.name.split(' ')[0]}&apos;s premium crew
+              For {instructor.name.split(' ')[0]}&apos;s inner circle
             </Text>
             <Text variant="small" color="textSecondary">
-              Unlock playlists, form tips and one on one access.
+              Go premium for form tips, extras and one on one time.
             </Text>
           </View>
-        </View>
+        </Pressable>
       )}
-    </Card>
+    </Row>
   );
 }
 
 const styles = StyleSheet.create({
-  classCard: { gap: Spacing.md },
-  classTop: { flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start' },
-  timeCol: { width: 74 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, paddingLeft: 74 + Spacing.md },
+  classRow: { flexDirection: 'row', gap: Spacing.lg, alignItems: 'flex-start' },
+  timeCol: { width: 64, gap: 2 },
+  struck: { textDecorationLine: 'line-through' },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },
   instructorRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  postIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   locked: {
     flexDirection: 'row',
     gap: Spacing.md,
     alignItems: 'center',
     backgroundColor: Colors.primarySoft,
     padding: Spacing.md,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
   },
 });

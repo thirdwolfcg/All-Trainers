@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Avatar, Card, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
+import { Avatar, Card, Row, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { daysUntilBirthday, sinceLabel } from '@/lib/dates';
 import { useStore } from '@/lib/store';
@@ -42,11 +42,8 @@ function ClassTracker() {
   const store = useStore();
   const mine = store.attendance.filter((a) => a.clientId === 'me');
 
-  const now = new Date();
-  const thisMonth = mine.filter((a) => {
-    const d = new Date(a.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).length;
+  // Rolling 30 days reads better than a calendar month on the 2nd of the month.
+  const last30 = mine.filter((a) => Date.now() - new Date(a.date).getTime() <= 30 * 24 * 60 * 60 * 1000).length;
 
   const byInstructor = useMemo(() => countBy(mine.map((a) => a.instructorId)), [mine]);
   const byStudio = useMemo(() => countBy(mine.map((a) => a.studioId)), [mine]);
@@ -55,9 +52,9 @@ function ClassTracker() {
   const top = byInstructor[0];
 
   return (
-    <Screen title="My classes" subtitle="Every class counts. Literally, we count them.">
+    <Screen eyebrow="Your receipts" title="My classes" subtitle="Every class counts. Literally, we count them.">
       {mine.length === 0 ? (
-        <EmptyState icon="stats-chart-outline" title="Your tracker starts here" body="Tap 'I went' after a class and it shows up here, by instructor and by studio." />
+        <EmptyState icon="stats-chart-outline" title="Your era starts here" body="Tap 'I went' after a class and it shows up here, by instructor and by studio." />
       ) : (
         <>
           <View style={styles.stats}>
@@ -70,9 +67,9 @@ function ClassTracker() {
               </Text>
             </Card>
             <Card tone="surface" style={styles.stat}>
-              <Text variant="display">{thisMonth}</Text>
+              <Text variant="display">{last30}</Text>
               <Text variant="smallStrong" color="textSecondary">
-                this month
+                last 30 days
               </Text>
             </Card>
           </View>
@@ -130,7 +127,7 @@ function ClientList() {
     .sort((a, b) => b.count - a.count);
 
   return (
-    <Screen title="Clients" subtitle={`${store.clients.length} people follow you. Everyone who follows lands here.`}>
+    <Screen eyebrow="Your people" title="Clients" subtitle={`${store.clients.length} people follow you. Every new follower lands here automatically.`}>
       <View style={styles.search}>
         <Icon name="search" size={18} color="textMuted" />
         <TextInput
@@ -142,13 +139,12 @@ function ClientList() {
         />
       </View>
 
-      <View style={{ gap: Spacing.sm }}>
+      <View>
         {rows.map(({ client, count, last }) => {
           const bday = client.birthday ? daysUntilBirthday(client.birthday) : null;
           return (
-            <Card
+            <Row
               key={client.id}
-              tone="plain"
               onPress={() => router.push({ pathname: '/client/[id]', params: { id: client.id } })}
               style={styles.clientRow}>
               <Avatar name={client.name} size={46} />
@@ -161,12 +157,12 @@ function ClientList() {
                 <View style={styles.tagRow}>
                   {client.isPremium ? <Chip label="Premium" icon="diamond-outline" tone="blush" /> : null}
                   {bday !== null && bday <= 7 ? (
-                    <Chip label={bday === 0 ? 'Birthday today' : `Birthday in ${bday}d`} icon="gift-outline" tone="warn" />
+                    <Chip label={bday === 0 ? 'Birthday today' : `Bday in ${bday}d`} icon="gift-outline" tone="warn" />
                   ) : null}
                 </View>
               </View>
               <Icon name="chevron-forward" size={18} color="textMuted" />
-            </Card>
+            </Row>
           );
         })}
       </View>
@@ -186,8 +182,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.pill,
+    borderWidth: 1,
+    borderColor: Colors.borderStrong,
+    borderRadius: Radius.sm,
     paddingHorizontal: Spacing.lg,
     height: 46,
     marginBottom: Spacing.lg,

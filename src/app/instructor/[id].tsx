@@ -4,8 +4,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ClassCard, PostCard } from '@/components/cards';
 import { Screen } from '@/components/screen';
-import { Avatar, Button, Card, Chip, EmptyState, Icon, Text } from '@/components/ui';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Avatar, Button, Card, EmptyState, Icon, Text } from '@/components/ui';
+import { Colors, Spacing } from '@/constants/theme';
 import { addDays, dayLabel, isSameDay, startOfDay } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
@@ -45,23 +45,22 @@ export default function InstructorProfile() {
       <Stack.Screen options={{ title: `@${instructor.handle}` }} />
       <Screen padTop={false}>
         <View style={styles.header}>
-          <Avatar name={instructor.name} size={88} ring />
-          <View style={{ alignItems: 'center', gap: 6 }}>
-            <Text variant="display" align="center">
-              {instructor.name}
+          {instructor.isFounding ? (
+            <Text variant="eyebrow" color="primary">
+              Founding instructor
             </Text>
-            <Text variant="small" color="textSecondary">
-              @{instructor.handle} · {instructor.neighborhood}, Denver
-            </Text>
+          ) : null}
+          <View style={styles.identity}>
+            <Avatar name={instructor.name} size={76} square />
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text variant="display">{instructor.name}</Text>
+              <Text variant="small" color="textSecondary">
+                {instructor.styles.map((s) => StyleLabels[s]).join(' and ')} · {instructor.neighborhood}
+              </Text>
+            </View>
           </View>
-          <View style={styles.chipRow}>
-            {instructor.styles.map((s) => (
-              <Chip key={s} label={StyleLabels[s]} />
-            ))}
-            {instructor.isFounding ? <Chip label="Founding" icon="sparkles" tone="blush" /> : null}
-          </View>
-          <Text variant="body" color="textSecondary" align="center" style={{ maxWidth: 460 }}>
-            {instructor.bio}
+          <Text variant="quote" color="text">
+            “{instructor.bio}”
           </Text>
 
           <View style={styles.stats}>
@@ -99,10 +98,10 @@ export default function InstructorProfile() {
             <Icon name="diamond-outline" size={22} color="primaryDeep" />
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="heading" color="primaryDeep">
-                Go premium with {instructor.name.split(' ')[0]}
+                Join {instructor.name.split(' ')[0]}&apos;s inner circle
               </Text>
               <Text variant="small" color="textSecondary">
-                Class playlists, form tips and one on one time. Coming soon.
+                Form tips, extras and one on one time. Coming soon.
               </Text>
             </View>
           </Card>
@@ -116,7 +115,7 @@ export default function InstructorProfile() {
               style={[styles.tab, tab === t && styles.tabActive]}
               accessibilityRole="tab"
               accessibilityState={{ selected: tab === t }}>
-              <Text variant="bodyStrong" color={tab === t ? 'primaryDeep' : 'textMuted'}>
+              <Text variant="eyebrow" color={tab === t ? 'text' : 'textSecondary'}>
                 {t === 'schedule' ? 'This week' : 'Feed'}
               </Text>
             </Pressable>
@@ -126,8 +125,8 @@ export default function InstructorProfile() {
         {tab === 'schedule' ? (
           days.length ? (
             days.map((g) => (
-              <View key={g.d.toISOString()} style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-                <Text variant="smallStrong" color="textSecondary">
+              <View key={g.d.toISOString()} style={{ marginBottom: Spacing.xl }}>
+                <Text variant="eyebrow" color="textSecondary">
                   {dayLabel(g.d)}
                 </Text>
                 {g.classes.map((c) => (
@@ -136,16 +135,16 @@ export default function InstructorProfile() {
               </View>
             ))
           ) : (
-            <EmptyState icon="calendar-outline" title="No classes this week" body="Follow to get a ping when new ones drop." />
+            <EmptyState icon="calendar-outline" title="Nothing on the books" body="Follow to get a ping the second new classes drop." />
           )
         ) : posts.length ? (
-          <View style={{ gap: Spacing.md }}>
+          <View>
             {posts.map((p) => (
               <PostCard key={p.id} post={p} />
             ))}
           </View>
         ) : (
-          <EmptyState icon="images-outline" title="Nothing posted yet" body="Recipes, playlists and updates show up here." />
+          <EmptyState icon="images-outline" title="No posts yet" body="Recipes, playlists and updates land here." />
         )}
       </Screen>
     </>
@@ -154,9 +153,9 @@ export default function InstructorProfile() {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <View style={{ alignItems: 'center', flex: 1 }}>
+    <View style={{ flex: 1, gap: 2, paddingVertical: Spacing.md }}>
       <Text variant="title">{value}</Text>
-      <Text variant="small" color="textSecondary">
+      <Text variant="eyebrow" color="textSecondary">
         {label}
       </Text>
     </View>
@@ -164,23 +163,22 @@ function Stat({ value, label }: { value: number; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm, marginBottom: Spacing.xl },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
+  header: { gap: Spacing.lg, paddingTop: Spacing.sm, marginBottom: Spacing.xl },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   stats: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.md,
-    width: '100%',
-    maxWidth: 360,
+    gap: Spacing.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
   },
-  statDivider: { width: 1, height: 28, backgroundColor: Colors.border },
-  buttons: { flexDirection: 'row', gap: Spacing.sm, width: '100%', maxWidth: 420 },
+  statDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: Colors.border },
+  buttons: { flexDirection: 'row', gap: Spacing.sm },
   premium: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.xl },
   tabs: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
     marginBottom: Spacing.lg,
   },

@@ -35,7 +35,7 @@ export default function MeScreen() {
   const myClientRecord = store.clients.find((c) => c.id === 'me');
 
   return (
-    <Screen title="Me">
+    <Screen eyebrow="Account" title="Me">
       {live && auth.profile ? (
         <Card tone="plain" style={[styles.profile, { marginBottom: Spacing.md }]}>
           <Avatar name={auth.profile.display_name} size={64} ring />
@@ -119,7 +119,7 @@ export default function MeScreen() {
         <Button
           kind="soft"
           icon="eye-outline"
-          label="See my public profile"
+          label="See my profile like clients do"
           onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: me.id } })}
           style={{ marginVertical: Spacing.lg }}
         />

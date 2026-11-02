@@ -1,50 +1,52 @@
 /**
- * All Trainers design tokens.
- * Light and airy: white base, soft lavender surfaces, one confident purple.
+ * All Trainers design tokens: "Studio Editorial".
+ * White ground, plum accent, soft gray surfaces, thin rules instead of boxes.
+ * Serif display (Fraunces) over a clean sans (Inter).
  */
 import '@/global.css';
 
-import { Platform } from 'react-native';
-
 export const Colors = {
   background: '#FFFFFF',
-  surface: '#F7F5FB', // soft lavender gray for cards and inputs
-  surfaceStrong: '#EFEBF7',
-  border: '#E8E3F1',
+  surface: '#F4F2F7', // soft gray-lilac for inputs and highlight panels
+  surfaceStrong: '#ECE8F2',
+  border: '#E6E3EA', // hairline rules
+  borderStrong: '#D9D5DF', // outline buttons and chips
 
-  text: '#1E1A29',
-  textSecondary: '#6D6780',
-  textMuted: '#A39DB2',
+  text: '#1C1A22',
+  textSecondary: '#6B6675',
+  textMuted: '#8A8494', // decorative only, never for small text that must be read
 
-  primary: '#7B5CE6', // main purple
-  primaryDeep: '#5A3DC2', // pressed states and text on soft purple
-  primarySoft: '#F1ECFE', // purple tint backgrounds
+  primary: '#4B2E83', // plum
+  primaryDeep: '#331E5E',
+  primarySoft: '#EFEAF7',
   onPrimary: '#FFFFFF',
 
-  blush: '#F7D9E8', // birthdays and celebration moments
-  blushDeep: '#B4417A',
-  mint: '#DDF3EA', // confirmations
-  mintDeep: '#22785A',
-  warn: '#FFF1D6',
-  warnDeep: '#9A6206',
+  blush: '#F6E4EC', // birthdays and premium
+  blushDeep: '#8E2F5A',
+  mint: '#E2F2EA',
+  mintDeep: '#1F6B4E',
+  warn: '#FBF0DC',
+  warnDeep: '#85540A',
 } as const;
 
 export type ColorName = keyof typeof Colors;
 
-/** Avatar tints, picked by name so each person keeps the same color. */
 export const AvatarTints = [
-  { bg: '#EDE7FE', fg: '#5A3DC2' },
-  { bg: '#F7D9E8', fg: '#A3346C' },
-  { bg: '#DDF3EA', fg: '#22785A' },
-  { bg: '#E3ECFB', fg: '#2F5BA8' },
-  { bg: '#FBEBDD', fg: '#9A5413' },
+  { bg: '#EEEAF4', fg: '#4B2E83' },
+  { bg: '#F6E4EC', fg: '#8E2F5A' },
+  { bg: '#E2F2EA', fg: '#1F6B4E' },
+  { bg: '#E6ECF7', fg: '#2F4F8A' },
+  { bg: '#F7ECE1', fg: '#85501A' },
 ] as const;
 
-export const Fonts = Platform.select({
-  ios: { sans: 'system-ui', rounded: 'ui-rounded' },
-  web: { sans: 'var(--font-display)', rounded: 'var(--font-rounded)' },
-  default: { sans: 'normal', rounded: 'normal' },
-});
+/** Font family names, registered in the root layout. */
+export const FontFamily = {
+  serif: 'Fraunces_500Medium',
+  serifItalic: 'Fraunces_400Regular_Italic',
+  sans: 'Inter_400Regular',
+  sansMedium: 'Inter_500Medium',
+  sansBold: 'Inter_600SemiBold',
+} as const;
 
 export const Spacing = {
   xs: 4,
@@ -56,21 +58,23 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
-  sm: 10,
-  md: 14,
-  lg: 20,
+  sm: 4,
+  md: 6,
+  lg: 8,
   pill: 999,
 } as const;
 
 export const Type = {
-  display: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const, letterSpacing: -0.4 },
-  title: { fontSize: 20, lineHeight: 26, fontWeight: '700' as const, letterSpacing: -0.2 },
-  heading: { fontSize: 16, lineHeight: 22, fontWeight: '600' as const },
-  body: { fontSize: 15, lineHeight: 21, fontWeight: '400' as const },
-  bodyStrong: { fontSize: 15, lineHeight: 21, fontWeight: '600' as const },
-  small: { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
-  smallStrong: { fontSize: 13, lineHeight: 18, fontWeight: '600' as const },
-  caption: { fontSize: 11, lineHeight: 14, fontWeight: '600' as const, letterSpacing: 0.4 },
+  display: { fontFamily: FontFamily.serif, fontSize: 34, lineHeight: 40, letterSpacing: -0.6 },
+  title: { fontFamily: FontFamily.serif, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
+  heading: { fontFamily: FontFamily.serif, fontSize: 19, lineHeight: 24 },
+  quote: { fontFamily: FontFamily.serifItalic, fontSize: 18, lineHeight: 26 },
+  body: { fontFamily: FontFamily.sans, fontSize: 15, lineHeight: 22 },
+  bodyStrong: { fontFamily: FontFamily.sansBold, fontSize: 15, lineHeight: 22 },
+  small: { fontFamily: FontFamily.sans, fontSize: 13, lineHeight: 18 },
+  smallStrong: { fontFamily: FontFamily.sansBold, fontSize: 13, lineHeight: 18 },
+  eyebrow: { fontFamily: FontFamily.sansBold, fontSize: 11, lineHeight: 14, letterSpacing: 1.4, textTransform: 'uppercase' as const },
+  caption: { fontFamily: FontFamily.sansBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.4 },
 } as const;
 
 export type TypeName = keyof typeof Type;

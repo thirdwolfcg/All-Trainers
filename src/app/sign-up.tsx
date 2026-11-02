@@ -42,7 +42,7 @@ export default function SignUp() {
   }
 
   return (
-    <Screen title="Make it official" subtitle="Takes about a minute. Following instructors and seeing schedules is free." padTop={false}>
+    <Screen eyebrow="New here" title="Let's get you in" subtitle="Takes a sec. Following your faves and seeing their schedules is free." padTop={false}>
       <View style={{ gap: Spacing.lg }}>
         <Field
           label="Email"
@@ -64,7 +64,7 @@ export default function SignUp() {
           textContentType="newPassword"
           error={error}
         />
-        <Button label={busy ? 'Creating your account…' : 'Create account'} disabled={!valid || busy} onPress={submit} />
+        <Button label={busy ? 'Setting you up…' : 'Create account'} disabled={!valid || busy} onPress={submit} />
         <Button kind="ghost" label="I already have an account" onPress={() => router.replace('/sign-in')} />
       </View>
     </Screen>
