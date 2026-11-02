@@ -4,11 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { dayLabel, timeLabel } from '@/lib/dates';
-import { inviteMessage, shareInvite, textInvite } from '@/lib/invite';
+import { coworkerInviteMessage } from '@/lib/invite';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type ClassSession } from '@/lib/types';
 
-import { Avatar, Button, Chip, Icon, Text } from './ui';
+import { InviteCard } from './invite-card';
+import { Avatar, Button, Chip, Text } from './ui';
 
 /**
  * Find a sub for one class. Only instructors who teach at the same studio are
@@ -31,7 +32,7 @@ export function SubSheet({ session, open, onClose }: { session: ClassSession; op
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.status;
 
   const start = new Date(session.startsAt);
-  const message = inviteMessage({ fromName: me.name, fromHandle: me.handle, studioName: studio.name });
+  const message = coworkerInviteMessage({ fromName: me.name, fromHandle: me.handle, studioName: studio.name });
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -101,21 +102,13 @@ export function SubSheet({ session, open, onClose }: { session: ClassSession; op
             </Text>
           ) : null}
 
-          <View style={styles.invite}>
-            <View style={styles.inline}>
-              <Icon name="paper-plane-outline" size={16} color="primary" />
-              <Text variant="eyebrow" color="primary">
-                Bring your studio crew
-              </Text>
-            </View>
-            <Text variant="small" color="textSecondary">
-              More {studio.name} instructors on here means more people to cover you. We&apos;ll text them a link to join.
-            </Text>
-            <View style={styles.inviteButtons}>
-              <Button size="sm" kind="ink" icon="chatbubble-outline" label="Text a coworker" onPress={() => textInvite(message)} />
-              <Button size="sm" kind="outline" icon="share-outline" label="Share another way" onPress={() => shareInvite(message)} />
-            </View>
-          </View>
+          <InviteCard
+            eyebrow="Bring your studio crew"
+            body={`More ${studio.name} instructors on here means more people to cover you. We'll text them a link to join.`}
+            message={message}
+            textLabel="Text a coworker"
+            style={{ marginTop: Spacing.xl }}
+          />
         </ScrollView>
       </View>
     </Modal>
@@ -149,13 +142,4 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
   },
-  invite: {
-    marginTop: Spacing.xl,
-    gap: Spacing.sm,
-    padding: Spacing.lg,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
-  },
-  inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  inviteButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: 4 },
 });

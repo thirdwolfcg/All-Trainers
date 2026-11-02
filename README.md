@@ -69,6 +69,7 @@ Done in this first pass (sample data, no backend yet):
 - [x] Book it opens a choice of where to book: the studio's own app or site, Mindbody or ClassPass (`studio_booking_links`)
 - [x] Sub requests: ask only instructors who teach at the same studio (enforced in the database), accept or decline, class shows who is covering
 - [x] Invite coworkers by text message or share sheet when no one from the studio is on the app
+- [x] Client invites: invite a friend, invite an instructor who isn't on the app, and "bring a friend" from any instructor's profile
 - [x] Demo mode from the welcome screen, so anyone can click around without an account
 
 Still to do for Phase 1:

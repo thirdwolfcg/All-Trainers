@@ -3,12 +3,14 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ClassCard, InstructorRow } from '@/components/cards';
+import { InviteCard } from '@/components/invite-card';
 import { SubSheet } from '@/components/sub-sheet';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
-import { useAuth } from '@/lib/auth';
 import { addDays, dayLabel, daysUntilBirthday, isSameDay, shortDay, startOfDay } from '@/lib/dates';
+import { instructorInviteMessage } from '@/lib/invite';
+import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type ClassSession, type Style } from '@/lib/types';
 
@@ -55,8 +57,8 @@ const allStyles: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hi
 
 function ClientHome() {
   const store = useStore();
-  const auth = useAuth();
-  const firstName = (auth.profile?.display_name ?? 'Lo S.').split(' ')[0];
+  const me = useMe();
+  const firstName = me.name.split(' ')[0];
   const [day, setDay] = useState(() => startOfDay(new Date()));
   const [query, setQuery] = useState('');
   const [style, setStyle] = useState<Style | null>(null);
@@ -157,6 +159,16 @@ function ClientHome() {
               ))}
             </>
           ) : null}
+
+          <InviteCard
+            eyebrow="Your fave not on here?"
+            title="Get them on All Trainers"
+            body="Text your instructor an invite. Founding instructors join free, and you'll never chase their IG stories again."
+            message={instructorInviteMessage({ fromName: me.name, refId: me.refId })}
+            icon="heart-outline"
+            textLabel="Text my instructor"
+            style={{ marginTop: Spacing.xxl }}
+          />
         </>
       )}
     </Screen>

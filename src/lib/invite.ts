@@ -2,20 +2,51 @@ import { Linking, Platform, Share } from 'react-native';
 
 /**
  * TODO before launch: replace with the real sign-up link (web page or app store
- * link) once the app has a domain. The ref parameter lets us credit whoever
- * sent the invite, for example toward a founding-instructor perk.
+ * link) once the app has a domain. The ref parameter credits whoever sent the
+ * invite, for example toward a founding-instructor perk or a client reward.
  */
 export const INVITE_BASE_URL = 'https://example.com/join';
 
-export function inviteLink(fromHandle: string) {
-  return `${INVITE_BASE_URL}?ref=${encodeURIComponent(fromHandle)}`;
+export function inviteLink(params: { ref: string; instructor?: string }) {
+  const q = new URLSearchParams({ ref: params.ref });
+  if (params.instructor) q.set('i', params.instructor);
+  return `${INVITE_BASE_URL}?${q.toString()}`;
 }
 
-export function inviteMessage(opts: { fromName: string; fromHandle: string; studioName: string }) {
+const first = (name: string) => name.split(' ')[0];
+
+/** Instructor to a coworker at the same studio. */
+export function coworkerInviteMessage(opts: { fromName: string; fromHandle: string; studioName: string }) {
   return (
-    `Hey! It's ${opts.fromName.split(' ')[0]}. I'm on All Trainers, where my clients follow my schedule across every studio I teach at. ` +
+    `Hey! It's ${first(opts.fromName)}. I'm on All Trainers, where my clients follow my schedule across every studio I teach at. ` +
     `It's also how ${opts.studioName} instructors find subs for each other. Founding instructors are free right now, join me: ` +
-    inviteLink(opts.fromHandle)
+    inviteLink({ ref: opts.fromHandle })
+  );
+}
+
+/** Client to a friend. */
+export function friendInviteMessage(opts: { fromName: string; refId: string }) {
+  return (
+    `Ok you need this. All Trainers shows you where your favorite instructors are teaching all week, every studio, one app. ` +
+    `No more digging through IG stories. Come work out with me: ${inviteLink({ ref: opts.refId })}`
+  );
+}
+
+/** Client to a friend, about one instructor's classes. */
+export function bringAFriendMessage(opts: { fromName: string; refId: string; instructorName: string; instructorHandle: string }) {
+  return (
+    `Take a class with me?? ${first(opts.instructorName)} is my favorite instructor in Denver. ` +
+    `Follow ${first(opts.instructorName)} on All Trainers to see where they're teaching this week: ` +
+    inviteLink({ ref: opts.refId, instructor: opts.instructorHandle })
+  );
+}
+
+/** Client to an instructor who isn't on the app yet. */
+export function instructorInviteMessage(opts: { fromName: string; refId: string }) {
+  return (
+    `Hi! It's ${first(opts.fromName)} from your class. I'd follow you everywhere if you were on All Trainers, ` +
+    `it's an app where clients can see your schedule across every studio you teach at, no more hunting for IG stories. ` +
+    `It's free for founding instructors right now: ${inviteLink({ ref: opts.refId })}`
   );
 }
 

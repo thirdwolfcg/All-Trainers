@@ -7,12 +7,15 @@ import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
 import { addDays, dayLabel, isSameDay, startOfDay } from '@/lib/dates';
+import { bringAFriendMessage, shareInvite, textInvite } from '@/lib/invite';
+import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
 
 export default function InstructorProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const store = useStore();
+  const me = useMe();
   const [tab, setTab] = useState<'schedule' | 'feed'>('schedule');
   const instructor = store.instructor(id);
 
@@ -88,6 +91,30 @@ export default function InstructorProfile() {
                   router.push({ pathname: '/chat/[id]', params: { id: conv.id } });
                 }}
                 style={{ flex: 1 }}
+              />
+            </View>
+          ) : null}
+
+          {isClient ? (
+            <View style={styles.friendRow}>
+              <Text variant="small" color="textSecondary" style={{ flex: 1 }}>
+                Workouts hit different with a friend.
+              </Text>
+              <Button
+                size="sm"
+                kind="ghost"
+                icon="people-outline"
+                label="Bring a friend"
+                onPress={() => {
+                  const message = bringAFriendMessage({
+                    fromName: me.name,
+                    refId: me.refId,
+                    instructorName: instructor.name,
+                    instructorHandle: instructor.handle,
+                  });
+                  // Phones: open Messages. Web: the share sheet is the friendlier default.
+                  textInvite(message).catch(() => shareInvite(message));
+                }}
               />
             </View>
           ) : null}
@@ -175,6 +202,7 @@ const styles = StyleSheet.create({
   },
   statDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: Colors.border },
   buttons: { flexDirection: 'row', gap: Spacing.sm },
+  friendRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: -Spacing.sm },
   premium: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.xl },
   tabs: {
     flexDirection: 'row',

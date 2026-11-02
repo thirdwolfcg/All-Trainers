@@ -5,7 +5,10 @@ import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, Divider, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { birthdayLabel } from '@/lib/dates';
+import { InviteCard } from '@/components/invite-card';
 import { useAuth } from '@/lib/auth';
+import { friendInviteMessage, instructorInviteMessage } from '@/lib/invite';
+import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type Role } from '@/lib/types';
 
@@ -29,6 +32,7 @@ function SettingRow({ icon, label, value }: { icon: IconName; label: string; val
 export default function MeScreen() {
   const store = useStore();
   const auth = useAuth();
+  const meInfo = useMe();
   const live = !auth.demo && !!auth.profile;
   const isInstructor = store.role === 'instructor';
   const me = isInstructor ? store.instructor(store.meId) : undefined;
@@ -126,6 +130,27 @@ export default function MeScreen() {
       ) : (
         <View style={{ height: Spacing.lg }} />
       )}
+
+      {!isInstructor ? (
+        <View style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+          <InviteCard
+            eyebrow="Bring your people"
+            title="Invite a friend"
+            body="Workout buddies keep each other honest. Send them the app."
+            message={friendInviteMessage({ fromName: meInfo.name, refId: meInfo.refId })}
+            icon="people-outline"
+            textLabel="Text a friend"
+          />
+          <InviteCard
+            eyebrow="Missing someone?"
+            title="Invite an instructor"
+            body="Love a teacher who isn't on here yet? Founding instructors join free."
+            message={instructorInviteMessage({ fromName: meInfo.name, refId: meInfo.refId })}
+            icon="heart-outline"
+            textLabel="Text my instructor"
+          />
+        </View>
+      ) : null}
 
       <Card tone="plain" style={{ paddingVertical: Spacing.xs }}>
         {isInstructor ? (
