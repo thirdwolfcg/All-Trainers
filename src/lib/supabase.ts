@@ -39,6 +39,7 @@ export function friendlyError(message: string | undefined) {
   if (m.includes('already registered') || m.includes('already been registered')) return 'That email already has an account. Try signing in.';
   if (m.includes('password') && m.includes('6')) return 'Passwords need at least 6 characters.';
   if (m.includes('email not confirmed')) return 'Check your inbox and confirm your email first.';
+  if (m.includes('profiles_id_fkey') || m.includes('user not found') || m.includes('user from sub claim')) return 'Your sign in expired. Please sign in again.';
   if (m.includes('profiles_handle_key') || m.includes('duplicate key')) return 'That handle is taken. Try another one.';
   if (m.includes('profiles_handle_check')) return 'Handles are 3 to 30 characters: lowercase letters, numbers, dots or underscores.';
   if (m.includes('network') || m.includes('fetch')) return "Can't reach the server. Check your connection.";

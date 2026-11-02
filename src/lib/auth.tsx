@@ -68,6 +68,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
+      // A saved login can outlive its account (for example after test data is reset).
+      // Ask the server whether the user still exists; if not, sign out cleanly.
+      if (data.session) {
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError && userError.status !== undefined && userError.status >= 400 && userError.status < 500) {
+          await supabase.auth.signOut({ scope: 'local' });
+          if (!active) return;
+          setSession(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(data.session);
       await loadProfile(data.session?.user.id);
       if (active) setLoading(false);
@@ -123,7 +136,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           instagram_handle: p.instagram?.trim().replace(/^@/, '') || null,
           tiktok_handle: p.tiktok?.trim().replace(/^@/, '') || null,
         });
-        if (error) return { error: friendlyError(error.message) };
+        if (error) {
+          if (error.message.includes('profiles_id_fkey')) {
+            // The account behind this login no longer exists. Start over at sign in.
+            await supabase.auth.signOut({ scope: 'local' });
+            setProfile(null);
+          }
+          return { error: friendlyError(error.message) };
+        }
 
         if (p.birthday) {
           const { error: bdayError } = await supabase.from('profile_private').upsert({
