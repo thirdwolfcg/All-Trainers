@@ -112,7 +112,15 @@ export default function Teach() {
               <>
                 <Button label="Join as an instructor" onPress={join} />
                 <Button kind="outline" label="I already have an account" onPress={() => router.push('/sign-in')} />
-                <Button kind="ghost" label="I take classes" onPress={() => router.replace('/welcome')} />
+                <Text
+                  variant="smallStrong"
+                  color="primary"
+                  align="center"
+                  accessibilityRole="link"
+                  onPress={() => router.replace('/welcome')}
+                  style={{ marginTop: Spacing.sm }}>
+                  Just here to sweat? This way ›
+                </Text>
               </>
             )}
           </View>
