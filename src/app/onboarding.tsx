@@ -74,7 +74,7 @@ export default function Onboarding() {
 
   if (step === 0) {
     return (
-      <Screen title="Hiii, taking a class or teaching it?" subtitle="One email, one vibe. If you teach and take classes, use a different email for the other side.">
+      <Screen title="Hiii, taking a class or teaching it?" subtitle="Teach and take? Love that. Just use a separate email for each side.">
         <View style={{ gap: Spacing.md, marginBottom: Spacing.xxl }}>
           <RoleCard
             icon="heart-outline"
