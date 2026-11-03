@@ -15,7 +15,7 @@ export default function FeedScreen() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
-    <Screen eyebrow="Your feed" title="Feed" subtitle="Updates, recipes and playlists. Your followers see these on your profile.">
+    <Screen eyebrow="Your feed" title="Feed" subtitle="Spill the tea, share the recipes, drop the playlists. It all lands on your profile for your people.">
       <Button icon="create-outline" label="New post" onPress={() => router.push('/post/new')} style={{ marginBottom: Spacing.lg }} />
       {posts.length ? (
         <View>
