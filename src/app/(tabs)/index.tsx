@@ -13,6 +13,7 @@ import { addDays, dayLabel, isSameDay, shortDay, startOfDay, timeLabel } from '@
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
+import { greetName } from '@/lib/names';
 
 export default function HomeScreen() {
   const { role } = useStore();
@@ -58,7 +59,7 @@ function DayTabs({ selected, onSelect, counts }: { selected: Date; onSelect: (d:
 function ClientHome() {
   const store = useStore();
   const me = useMe();
-  const firstName = me.name.split(' ')[0];
+  const firstName = greetName(me.name);
   const [day, setDay] = useState(() => startOfDay(new Date()));
 
   const followedClasses = useMemo(
@@ -94,10 +95,10 @@ function ClientHome() {
       title="Where we sweating today?"
       subtitle={
         followingCount === 0
-          ? `hiii ${firstName}. Follow a few instructors and their classes land right here.`
+          ? `Hiii ${firstName}! Follow a few instructors and their classes will show up right here.`
           : today
-            ? `hiii ${firstName}. ${today === 1 ? 'One of your people is' : `${today} of your people are`} teaching today.`
-            : `hiii ${firstName}. Here's where your people are teaching this week.`
+            ? `Hiii ${firstName}! ${today === 1 ? 'One of your people is' : `${today} of your people are`} teaching today.`
+            : `Hiii ${firstName}! Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
       <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
@@ -217,7 +218,7 @@ function InstructorWeek() {
   return (
     <Screen
       eyebrow={todayEyebrow()}
-      title={`hiii ${me.name.split(' ')[0]}`}
+      title={`Hiii ${greetName(me.name)}`}
       subtitle={`${mine.length} classes, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`}
       right={
         <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
