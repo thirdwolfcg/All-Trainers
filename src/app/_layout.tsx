@@ -98,7 +98,6 @@ function Navigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="instructor/[id]" options={{ title: '' }} />
         <Stack.Screen name="class/[id]" options={{ title: '' }} />
-        <Stack.Screen name="qr" options={{ title: 'My QR code' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Messages' }} />
         <Stack.Screen name="client/[id]" options={{ title: 'Client' }} />
         <Stack.Screen name="schedule/new" options={{ title: 'Add a class', presentation: 'modal' }} />

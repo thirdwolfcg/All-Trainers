@@ -1,10 +1,11 @@
+import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
-import { Text } from './ui';
+import { Icon, Text } from './ui';
 
 /** Page wrapper: white background, safe area, centered column on wide screens. */
 export function Screen({
@@ -15,6 +16,7 @@ export function Screen({
   children,
   scroll = true,
   padTop = true,
+  back = false,
 }: {
   eyebrow?: string;
   title?: string;
@@ -23,8 +25,20 @@ export function Screen({
   children: ReactNode;
   scroll?: boolean;
   padTop?: boolean;
+  /** Show a back arrow above the title. Goes home if there is nothing to go back to. */
+  back?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const backButton = back ? (
+    <Pressable
+      onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      accessibilityRole="button"
+      accessibilityLabel="Back"
+      hitSlop={12}
+      style={{ alignSelf: 'flex-start', marginBottom: Spacing.md }}>
+      <Icon name="arrow-back" size={24} color="primaryDeep" />
+    </Pressable>
+  ) : null;
   const header = title ? (
     <View style={styles.header}>
       <View style={{ flex: 1, gap: 6 }}>
@@ -50,6 +64,7 @@ export function Screen({
     return (
       <View style={[styles.root, { paddingTop: top }]}>
         <View style={styles.column}>
+          {backButton}
           {header}
           {children}
         </View>
@@ -63,6 +78,7 @@ export function Screen({
       contentContainerStyle={{ paddingTop: top, paddingBottom: Spacing.xxl * 3 }}
       keyboardShouldPersistTaps="handled">
       <View style={styles.column}>
+        {backButton}
         {header}
         {children}
       </View>

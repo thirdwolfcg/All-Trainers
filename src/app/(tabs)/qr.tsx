@@ -1,4 +1,3 @@
-import { Stack } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { QrCode } from '@/components/qr-code';
@@ -16,7 +15,7 @@ export default function MyQr() {
 
   if (!me || store.role !== 'instructor') {
     return (
-      <Screen padTop={false}>
+      <Screen back title="My QR code">
         <EmptyState icon="qr-code-outline" title="For instructors" body="Instructors get a QR code clients can scan to follow them." />
       </Screen>
     );
@@ -26,8 +25,7 @@ export default function MyQr() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'My QR code' }} />
-      <Screen padTop={false}>
+      <Screen back eyebrow="Share" title="My QR code">
         <View style={styles.card}>
           <Avatar name={me.name} size={56} />
           <Text variant="title" align="center">

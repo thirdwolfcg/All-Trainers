@@ -62,6 +62,8 @@ export default function TabLayout() {
           <TabTrigger name="messages" href="/messages" asChild>
             <TabButton label="Messages" icon="chatbubbles-outline" activeIcon="chatbubbles" />
           </TabTrigger>
+          {/* QR page lives in the tabs so the bottom bar stays visible. No tab button of its own. */}
+          <TabTrigger name="qr" href="/qr" style={{ display: 'none' }} />
           <TabTrigger name="me" href="/me" asChild>
             <TabButton label="Me" icon="person-circle-outline" activeIcon="person-circle" />
           </TabTrigger>
