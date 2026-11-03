@@ -187,11 +187,19 @@ function InstructorWeek() {
             const n = daysUntilBirthday(c.birthday!);
             return (
               <View key={c.id} style={styles.inline}>
-                <Avatar name={c.name} size={32} />
-                <Text variant="body" style={{ flex: 1 }}>
-                  <Text variant="bodyStrong">{c.name.split(' ')[0]}</Text>
-                  {n === 0 ? ' is celebrating today' : n === 1 ? ' tomorrow' : ` in ${n} days`}
-                </Text>
+                <Pressable
+                  style={[styles.inline, { flex: 1 }]}
+                  onPress={() => router.push({ pathname: '/client/[id]', params: { id: c.id } })}
+                  accessibilityRole="link"
+                  accessibilityLabel={`Open ${c.name}'s profile`}>
+                  <Avatar name={c.name} size={32} />
+                  <Text variant="body" style={{ flex: 1 }}>
+                    <Text variant="bodyStrong" style={{ textDecorationLine: 'underline' }}>
+                      {c.name.split(' ')[0]}
+                    </Text>
+                    {n === 0 ? ' is celebrating today' : n === 1 ? ' tomorrow' : ` in ${n} days`}
+                  </Text>
+                </Pressable>
                 <Button
                   size="sm"
                   kind="outline"

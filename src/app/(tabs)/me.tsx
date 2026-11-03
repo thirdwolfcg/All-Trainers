@@ -48,7 +48,10 @@ export default function MeScreen() {
   return (
     <Screen eyebrow="Account" title="Me">
       {live && auth.profile ? (
-        <Card tone="plain" style={[styles.profile, { marginBottom: Spacing.md }]}>
+        <Card
+          tone="plain"
+          style={[styles.profile, { marginBottom: Spacing.md }]}
+          onPress={auth.profile.role === 'instructor' ? () => router.push({ pathname: '/instructor/[id]', params: { id: store.meId } }) : undefined}>
           <Avatar name={auth.profile.display_name} size={64} ring />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="title">{auth.profile.display_name}</Text>
@@ -104,7 +107,7 @@ export default function MeScreen() {
       ) : null}
 
       {live ? null : isInstructor && me ? (
-        <Card tone="plain" style={styles.profile}>
+        <Card tone="plain" style={styles.profile} onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: me.id } })}>
           <Avatar name={me.name} size={64} ring />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="title">{me.name}</Text>
@@ -113,6 +116,7 @@ export default function MeScreen() {
             </Text>
             {me.isFounding ? <Chip label="Founding instructor" icon="sparkles" /> : null}
           </View>
+          <Icon name="chevron-forward" size={18} color="textSecondary" />
         </Card>
       ) : (
         <Card tone="plain" style={styles.profile}>
