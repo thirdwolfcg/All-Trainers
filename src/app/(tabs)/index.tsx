@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ClassCard, InstructorRow } from '@/components/cards';
 import { ConfirmSheet } from '@/components/confirm-sheet';
 import { InstructorClassActions } from '@/components/instructor-class-actions';
+import { PreviewSwitch } from '@/components/preview-switch';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -88,6 +89,7 @@ function ClientHome() {
             ? `hiii ${firstName}. ${today === 1 ? 'One of your people is' : `${today} of your people are`} teaching today.`
             : `hiii ${firstName}. Here's where your people are teaching this week.`
       }>
+      <PreviewSwitch />
       <Pressable
         onPress={() => router.push('/discover')}
         style={styles.findButton}
@@ -171,6 +173,7 @@ function InstructorWeek() {
           </Text>
         </Pressable>
       }>
+      <PreviewSwitch />
       {asksForMe.length ? (
         <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
           <View style={styles.inline}>

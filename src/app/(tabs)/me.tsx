@@ -3,14 +3,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, Divider, Icon, Text, type IconName } from '@/components/ui';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { birthdayLabel } from '@/lib/dates';
 import { InviteCard } from '@/components/invite-card';
 import { useAuth } from '@/lib/auth';
 import { friendInviteMessage, instructorInviteMessage } from '@/lib/invite';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type Role } from '@/lib/types';
+import { StyleLabels } from '@/lib/types';
 
 /** A settings line. Ones that don't work yet say so instead of pretending to be tappable. */
 function SettingRow({ icon, label, value, onPress }: { icon: IconName; label: string; value?: string; onPress?: () => void }) {
@@ -74,37 +74,6 @@ export default function MeScreen() {
         </Card>
       ) : null}
 
-      {/* Preview switch, demo only */}
-      {auth.demo ? (
-      <Card tone="surface" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-        <Text variant="caption" color="textSecondary">
-          PREVIEW MODE
-        </Text>
-        <View style={styles.segment}>
-          {(['client', 'instructor'] as Role[]).map((r) => {
-            const active = store.role === r;
-            return (
-              <Pressable
-                key={r}
-                onPress={() => {
-                  store.setRole(r);
-                  router.replace('/');
-                }}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                style={[styles.segmentItem, active && styles.segmentActive]}>
-                <Text variant="smallStrong" color={active ? 'primaryDeep' : 'textSecondary'}>
-                  {r === 'client' ? 'Client view' : 'Instructor view'}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text variant="small" color="textSecondary">
-          Switch sides to see the app the way clients and instructors will.
-        </Text>
-      </Card>
-      ) : null}
 
       {live ? null : isInstructor && me ? (
         <Card tone="plain" style={styles.profile} onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: me.id } })}>
@@ -208,9 +177,6 @@ export default function MeScreen() {
 }
 
 const styles = StyleSheet.create({
-  segment: { flexDirection: 'row', backgroundColor: Colors.surfaceStrong, borderRadius: Radius.pill, padding: 4 },
-  segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: Radius.pill },
-  segmentActive: { backgroundColor: Colors.background },
   profile: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   setting: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14 },
 });
