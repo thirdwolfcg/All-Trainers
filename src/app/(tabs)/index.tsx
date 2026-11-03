@@ -100,23 +100,11 @@ function ClientHome() {
             : `hiii ${firstName}. Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
-      <Pressable
-        onPress={() => router.push('/discover')}
-        style={styles.findButton}
-        accessibilityRole="button"
-        accessibilityLabel="Find instructors to follow">
-        <Icon name="search" size={18} color="textSecondary" />
-        <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
-          Find instructors to follow
-        </Text>
-        <Icon name="arrow-forward" size={18} color="primary" />
-      </Pressable>
-
       <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
         <View style={styles.inline}>
           <Icon name="checkmark-circle" size={18} color="primary" />
           <Text variant="eyebrow" color="primary">
-            Your week{myWeek.length ? ` · ${myWeek.length} booked` : ''}
+            Your schedule{myWeek.length ? ` · ${myWeek.length} this week` : ''}
           </Text>
         </View>
         {myWeek.length ? (
@@ -151,10 +139,22 @@ function ClientHome() {
           })
         ) : (
           <Text variant="small" color="textSecondary">
-            Nothing booked yet. Booked a class? Tap &quot;Booked it&quot; on it and it lands here.
+            Nothing on your schedule yet. Booked a class? Tap &quot;Booked it&quot; on it below and it shows up here.
           </Text>
         )}
       </Card>
+
+      <Pressable
+        onPress={() => router.push('/discover')}
+        style={styles.findButton}
+        accessibilityRole="button"
+        accessibilityLabel="Find instructors to follow">
+        <Icon name="search" size={18} color="textSecondary" />
+        <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
+          Find instructors to follow
+        </Text>
+        <Icon name="arrow-forward" size={18} color="primary" />
+      </Pressable>
 
       {followingCount === 0 ? (
         <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
