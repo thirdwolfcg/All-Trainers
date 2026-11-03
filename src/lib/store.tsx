@@ -3,7 +3,7 @@
  * on reload. When Supabase is connected, each action here becomes a query
  * against the tables in supabase/migrations/0001_initial.sql.
  */
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
   ME_CLIENT_ID,
@@ -18,6 +18,7 @@ import {
   studios,
 } from '@/data/sample';
 
+import { useAuth } from './auth';
 import type { AttendanceEntry, ClassSession, Client, Conversation, Instructor, Post, Role, Studio, SubRequest } from './types';
 
 type Store = {
@@ -85,12 +86,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState(() => buildAttendance(now));
   const [conversations, setConversations] = useState(() => buildConversations(now));
   const [following, setFollowing] = useState(() => new Set(['maya', 'jordan', 'priya']));
-  const [premium] = useState(() => new Set(['maya']));
+  const [premium, setPremium] = useState(() => new Set(['maya']));
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
 
   const meId = role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
+
+  // A real account starts fresh: no sample follows, classes, clients or messages
+  // tied to "me". Other sample instructors stay so there is someone to discover.
+  // (Until screens read live data, "me" keeps its sample id internally.)
+  const { session, profile, demo } = useAuth();
+  const liveKey = !demo && session && profile ? `${profile.id}:${profile.role}` : null;
+  useEffect(() => {
+    if (!liveKey || !profile) return;
+    const me = profile.role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
+    const notMine = <T extends Record<string, unknown>>(rows: T[], keys: (keyof T)[]) => rows.filter((r) => !keys.some((k) => r[k] === me));
+    setFollowing(new Set());
+    setPremium(new Set());
+    setAttendance((prev) => notMine(prev, ['clientId', 'instructorId']));
+    setConversations((prev) => notMine(prev, ['clientId', 'instructorId']));
+    if (profile.role === 'instructor') {
+      setInstructors((prev) =>
+        prev.map((i) =>
+          i.id === me
+            ? {
+                ...i,
+                name: profile.display_name,
+                handle: profile.handle ?? i.handle,
+                bio: profile.bio ?? '',
+                styles: profile.styles ?? [],
+                neighborhood: profile.neighborhood ?? '',
+                instagram: profile.instagram_handle ?? undefined,
+                tiktok: profile.tiktok_handle ?? undefined,
+                isFounding: true,
+              }
+            : i,
+        ),
+      );
+      setClasses((prev) => prev.filter((c) => c.instructorId !== me && c.subInstructorId !== me));
+      setPosts((prev) => prev.filter((p) => p.instructorId !== me));
+      setClients([]);
+      setSubRequests((prev) => notMine(prev, ['fromInstructorId', 'toInstructorId']));
+    }
+    // Only when a different real account signs in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveKey]);
 
   const store = useMemo<Store>(() => {
     const instructorById = new Map(instructors.map((i) => [i.id, i]));

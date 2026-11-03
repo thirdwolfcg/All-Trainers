@@ -42,7 +42,7 @@ export default function SignUp() {
   }
 
   return (
-    <Screen eyebrow="New here" title="Let's get you in" subtitle="Takes a sec. Following your faves and seeing their schedules is free." padTop={false}>
+    <Screen eyebrow="New here" title="Hiii, welcome in" subtitle="Takes a sec, and it's free. Let's get you set up." padTop={false}>
       <View style={{ gap: Spacing.lg }}>
         <Field
           label="Email"
