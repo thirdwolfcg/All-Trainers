@@ -58,6 +58,15 @@ export default function Welcome() {
           <Button label="Let's go" onPress={() => router.push('/sign-up')} />
           <Button kind="outline" label="I already have one" onPress={() => router.push('/sign-in')} />
           <Button kind="ghost" label="Just let me look around" onPress={enterDemo} />
+          <Text
+            variant="smallStrong"
+            color="primary"
+            align="center"
+            accessibilityRole="link"
+            onPress={() => router.push('/teach')}
+            style={{ marginTop: Spacing.sm }}>
+            Teach classes? This way ›
+          </Text>
         </View>
       </View>
     </View>

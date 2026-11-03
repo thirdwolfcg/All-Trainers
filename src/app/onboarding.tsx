@@ -5,6 +5,7 @@ import { Screen } from '@/components/screen';
 import { Button, Card, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { useStore } from '@/lib/store';
 import { StyleLabels, type Role, type Style } from '@/lib/types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -33,7 +34,8 @@ function RoleCard({ icon, title, body, selected, onPress }: { icon: IconName; ti
 export default function Onboarding() {
   const { createProfile, signOut, session } = useAuth();
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState<Role | null>(null);
+  const { pendingRole } = useStore();
+  const [role, setRole] = useState<Role | null>(pendingRole);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');

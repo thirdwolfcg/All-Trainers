@@ -7,9 +7,10 @@ import { PUBLIC_APP_URL, followUrl } from './links';
  * they open that instructor's follow page. The ref parameter credits whoever
  * sent the invite, for example toward a founding-instructor perk or a client reward.
  */
-export function inviteLink(params: { ref: string; instructor?: string }) {
+export function inviteLink(params: { ref: string; instructor?: string; forInstructors?: boolean }) {
   const q = new URLSearchParams({ ref: params.ref }).toString();
-  return params.instructor ? `${followUrl(params.instructor)}?${q}` : `${PUBLIC_APP_URL}/welcome?${q}`;
+  if (params.instructor) return `${followUrl(params.instructor)}?${q}`;
+  return `${PUBLIC_APP_URL}/${params.forInstructors ? 'teach' : 'welcome'}?${q}`;
 }
 
 const first = (name: string) => name.split(' ')[0];
@@ -19,7 +20,7 @@ export function coworkerInviteMessage(opts: { fromName: string; fromHandle: stri
   return (
     `Hey! It's ${first(opts.fromName)}. I'm on All Trainers, where my clients follow my schedule across every studio I teach at. ` +
     `It's also how ${opts.studioName} instructors find subs for each other. Founding instructors are free right now, join me: ` +
-    inviteLink({ ref: opts.fromHandle })
+    inviteLink({ ref: opts.fromHandle, forInstructors: true })
   );
 }
 
@@ -45,7 +46,7 @@ export function instructorInviteMessage(opts: { fromName: string; refId: string 
   return (
     `Hi! It's ${first(opts.fromName)} from your class. I'd follow you everywhere if you were on All Trainers, ` +
     `it's an app where clients can see your schedule across every studio you teach at, no more hunting for IG stories. ` +
-    `It's free for founding instructors right now: ${inviteLink({ ref: opts.refId })}`
+    `It's free for founding instructors right now: ${inviteLink({ ref: opts.refId, forInstructors: true })}`
   );
 }
 

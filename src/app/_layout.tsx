@@ -83,6 +83,7 @@ function Navigator() {
       }}>
       {/* Open to everyone: where instructor QR codes and shared links land */}
       <Stack.Screen name="follow/[handle]" options={{ headerShown: false }} />
+      <Stack.Screen name="teach" options={{ headerShown: false }} />
 
       <Stack.Protected guard={!signedIn && !demo} redirectTo={profile || demo ? '/' : '/onboarding'}>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
