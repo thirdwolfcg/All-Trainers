@@ -25,7 +25,7 @@ export default function MyQr() {
 
   return (
     <>
-      <Screen back eyebrow="Share" title="My QR code">
+      <Screen back title="My QR code">
         <View style={styles.card}>
           <Avatar name={me.name} size={56} />
           <Text variant="title" align="center">
