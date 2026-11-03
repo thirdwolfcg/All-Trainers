@@ -39,7 +39,7 @@ export default function MyQr() {
           <View style={styles.qr}>
             <QrCode value={url} size={232} />
           </View>
-          <Text variant="small" color="textSecondary" align="center">
+          <Text variant="quote" color="textSecondary" align="center" style={styles.aside}>
             Point a phone camera here. No app needed to see my schedule.
           </Text>
         </View>
@@ -52,10 +52,10 @@ export default function MyQr() {
         />
 
         <View style={styles.tips}>
-          <Text variant="eyebrow" color="textSecondary">
+          <Text variant="quote" color="textSecondary" style={styles.aside}>
             Where to put it
           </Text>
-          <Text variant="body" color="textSecondary">
+          <Text variant="quote" color="textSecondary" style={styles.aside}>
             Screenshot it for your IG story, ask the front desk to print it, or flash it on your phone at the end of class.
           </Text>
         </View>
@@ -65,6 +65,8 @@ export default function MyQr() {
 }
 
 const styles = StyleSheet.create({
+  // Soft, background-feel helper text: serif italic, smaller, secondary gray (still readable).
+  aside: { fontSize: 15, lineHeight: 22 },
   card: {
     alignItems: 'center',
     gap: Spacing.sm,
