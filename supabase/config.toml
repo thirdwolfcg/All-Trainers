@@ -1,0 +1,4 @@
+# Only what differs from Supabase defaults.
+[functions.describe-class]
+# The function verifies the user itself (auth.getUser), so the gateway check is off.
+verify_jwt = false

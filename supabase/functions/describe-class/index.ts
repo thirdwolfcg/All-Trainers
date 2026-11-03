@@ -3,6 +3,8 @@
 // The Anthropic API key lives only here, as the ANTHROPIC_API_KEY secret in Supabase.
 // It is never in the app or the repo. Only signed-in instructors can call this,
 // and each one is capped at DAILY_LIMIT drafts per 24 hours.
+// Deploy with JWT verification off (verify_jwt = false): the function checks the
+// signed-in user itself with auth.getUser(), which works with new signing keys.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -39,7 +41,10 @@ Deno.serve(async (req) => {
   if (!authHeader) return json({ error: 'Please sign in again.' }, 401);
 
   // Act as the signed-in user so database rules (RLS) apply.
-  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  // The public key: the legacy anon key if the project has one, otherwise the
+  // publishable key the app sends along. Neither grants anything on its own.
+  const publicKey = Deno.env.get('SUPABASE_ANON_KEY') || req.headers.get('apikey') || '';
+  const sb = createClient(Deno.env.get('SUPABASE_URL')!, publicKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
