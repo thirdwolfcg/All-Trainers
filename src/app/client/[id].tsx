@@ -102,7 +102,7 @@ export default function ClientDetail() {
         <TextInput
           value={notes}
           onChangeText={setNotes}
-          placeholder="Favorite spot, goals, music taste, anything to remember"
+          placeholder="Goals, injury, music taste, anything to remember"
           placeholderTextColor={Colors.textMuted}
           multiline
           style={styles.notes}
