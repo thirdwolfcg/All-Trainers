@@ -8,11 +8,10 @@ import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
-import { addDays, dayLabel, daysUntilBirthday, isSameDay, shortDay, startOfDay } from '@/lib/dates';
+import { addDays, dayLabel, isSameDay, shortDay, startOfDay } from '@/lib/dates';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
-import { clientName } from '@/lib/names';
 
 export default function HomeScreen() {
   const { role } = useStore();
@@ -154,10 +153,6 @@ function InstructorWeek() {
   const classToConfirm = askToConfirm ? store.classes.find((c) => c.id === askToConfirm.classId) : undefined;
   const studiosThisWeek = new Set(mine.map((c) => c.studioId)).size;
 
-  const soonBirthdays = store.clients
-    .filter((c) => c.birthday && daysUntilBirthday(c.birthday) <= 7)
-    .sort((a, b) => daysUntilBirthday(a.birthday!) - daysUntilBirthday(b.birthday!));
-
   const byDay = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(today, i);
     return { day: d, classes: mine.filter((c) => isSameDay(new Date(c.startsAt), d)) };
@@ -176,46 +171,6 @@ function InstructorWeek() {
           </Text>
         </Pressable>
       }>
-      {soonBirthdays.length ? (
-        <Card tone="gray" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-          <View style={styles.inline}>
-            <Icon name="gift-outline" size={18} color="primary" />
-            <Text variant="eyebrow" color="primary">
-              Birthday szn
-            </Text>
-          </View>
-          {soonBirthdays.map((c) => {
-            const n = daysUntilBirthday(c.birthday!);
-            return (
-              <View key={c.id} style={styles.inline}>
-                <Pressable
-                  style={[styles.inline, { flex: 1 }]}
-                  onPress={() => router.push({ pathname: '/client/[id]', params: { id: c.id } })}
-                  accessibilityRole="link"
-                  accessibilityLabel={`Open ${clientName(c.name)}'s profile`}>
-                  <Avatar name={c.name} size={32} plain />
-                  <Text variant="body" style={{ flex: 1 }}>
-                    <Text variant="bodyStrong" style={{ textDecorationLine: 'underline' }}>
-                      {clientName(c.name)}
-                    </Text>
-                    {n === 0 ? ' is celebrating today' : n === 1 ? ' tomorrow' : ` in ${n} days`}
-                  </Text>
-                </Pressable>
-                <Button
-                  size="sm"
-                  kind="outline"
-                  label="Send love"
-                  onPress={() => {
-                    const conv = store.conversationWith(me.id, c.id);
-                    router.push({ pathname: '/chat/[id]', params: { id: conv.id } });
-                  }}
-                />
-              </View>
-            );
-          })}
-        </Card>
-      ) : null}
-
       {asksForMe.length ? (
         <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
           <View style={styles.inline}>

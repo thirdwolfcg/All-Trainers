@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { BirthdayCard } from '@/components/birthday-card';
 import { Screen } from '@/components/screen';
 import { Avatar, Card, Row, Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -129,6 +130,7 @@ function ClientList() {
 
   return (
     <Screen eyebrow="Your people" title="Clients" subtitle={`${store.clients.length} people follow you. Every new follower lands here automatically.`}>
+      <BirthdayCard />
       <View style={styles.search}>
         <Icon name="search" size={18} color="textMuted" />
         <TextInput
