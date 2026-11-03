@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Button, Chip, Field, Text } from '@/components/ui';
+import { Button, Card, Chip, Field, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { describeClass } from '@/lib/ai';
+import { useAuth } from '@/lib/auth';
 import { addDays, dayLabel, startOfDay } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
@@ -43,6 +45,28 @@ export default function NewClass() {
   const [dayOffset, setDayOffset] = useState(1);
   const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState(50);
+  const { demo } = useAuth();
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string>();
+  const [suggestion, setSuggestion] = useState<string>();
+
+  const askAi = async () => {
+    setAiBusy(true);
+    setAiError(undefined);
+    const res = await describeClass(
+      {
+        title: title.trim(),
+        style,
+        durationMin: duration,
+        studio: store.studio(studioId)?.name,
+        notes: description,
+      },
+      { demo },
+    );
+    setAiBusy(false);
+    if (res.description) setSuggestion(res.description);
+    else setAiError(res.error);
+  };
 
   const today = startOfDay(new Date());
   const canSave = title.trim().length > 1;
@@ -82,6 +106,54 @@ export default function NewClass() {
           style={{ minHeight: 96, paddingTop: 12, textAlignVertical: 'top' }}
           hint="Optional, but clients love knowing what they're signing up for."
         />
+        {suggestion ? (
+          <Card tone="purple" style={{ gap: Spacing.md }}>
+            <Text variant="eyebrow" color="primary">
+              Here&apos;s a draft
+            </Text>
+            <Text variant="body">{suggestion}</Text>
+            <View style={styles.wrap}>
+              <Button
+                size="sm"
+                icon="checkmark"
+                label="Use this"
+                onPress={() => {
+                  setDescription(suggestion);
+                  setSuggestion(undefined);
+                }}
+              />
+              <Button size="sm" kind="outline" icon="refresh" label={aiBusy ? 'Writing…' : 'Try another'} disabled={aiBusy} onPress={askAi} />
+              <Button size="sm" kind="ghost" label="Never mind" onPress={() => setSuggestion(undefined)} />
+            </View>
+            <Text variant="small" color="textSecondary">
+              {demo
+                ? 'Preview mode uses a sample writer. Signed-in instructors get the real AI.'
+                : 'Written with AI. Give it a read and make it sound like you before you post.'}
+            </Text>
+          </Card>
+        ) : (
+          <View style={{ gap: Spacing.sm }}>
+            <Button
+              kind="soft"
+              size="sm"
+              icon="sparkles-outline"
+              label={aiBusy ? 'Writing…' : description.trim() ? 'Polish what I wrote' : 'Help me write it'}
+              disabled={aiBusy || title.trim().length < 2}
+              onPress={askAi}
+              style={{ alignSelf: 'flex-start' }}
+            />
+            <Text variant="small" color="textSecondary">
+              {title.trim().length < 2
+                ? 'Add a class name and AI can draft this for you.'
+                : 'Jot a few words above (level, vibe, what to bring) for a better draft.'}
+            </Text>
+          </View>
+        )}
+        {aiError ? (
+          <Text variant="small" color="blushDeep">
+            {aiError}
+          </Text>
+        ) : null}
       </View>
 
       <Label>Style</Label>

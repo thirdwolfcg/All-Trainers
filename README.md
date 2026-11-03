@@ -21,6 +21,18 @@ The `.env` file holds the Supabase project URL and publishable key. Both are mea
 
 The latest build runs at **https://thirdwolfcg.github.io/All-Trainers/** (GitHub Pages, `gh-pages` branch). To update it, run `scripts/deploy-web-preview.sh`.
 
+## AI writing help
+
+Instructors can tap "Help me write it" when adding a class. The app calls the
+`describe-class` Edge Function, which calls Claude (claude-haiku-5-5) with the
+key stored only as the Supabase secret `ANTHROPIC_API_KEY`. Each instructor is
+capped at 25 drafts per 24 hours (table `ai_usage`, migration 0006). Preview
+mode uses a built-in template writer instead of the AI.
+
+Deploy: `supabase functions deploy describe-class` and
+`supabase secrets set ANTHROPIC_API_KEY=...` (or paste the function into the
+dashboard's Edge Functions editor and add the secret under Edge Functions, Secrets).
+
 ## Stack
 
 | Piece | Choice | Why |
@@ -47,7 +59,8 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0005 in order)
+supabase/migrations/     database schema with row level security (run 0001 through 0006 in order)
+supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
 
