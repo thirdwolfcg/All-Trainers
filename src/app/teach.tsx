@@ -119,7 +119,7 @@ export default function Teach() {
                   accessibilityRole="link"
                   onPress={() => router.replace('/welcome')}
                   style={{ marginTop: Spacing.sm }}>
-                  Just here to sweat? This way ›
+                  Here for the burn, not the mic? ›
                 </Text>
               </>
             )}
