@@ -7,7 +7,11 @@ import { Button, Card, Field, Icon, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 
+/** A different hello each time someone lands on sign up. */
+const GREETINGS = ['Hiii, you made it', 'Hiii, glad you’re here', 'Hiii, new friend'];
+
 export default function SignUp() {
+  const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,7 +46,7 @@ export default function SignUp() {
   }
 
   return (
-    <Screen eyebrow="New here" title="Hiii, welcome in" subtitle="Takes a sec, and it's free. Let's get you set up." padTop={false}>
+    <Screen eyebrow="New here" title={greeting} subtitle="Takes a sec, and it's free. Let's get you set up." padTop={false}>
       <View style={{ gap: Spacing.lg }}>
         <Field
           label="Email"
