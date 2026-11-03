@@ -54,7 +54,7 @@ export default function TabLayout() {
           ) : null}
           <TabTrigger name="activity" href="/activity" asChild>
             <TabButton
-              label={isInstructor ? 'Clients' : 'My classes'}
+              label={isInstructor ? 'Followers' : 'My classes'}
               icon={isInstructor ? 'people-outline' : 'stats-chart-outline'}
               activeIcon={isInstructor ? 'people' : 'stats-chart'}
             />

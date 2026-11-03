@@ -1,12 +1,13 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
-import { ClassActions, useFollowToggle } from '@/components/cards';
+import { ClassActions, PostCard, useFollowToggle } from '@/components/cards';
 import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Chip, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
 import { dayLabel, timeRange } from '@/lib/dates';
+import { linkButton } from '@/lib/links';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
 
@@ -16,6 +17,7 @@ export default function ClassDetail() {
   const toggleFollow = useFollowToggle();
   const session = store.classes.find((c) => c.id === id);
   const instructor = session ? store.instructor(session.instructorId) : undefined;
+  const recipe = session?.recipePostId ? store.posts.find((p) => p.id === session.recipePostId) : undefined;
   const studio = session ? store.studio(session.studioId) : undefined;
 
   if (!session || !instructor || !studio) {
@@ -93,6 +95,24 @@ export default function ClassDetail() {
             {session.description ?? `${instructor.name.split(' ')[0]} hasn't added a description yet. Slide into their DMs if you have questions.`}
           </Text>
         </View>
+
+        {session.playlistUrl || recipe ? (
+          <View style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+            <Text variant="eyebrow" color="textSecondary">
+              Extras
+            </Text>
+            {session.playlistUrl ? (
+              <Button
+                kind="outline"
+                icon={linkButton(session.playlistUrl, 'playlist').icon}
+                label={linkButton(session.playlistUrl, 'playlist').label === 'Open playlist' ? 'The class playlist' : linkButton(session.playlistUrl, 'playlist').label}
+                onPress={() => Linking.openURL(session.playlistUrl!)}
+                style={{ alignSelf: 'flex-start' }}
+              />
+            ) : null}
+            {recipe ? <PostCard post={recipe} /> : null}
+          </View>
+        ) : null}
 
         {isClient ? <ClassActions session={session} size="md" /> : null}
         {isOwner ? <InstructorClassActions session={session} align="start" /> : null}

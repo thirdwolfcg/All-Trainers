@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 
 import { InstructorRow } from '@/components/cards';
 import { InviteCard } from '@/components/invite-card';
+import { Tip } from '@/components/tip';
 import { Screen } from '@/components/screen';
 import { Chip, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -20,6 +21,8 @@ export default function Discover() {
   const [query, setQuery] = useState('');
   const [style, setStyle] = useState<Style | null>(null);
   const [hood, setHood] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilters = Number(!!style) + Number(!!hood);
 
   const neighborhoods = useMemo(() => [...new Set(store.instructors.map((i) => i.neighborhood))].sort(), [store.instructors]);
   const upcoming = (id: string) =>
@@ -42,7 +45,10 @@ export default function Discover() {
   const filtering = !!q || !!style || !!hood;
 
   return (
-    <Screen eyebrow="Discover" title="Find your people" subtitle="Search by name, @handle, studio or neighborhood. Tap Follow and their classes land on your home screen.">
+    <Screen
+      eyebrow="Discover"
+      title="Find your people"
+      subtitle="Search by name, @handle, studio or neighborhood. Tap Follow and their classes land on your home screen.">
       <View style={styles.search}>
         <Icon name="search" size={18} color="textSecondary" />
         <TextInput
@@ -61,25 +67,49 @@ export default function Discover() {
             <Icon name="close-circle" size={18} color="textSecondary" />
           </Pressable>
         ) : null}
+        <Pressable
+          onPress={() => setShowFilters(!showFilters)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={showFilters ? 'Hide filters' : 'Show filters'}
+          accessibilityState={{ expanded: showFilters }}
+          style={[styles.filterButton, (showFilters || activeFilters > 0) && styles.filterButtonOn]}>
+          <Icon name="options-outline" size={18} color={showFilters || activeFilters > 0 ? 'primary' : 'textSecondary'} />
+          {activeFilters ? (
+            <Text variant="smallStrong" color="primary">
+              {activeFilters}
+            </Text>
+          ) : null}
+        </Pressable>
       </View>
 
-      <Text variant="eyebrow" color="textSecondary" style={styles.filterLabel}>
-        Style
-      </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {allStyles.map((s) => (
-          <Chip key={s} label={StyleLabels[s]} selected={style === s} onPress={() => setStyle(style === s ? null : s)} />
-        ))}
-      </ScrollView>
+      <Tip
+        id="tip-filters"
+        text="Follow instructors here and their classes land on Home. The sliders icon filters by style or neighborhood."
+        pointer="up"
+        style={{ marginTop: Spacing.sm }}
+      />
+      {showFilters ? (
+        <>
+          <Text variant="eyebrow" color="textSecondary" style={styles.filterLabel}>
+            Style
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            {allStyles.map((s) => (
+              <Chip key={s} label={StyleLabels[s]} selected={style === s} onPress={() => setStyle(style === s ? null : s)} />
+            ))}
+          </ScrollView>
 
-      <Text variant="eyebrow" color="textSecondary" style={styles.filterLabel}>
-        Neighborhood
-      </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {neighborhoods.map((n) => (
-          <Chip key={n} label={n} selected={hood === n} onPress={() => setHood(hood === n ? null : n)} />
-        ))}
-      </ScrollView>
+          <Text variant="eyebrow" color="textSecondary" style={styles.filterLabel}>
+            Neighborhood
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            {neighborhoods.map((n) => (
+              <Chip key={n} label={n} selected={hood === n} onPress={() => setHood(hood === n ? null : n)} />
+            ))}
+          </ScrollView>
+        </>
+      ) : null}
 
       <View style={styles.tip}>
         <Icon name="qr-code-outline" size={18} color="primary" />
@@ -109,7 +139,10 @@ export default function Discover() {
         eyebrow="Your fave not on here?"
         title="Get them on All Trainers"
         body="Text your instructor an invite. Founding instructors join free."
-        message={instructorInviteMessage({ fromName: me.name, refId: me.refId })}
+        message={instructorInviteMessage({
+          fromName: me.name,
+          refId: me.refId,
+        })}
         icon="heart-outline"
         textLabel="Text my instructor"
         style={{ marginTop: Spacing.xxl }}
@@ -119,6 +152,15 @@ export default function Discover() {
 }
 
 const styles = StyleSheet.create({
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+  },
+  filterButtonOn: { backgroundColor: Colors.primarySoft },
   search: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addToCalendar } from '@/lib/calendar';
@@ -276,24 +276,33 @@ const postKindLabel: Record<Post['kind'], string> = {
   note: 'Update',
 };
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, showAuthor = false }: { post: Post; showAuthor?: boolean }) {
   const store = useStore();
   const toast = useToast();
   const instructor = store.instructor(post.instructorId);
   if (!instructor) return null;
 
   const isOwner = store.role === 'instructor' && store.meId === post.instructorId;
-  const unlocked = !post.isPremium || isOwner || (store.role === 'client' && store.premium.has(post.instructorId));
 
   return (
     <Row style={{ gap: Spacing.sm }}>
+      {showAuthor ? (
+        <Pressable
+          style={styles.inline}
+          onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}
+          accessibilityRole="link">
+          <Avatar name={instructor.name} size={24} />
+          <Text variant="smallStrong" color="primary">
+            {instructor.name}
+          </Text>
+        </Pressable>
+      ) : null}
       <View style={styles.inline}>
         <Icon name={postIcons[post.kind]} size={14} color="primary" />
         <Text variant="eyebrow" color="textSecondary">
           {postKindLabel[post.kind]} · {relativeTime(post.createdAt)}
         </Text>
         <View style={{ flex: 1 }} />
-        {post.isPremium ? <Chip label="Premium" icon="diamond-outline" tone="blush" /> : null}
         {isOwner ? (
           <Pressable
             accessibilityRole="button"
@@ -309,36 +318,22 @@ export function PostCard({ post }: { post: Post }) {
       </View>
 
       <Text variant="heading">{post.title}</Text>
-
-      {unlocked ? (
-        <>
-          <Text variant="body" color="textSecondary">
-            {post.body}
-          </Text>
-          {post.linkUrl ? (
-            <Button
-              size="sm"
-              kind="outline"
-              icon={linkButton(post.linkUrl, post.kind).icon}
-              label={linkButton(post.linkUrl, post.kind).label}
-              onPress={() => Linking.openURL(post.linkUrl!)}
-              style={{ alignSelf: 'flex-start', marginTop: 4 }}
-            />
-          ) : null}
-        </>
-      ) : (
-        <Pressable style={styles.locked} accessibilityRole="button">
-          <Icon name="lock-closed" size={16} color="primaryDeep" />
-          <View style={{ flex: 1 }}>
-            <Text variant="smallStrong" color="primaryDeep">
-              For {instructor.name.split(' ')[0]}&apos;s inner circle
-            </Text>
-            <Text variant="small" color="textSecondary">
-              Go premium for form tips, extras and one on one time.
-            </Text>
-          </View>
-        </Pressable>
-      )}
+      {post.imageUrl ? (
+        <Image source={{ uri: post.imageUrl }} style={styles.postImage} resizeMode="cover" accessibilityLabel={`Photo for ${post.title}`} />
+      ) : null}
+      <Text variant="body" color="textSecondary">
+        {post.body}
+      </Text>
+      {post.linkUrl ? (
+        <Button
+          size="sm"
+          kind="outline"
+          icon={linkButton(post.linkUrl, post.kind).icon}
+          label={linkButton(post.linkUrl, post.kind).label}
+          onPress={() => Linking.openURL(post.linkUrl!)}
+          style={{ alignSelf: 'flex-start', marginTop: 4 }}
+        />
+      ) : null}
     </Row>
   );
 }
@@ -351,12 +346,5 @@ const styles = StyleSheet.create({
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },
   instructorRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  locked: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'center',
-    backgroundColor: Colors.primarySoft,
-    padding: Spacing.md,
-    borderRadius: Radius.sm,
-  },
+  postImage: { width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.sm, backgroundColor: Colors.surface },
 });

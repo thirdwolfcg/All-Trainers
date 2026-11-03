@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, Divider, Icon, Text, type IconName } from '@/components/ui';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { birthdayLabel } from '@/lib/dates';
 import { InviteCard } from '@/components/invite-card';
 import { useAuth } from '@/lib/auth';
@@ -170,7 +170,14 @@ export default function MeScreen() {
         <Divider />
         <SettingRow icon="shield-checkmark-outline" label="Privacy" onPress={() => router.push('/settings/privacy')} />
         <Divider />
-        <SettingRow icon="compass-outline" label="Take the tour" onPress={() => router.push('/tour')} />
+        <SettingRow
+          icon="bulb-outline"
+          label="Show tips again"
+          onPress={() => {
+            store.showTips();
+            router.replace('/');
+          }}
+        />
       </Card>
 
       <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.xl }}>

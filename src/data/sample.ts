@@ -168,6 +168,9 @@ export function buildClasses(now = new Date()): ClassSession[] {
       status: s.status ?? 'scheduled',
       note: s.note,
       description: descriptions[s.title],
+      // A couple of classes come with extras so the class page shows them off.
+      ...(s.title === 'Reformer Flow' ? { playlistUrl: 'https://open.spotify.com', recipePostId: 'p2' } : {}),
+      ...(s.title === 'Throwback Ride' ? { playlistUrl: 'https://open.spotify.com' } : {}),
     };
   });
 }

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ClassCard, InstructorRow } from '@/components/cards';
+import { ClassCard, InstructorRow, PostCard } from '@/components/cards';
 import { ConfirmSheet } from '@/components/confirm-sheet';
 import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { PreviewSwitch } from '@/components/preview-switch';
@@ -10,10 +10,12 @@ import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addDays, dayLabel, isSameDay, shortDay, startOfDay, timeLabel } from '@/lib/dates';
+import { useAuth } from '@/lib/auth';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { greetName } from '@/lib/names';
+import { Tip } from '@/components/tip';
 
 export default function HomeScreen() {
   const { role } = useStore();
@@ -78,6 +80,13 @@ function ClientHome() {
   const today = counts[0];
   const suggestions = store.instructors.filter((i) => !store.following.has(i.id)).slice(0, 3);
   const followingCount = store.following.size;
+  const latestPosts = store.posts
+    .filter((p) => store.following.has(p.instructorId))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 3);
+  const auth = useAuth();
+  const hasBirthday = !auth.demo && auth.session ? !!auth.birthday : !!store.clients.find((c) => c.id === 'me')?.birthday;
+  const needsBirthday = !hasBirthday && !store.dismissedTips.has('birthday-nudge');
   const now = new Date();
   const myWeek = store.classes
     .filter(
@@ -101,6 +110,7 @@ function ClientHome() {
             : `Hiii ${firstName}! Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
+      <Tip id="tip-schedule" text="This is your schedule. Booked a class somewhere? Tap “Booked it” on it and it lands here." />
       <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
         <View style={styles.inline}>
           <Icon name="checkmark-circle" size={18} color="primary" />
@@ -145,24 +155,36 @@ function ClientHome() {
         )}
       </Card>
 
-      <Pressable
-        onPress={() => router.push('/discover')}
-        style={styles.findButton}
-        accessibilityRole="button"
-        accessibilityLabel="Find instructors to follow">
-        <Icon name="search" size={18} color="textSecondary" />
-        <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
-          Find instructors to follow
-        </Text>
-        <Icon name="arrow-forward" size={18} color="primary" />
-      </Pressable>
 
       {followingCount === 0 ? (
-        <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
+        <>
+          <Tip id="tip-follow" text="Start here. Find the instructors you take class with and follow them." pointer="none" />
+          <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
+          <Pressable
+            onPress={() => router.push('/discover')}
+            style={styles.findButton}
+            accessibilityRole="button"
+            accessibilityLabel="Find instructors to follow">
+            <Icon name="search" size={18} color="textSecondary" />
+            <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
+              Find instructors to follow
+            </Text>
+            <Icon name="arrow-forward" size={18} color="primary" />
+          </Pressable>
+          {suggestions.length ? (
+            <>
+              <SectionHeader title="Start with these" action="See all" onAction={() => router.push('/discover')} />
+              {suggestions.map((i) => (
+                <InstructorRow key={i.id} instructor={i} />
+              ))}
+            </>
+          ) : null}
+        </>
       ) : (
         <>
           <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
           <DayTabs selected={day} onSelect={setDay} counts={counts} />
+          <Tip id="tip-book" text="“Book it” opens the studio’s app, Mindbody or ClassPass. Tap a class to see the details." style={{ marginTop: Spacing.md }} />
           <View style={{ marginBottom: Spacing.xxl }}>
             {dayClasses.length ? (
               dayClasses.map((c) => <ClassCard key={c.id} session={c} />)
@@ -170,17 +192,35 @@ function ClientHome() {
               <EmptyState icon="cafe-outline" title="Rest day energy" body="None of your people are teaching that day. Pick another day or find someone new." />
             )}
           </View>
+
+          {needsBirthday ? (
+            <Card tone="gray" style={{ gap: Spacing.sm, marginBottom: Spacing.xxl }}>
+              <View style={styles.inline}>
+                <Icon name="gift-outline" size={18} color="primary" />
+                <Text variant="eyebrow" color="primary">
+                  When&apos;s your birthday?
+                </Text>
+              </View>
+              <Text variant="small" color="textSecondary">
+                Your instructors love to celebrate. Month and day only, and only people you follow see it.
+              </Text>
+              <View style={[styles.inline, { marginTop: 4 }]}>
+                <Button size="sm" label="Add it" onPress={() => router.push('/settings/birthday')} />
+                <Button size="sm" kind="ghost" label="Not now" onPress={() => store.dismissTip('birthday-nudge')} />
+              </View>
+            </Card>
+          ) : null}
+
+          {latestPosts.length ? (
+            <>
+              <SectionHeader title="Latest from your people" />
+              {latestPosts.map((p) => (
+                <PostCard key={p.id} post={p} showAuthor />
+              ))}
+            </>
+          ) : null}
         </>
       )}
-
-      {suggestions.length ? (
-        <>
-          <SectionHeader title="Fresh faces in Denver" action="See all" onAction={() => router.push('/discover')} />
-          {suggestions.map((i) => (
-            <InstructorRow key={i.id} instructor={i} />
-          ))}
-        </>
-      ) : null}
     </Screen>
   );
 }
@@ -229,6 +269,7 @@ function InstructorWeek() {
         </Pressable>
       }>
       <PreviewSwitch />
+      <Tip id="tip-qr" text="Tap My QR (top right) and flash it after class. One scan and they’re following you." pointer="none" />
       {asksForMe.length ? (
         <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
           <View style={styles.inline}>
@@ -303,11 +344,13 @@ function InstructorWeek() {
         onClose={() => setConfirmAsk(null)}
       />
 
+      <Tip id="tip-add" text="Add every class you teach, at every studio. Set it to repeat so you only do it once." />
       <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl }}>
         <Button kind="primary" icon="add" label="Add class" accessibilityLabel="Add a class" onPress={() => router.push('/schedule/new')} style={{ flex: 1 }} />
         <Button kind="outline" icon="create-outline" label="Post" accessibilityLabel="Post to your feed" onPress={() => router.push('/post/new')} style={{ flex: 1 }} />
       </View>
 
+      <Tip id="tip-sub" text="Can’t make a class? Tap “Need a sub” under it to ask instructors at the same studio." />
       {byDay.length ? (
         byDay.map((g) => (
           <View key={g.day.toISOString()} style={{ marginBottom: Spacing.xl }}>

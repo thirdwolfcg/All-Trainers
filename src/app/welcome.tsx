@@ -10,7 +10,7 @@ import { useStore } from '@/lib/store';
 export default function Welcome() {
   const insets = useSafeAreaInsets();
   const { enterDemo } = useAuth();
-  const { setPendingTour } = useStore();
+  const { showTips } = useStore();
 
   return (
     <ScrollView
@@ -66,7 +66,7 @@ export default function Welcome() {
             kind="ghost"
             label="Just let me look around"
             onPress={() => {
-              setPendingTour(true);
+              showTips();
               enterDemo();
             }}
           />

@@ -14,6 +14,7 @@ import { useToast } from '@/lib/toast';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
+import { Tip } from '@/components/tip';
 
 export default function InstructorProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -163,6 +164,9 @@ export default function InstructorProfile() {
           </Card>
         ) : null}
 
+        {store.role === 'client' ? (
+          <Tip id="tip-feed" text="Their playlists, recipes, videos and tips live in Feed." />
+        ) : null}
         <View style={styles.tabs}>
           {(['schedule', 'feed'] as const).map((t) => (
             <Pressable

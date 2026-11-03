@@ -43,9 +43,12 @@ type Store = {
   /** Set by the instructor landing page so onboarding starts on "I teach classes". */
   pendingRole: Role | null;
   setPendingRole: (r: Role | null) => void;
-  /** Show the app tour once the person lands in the app (after onboarding or entering preview). */
-  pendingTour: boolean;
-  setPendingTour: (v: boolean) => void;
+  /** One-time tips (and nudges) the person has closed. */
+  dismissedTips: Set<string>;
+  dismissTip: (id: string) => void;
+  /** Tips show on the real screens after onboarding or entering preview, until each is dismissed. */
+  tipsOn: boolean;
+  showTips: () => void;
 
   following: Set<string>;
   premium: Set<string>; // instructors the client has premium with
@@ -58,6 +61,8 @@ type Store = {
   toggleAttended: (session: ClassSession) => void;
 
   addClass: (c: Omit<ClassSession, 'id' | 'status'>) => void;
+  /** Add many classes at once (a repeating series). */
+  addClasses: (cs: Omit<ClassSession, 'id' | 'status'>[]) => void;
   addPost: (p: Omit<Post, 'id' | 'createdAt' | 'instructorId'>) => void;
   deletePost: (id: string) => Post | undefined;
   restorePost: (p: Post) => void;
@@ -104,7 +109,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
-  const [pendingTour, setPendingTour] = useState(false);
+  const [tipsOn, setTipsOn] = useState(false);
+  const [dismissedTips, setDismissedTips] = useState<Set<string>>(() => new Set());
 
   const meId = role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
 
@@ -171,8 +177,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pendingFollow,
       pendingRole,
       setPendingRole,
-      pendingTour,
-      setPendingTour,
+      tipsOn,
+      showTips() {
+        setDismissedTips((prev) => new Set([...prev].filter((t) => !t.startsWith('tip-'))));
+        setTipsOn(true);
+      },
+      dismissedTips,
+      dismissTip(id) {
+        setDismissedTips((prev) => new Set(prev).add(id));
+      },
       setPendingFollow,
       posts,
       clients,
@@ -233,6 +246,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             },
           ];
         });
+      },
+
+      addClasses(cs) {
+        const stamp = Date.now();
+        setClasses((prev) =>
+          [...prev, ...cs.map((c, n) => ({ ...c, id: `c${stamp}-${n}`, status: 'scheduled' as const }))].sort(
+            (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+          ),
+        );
       },
 
       addClass(c) {
@@ -354,7 +376,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, pendingTour]);
+  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, tipsOn, dismissedTips]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

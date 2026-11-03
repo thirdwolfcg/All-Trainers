@@ -6,6 +6,7 @@ import { Screen } from '@/components/screen';
 import { Button, EmptyState } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useStore } from '@/lib/store';
+import { Tip } from '@/components/tip';
 
 /** Instructor's own feed: what followers see on the Feed tab of their profile. */
 export default function FeedScreen() {
@@ -16,6 +17,7 @@ export default function FeedScreen() {
 
   return (
     <Screen eyebrow="Your feed" title="Feed" subtitle="Spill the tea, share the recipes, drop the playlists. It all lands on your profile for your people.">
+      <Tip id="tip-post" text="Post updates, photos, videos, recipes and playlists. They show on your profile." />
       <Button icon="create-outline" label="New post" onPress={() => router.push('/post/new')} style={{ marginBottom: Spacing.lg }} />
       {posts.length ? (
         <View>

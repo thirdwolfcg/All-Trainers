@@ -1,16 +1,20 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { NewMessageSheet } from '@/components/new-message-sheet';
 import { Screen } from '@/components/screen';
-import { Avatar, Row, EmptyState, Text } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Avatar, Button, Icon, Row, EmptyState, Text } from '@/components/ui';
+import { Colors, Spacing } from '@/constants/theme';
 import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { clientName } from '@/lib/names';
+import { Tip } from '@/components/tip';
 
 export default function MessagesScreen() {
   const store = useStore();
   const isInstructor = store.role === 'instructor';
+  const [composing, setComposing] = useState(false);
 
   const mine = store.conversations
     .filter((c) => (isInstructor ? c.instructorId === store.meId : c.clientId === store.meId))
@@ -23,9 +27,26 @@ export default function MessagesScreen() {
       : (store.instructor(otherId)?.name ?? 'Instructor');
 
   return (
-    <Screen eyebrow="DMs" title="Messages" subtitle={isInstructor ? 'Your clients, all in one inbox.' : 'Slide into your instructor’s DMs. Respectfully.'}>
+    <Screen
+      eyebrow="DMs"
+      title="Messages"
+      subtitle={isInstructor ? 'Your followers, all in one inbox.' : 'Slide into your instructor’s DMs. Respectfully.'}
+      right={
+        <Pressable onPress={() => setComposing(true)} style={styles.compose} accessibilityRole="button" accessibilityLabel="New message">
+          <Icon name="create-outline" size={22} color="onPrimary" />
+        </Pressable>
+      }>
+      <NewMessageSheet open={composing} onClose={() => setComposing(false)} />
+      <Tip id="tip-message" text="Tap the pencil (top right) to start a new message." pointer="none" />
       {mine.length === 0 ? (
-        <EmptyState icon="chatbubbles-outline" title="Quiet in here" body="Start a chat from an instructor's profile. They don't bite." />
+        <>
+          <EmptyState
+            icon="chatbubbles-outline"
+            title="Quiet in here"
+            body={isInstructor ? 'Message a follower to say hi, or wait for them to slide in.' : "Message an instructor you follow. They don't bite."}
+          />
+          <Button icon="create-outline" label="New message" onPress={() => setComposing(true)} />
+        </>
       ) : (
         <View>
           {mine.map((c) => {
@@ -62,6 +83,7 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
+  compose: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   top: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
 });

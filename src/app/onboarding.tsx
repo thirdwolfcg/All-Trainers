@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Button, Card, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
+import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
 import { StyleLabels, type Role, type Style } from '@/lib/types';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const STYLE_OPTIONS: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 
 function RoleCard({ icon, title, body, selected, onPress }: { icon: IconName; title: string; body: string; selected: boolean; onPress: () => void }) {
@@ -34,7 +32,7 @@ function RoleCard({ icon, title, body, selected, onPress }: { icon: IconName; ti
 export default function Onboarding() {
   const { createProfile, signOut, session } = useAuth();
   const [step, setStep] = useState(0);
-  const { pendingRole, setPendingTour } = useStore();
+  const { pendingRole, showTips } = useStore();
   const [role, setRole] = useState<Role | null>(pendingRole);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -43,20 +41,16 @@ export default function Onboarding() {
   const [instagram, setInstagram] = useState('');
   const [tiktok, setTiktok] = useState('');
   const [teach, setTeach] = useState<Style[]>([]);
-  const [month, setMonth] = useState<number | null>(null);
-  const [day, setDay] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const isInstructor = role === 'instructor';
   const handleOk = /^[a-z0-9_.]{3,30}$/.test(handle);
-  const dayNum = Number(day);
-  const dayOk = month !== null && Number.isInteger(dayNum) && dayNum >= 1 && dayNum <= DAYS_IN_MONTH[month - 1];
 
-  const finish = async (withBirthday: boolean) => {
+  const finish = async () => {
     if (!role) return;
     setBusy(true);
-    setPendingTour(true);
+    showTips();
     setError(undefined);
     const res = await createProfile({
       role,
@@ -67,16 +61,14 @@ export default function Onboarding() {
       neighborhood,
       instagram: isInstructor ? instagram : undefined,
       tiktok: isInstructor ? tiktok : undefined,
-      birthday: withBirthday && month && dayOk ? { month, day: dayNum } : undefined,
     });
     setBusy(false);
     if (res.error) {
-      setPendingTour(false);
       setError(res.error);
     }
   };
 
-  const totalSteps = role === 'instructor' ? 2 : 3;
+  const totalSteps = 2;
   const stepLabel = (n: number) => `Step ${n} of ${totalSteps}`;
 
   if (step === 0) {
@@ -161,52 +153,13 @@ export default function Onboarding() {
             </Text>
           ) : null}
         </View>
-        {isInstructor ? (
-          <Button label={busy ? 'Saving…' : 'Finish'} disabled={!canContinue || busy} onPress={() => finish(false)} />
-        ) : (
-          <Button label="Next" disabled={!canContinue} onPress={() => setStep(2)} />
-        )}
+        <Button label={busy ? 'Saving…' : 'Finish'} disabled={!canContinue || busy} onPress={finish} />
         <Button kind="ghost" label="Back" onPress={() => setStep(0)} style={{ marginTop: Spacing.sm }} />
       </Screen>
     );
   }
 
-  return (
-    <Screen eyebrow={stepLabel(3)} title="When's your birthday?" subtitle="So your instructors can celebrate you. We only ask for the month and day.">
-      <Text variant="caption" color="textSecondary" style={{ marginBottom: Spacing.sm }}>
-        MONTH
-      </Text>
-      <View style={[styles.wrap, { marginBottom: Spacing.xl }]}>
-        {MONTHS.map((m, i) => (
-          <Chip key={m} label={m} selected={month === i + 1} onPress={() => setMonth(i + 1)} />
-        ))}
-      </View>
-      <Field
-        label="Day"
-        value={day}
-        onChangeText={(t) => setDay(t.replace(/\D/g, '').slice(0, 2))}
-        placeholder="17"
-        keyboardType="number-pad"
-        style={{ width: 96 }}
-        error={day && month && !dayOk ? 'That day doesn’t exist in that month.' : undefined}
-      />
-
-      <Card tone="surface" style={styles.privacy}>
-        <Icon name="lock-closed-outline" size={18} color="textSecondary" />
-        <Text variant="small" color="textSecondary" style={{ flex: 1 }}>
-          No year, no age. Only instructors you follow can see it.
-        </Text>
-      </Card>
-
-      {error ? (
-        <Text variant="small" color="blushDeep" style={{ marginBottom: Spacing.md }}>
-          {error}
-        </Text>
-      ) : null}
-      <Button label={busy ? 'Saving…' : 'All set'} disabled={!dayOk || busy} onPress={() => finish(true)} />
-      <Button kind="ghost" label="Skip for now" disabled={busy} onPress={() => finish(false)} style={{ marginTop: Spacing.sm }} />
-    </Screen>
-  );
+  return null;
 }
 
 const styles = StyleSheet.create({
@@ -230,5 +183,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  privacy: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginVertical: Spacing.xl },
 });

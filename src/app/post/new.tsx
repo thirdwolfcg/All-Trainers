@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
+import { Button, Chip, Field, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
@@ -47,7 +48,7 @@ export default function NewPost() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [link, setLink] = useState('');
-  const [premium, setPremium] = useState(false);
+  const [photo, setPhoto] = useState<string>();
 
   const current = kinds.find((k) => k.kind === kind)!;
   const trimmedLink = link.trim();
@@ -55,15 +56,21 @@ export default function NewPost() {
   const needsLink = kind === 'video' && !trimmedLink;
   const canPost = title.trim().length > 1 && body.trim().length > 0 && linkOk && !needsLink;
 
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+    if (!res.canceled && res.assets[0]) setPhoto(res.assets[0].uri);
+  };
+
   const post = () => {
     store.addPost({
       kind,
       title: title.trim(),
       body: body.trim(),
       linkUrl: trimmedLink || undefined,
-      isPremium: premium,
+      imageUrl: photo,
+      isPremium: false,
     });
-    toast(premium ? 'Posted for your premium people.' : 'Posted. Your followers can see it on your feed.');
+    toast('Posted. Your followers can see it on your feed.');
     router.back();
   };
 
@@ -93,6 +100,22 @@ export default function NewPost() {
           maxLength={2000}
           style={{ minHeight: 120, paddingTop: 12, textAlignVertical: 'top' }}
         />
+        <View style={{ gap: Spacing.sm }}>
+          <Text variant="caption" color="textSecondary">
+            PHOTO
+          </Text>
+          {photo ? (
+            <View style={{ gap: Spacing.sm }}>
+              <Image source={{ uri: photo }} style={styles.photo} resizeMode="cover" accessibilityLabel="Selected photo" />
+              <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+                <Button size="sm" kind="outline" icon="image-outline" label="Change photo" onPress={pickPhoto} />
+                <Button size="sm" kind="ghost" label="Remove" onPress={() => setPhoto(undefined)} />
+              </View>
+            </View>
+          ) : (
+            <Button size="sm" kind="outline" icon="image-outline" label="Add a photo" onPress={pickPhoto} style={{ alignSelf: 'flex-start' }} />
+          )}
+        </View>
         <Field
           label={kind === 'playlist' ? 'Playlist link' : kind === 'video' ? 'Video link' : 'Link'}
           value={link}
@@ -115,26 +138,6 @@ export default function NewPost() {
         />
       </View>
 
-      <Text variant="eyebrow" color="textSecondary" style={styles.label}>
-        Who can see it?
-      </Text>
-      <View style={{ gap: Spacing.sm }}>
-        <Audience
-          icon="people-outline"
-          title="Everyone who follows me"
-          body="Free for all your followers."
-          selected={!premium}
-          onPress={() => setPremium(false)}
-        />
-        <Audience
-          icon="diamond-outline"
-          title="Premium only"
-          body="Followers see the title and a lock until they go premium."
-          selected={premium}
-          onPress={() => setPremium(true)}
-        />
-      </View>
-
       <Button label="Post it" icon="send" disabled={!canPost} onPress={post} style={{ marginTop: Spacing.xxl }} />
       {!canPost ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
@@ -145,24 +148,8 @@ export default function NewPost() {
   );
 }
 
-function Audience({ icon, title, body, selected, onPress }: { icon: IconName; title: string; body: string; selected: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }} accessibilityLabel={title}>
-      <View style={[styles.option, selected && styles.optionActive]}>
-        <Icon name={icon} size={20} color={selected ? 'primary' : 'textSecondary'} />
-        <View style={{ flex: 1 }}>
-          <Text variant="bodyStrong">{title}</Text>
-          <Text variant="small" color="textSecondary">
-            {body}
-          </Text>
-        </View>
-        <Icon name={selected ? 'radio-button-on' : 'radio-button-off'} size={20} color={selected ? 'primary' : 'textMuted'} />
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.sm, backgroundColor: Colors.surface },
   label: { marginBottom: Spacing.sm, marginTop: Spacing.xl },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   option: {

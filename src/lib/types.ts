@@ -61,6 +61,12 @@ export type ClassSession = {
   bookingUrl?: string;
   /** The instructor covering this class once a sub is confirmed. */
   subInstructorId?: string;
+  /** Classes made together as a repeating series share this id. */
+  seriesId?: string;
+  /** The class playlist (Spotify, Apple Music…). */
+  playlistUrl?: string;
+  /** One of the instructor's recipe posts, attached to the class. */
+  recipePostId?: string;
 };
 
 export type SubRequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
@@ -83,6 +89,8 @@ export type Post = {
   title: string;
   body: string;
   linkUrl?: string;
+  /** Local or storage URL of an attached photo. */
+  imageUrl?: string;
   isPremium: boolean;
   createdAt: string; // ISO
 };

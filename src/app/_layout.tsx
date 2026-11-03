@@ -70,13 +70,6 @@ function Navigator() {
     }, 0);
   }, [inApp, store, toast]);
 
-  // Right after onboarding (or entering preview), walk them through the app once.
-  useEffect(() => {
-    if (!inApp || !store.pendingTour) return;
-    store.setPendingTour(false);
-    setTimeout(() => router.push('/tour'), 300);
-  }, [inApp, store]);
-
   if (loading) return null;
 
   return (
@@ -111,7 +104,6 @@ function Navigator() {
         <Stack.Screen name="schedule/new" options={{ title: 'Add a class', presentation: 'modal' }} />
         <Stack.Screen name="post/new" options={{ title: 'New post', presentation: 'modal' }} />
         <Stack.Screen name="profile/edit" options={{ title: 'Edit profile', presentation: 'modal' }} />
-        <Stack.Screen name="tour" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="settings/birthday" options={{ title: 'Birthday' }} />
         <Stack.Screen name="settings/privacy" options={{ title: 'Privacy' }} />
       </Stack.Protected>

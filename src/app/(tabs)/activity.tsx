@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { BirthdayCard } from '@/components/birthday-card';
 import { Screen } from '@/components/screen';
@@ -9,6 +9,7 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
 import { daysUntilBirthday, sinceLabel } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { clientName } from '@/lib/names';
+import { Tip } from '@/components/tip';
 
 export default function ActivityScreen() {
   const { role } = useStore();
@@ -17,9 +18,9 @@ export default function ActivityScreen() {
 
 /* ---------- Client: class tracker ---------- */
 
-function Bar({ label, sub, value, max }: { label: string; sub?: string; value: number; max: number }) {
+function Bar({ label, sub, value, max, onPress }: { label: string; sub?: string; value: number; max: number; onPress?: () => void }) {
   return (
-    <View style={{ gap: 6 }}>
+    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? 'link' : undefined} style={{ gap: 6 }}>
       <View style={styles.barLabel}>
         <View style={{ flex: 1 }}>
           <Text variant="bodyStrong">{label}</Text>
@@ -34,9 +35,9 @@ function Bar({ label, sub, value, max }: { label: string; sub?: string; value: n
         </Text>
       </View>
       <View style={styles.track}>
-        <View style={[styles.fill, { width: `${Math.max(6, (value / max) * 100)}%` }]} />
+        <View style={[styles.fill, { width: `${value ? Math.max(6, (value / max) * 100) : 0}%` }]} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -47,7 +48,13 @@ function ClassTracker() {
   // Rolling 30 days reads better than a calendar month on the 2nd of the month.
   const last30 = mine.filter((a) => Date.now() - new Date(a.date).getTime() <= 30 * 24 * 60 * 60 * 1000).length;
 
-  const byInstructor = useMemo(() => countBy(mine.map((a) => a.instructorId)), [mine]);
+  // Everyone you follow shows up, even before your first class with them.
+  const byInstructor = useMemo(() => {
+    const counted = countBy(mine.map((a) => a.instructorId));
+    const seen = new Set(counted.map(([id]) => id));
+    const followedNotYet = [...store.following].filter((id) => !seen.has(id)).map((id) => [id, 0] as [string, number]);
+    return [...counted, ...followedNotYet];
+  }, [mine, store.following]);
   const byStudio = useMemo(() => countBy(mine.map((a) => a.studioId)), [mine]);
   const maxI = Math.max(1, ...byInstructor.map(([, n]) => n));
   const maxS = Math.max(1, ...byStudio.map(([, n]) => n));
@@ -56,7 +63,29 @@ function ClassTracker() {
   return (
     <Screen eyebrow="Your receipts" title="My classes" subtitle="Every class counts. Literally, we count them.">
       {mine.length === 0 ? (
-        <EmptyState icon="stats-chart-outline" title="Your era starts here" body="Tap 'I went' after a class and it shows up here, by instructor and by studio." />
+        <>
+          <EmptyState icon="stats-chart-outline" title="Your era starts here" body="Tap 'I went' after a class and it shows up here, by instructor and by studio." />
+          {byInstructor.length ? (
+            <>
+              <SectionHeader title={`Your instructors · ${byInstructor.length}`} />
+              <View style={styles.bars}>
+                {byInstructor.map(([id, n]) => {
+                  const i = store.instructor(id);
+                  return (
+                    <Bar
+                      key={id}
+                      label={i?.name ?? 'Instructor'}
+                      sub={n ? undefined : 'No classes logged yet'}
+                      value={n}
+                      max={1}
+                      onPress={() => router.push({ pathname: '/instructor/[id]', params: { id } })}
+                    />
+                  );
+                })}
+              </View>
+            </>
+          ) : null}
+        </>
       ) : (
         <>
           <View style={styles.stats}>
@@ -86,11 +115,20 @@ function ClassTracker() {
             </Card>
           ) : null}
 
-          <SectionHeader title="By instructor" />
+          <SectionHeader title={`Your instructors · ${byInstructor.length}`} />
           <View style={styles.bars}>
             {byInstructor.map(([id, n]) => {
               const i = store.instructor(id);
-              return <Bar key={id} label={i?.name ?? 'Instructor'} value={n} max={maxI} />;
+              return (
+                <Bar
+                  key={id}
+                  label={i?.name ?? 'Instructor'}
+                  sub={n ? undefined : 'No classes logged yet'}
+                  value={n}
+                  max={maxI}
+                  onPress={() => router.push({ pathname: '/instructor/[id]', params: { id } })}
+                />
+              );
             })}
           </View>
 
@@ -129,14 +167,15 @@ function ClientList() {
     .sort((a, b) => b.count - a.count);
 
   return (
-    <Screen eyebrow="Your people" title="Clients" subtitle={`${store.clients.length} people follow you. Every new follower lands here automatically.`}>
+    <Screen eyebrow="Your people" title="Followers" subtitle={`${store.clients.length} ${store.clients.length === 1 ? 'person follows' : 'people follow'} you. Everyone who follows you lands here automatically.`}>
+      <Tip id="tip-followers" text="Everyone who follows you. Tap a name for their birthday, class history and your private notes." pointer="none" />
       <BirthdayCard />
       <View style={styles.search}>
         <Icon name="search" size={18} color="textMuted" />
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search clients"
+          placeholder="Search followers"
           placeholderTextColor={Colors.textMuted}
           style={styles.searchInput}
         />
