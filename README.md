@@ -130,6 +130,8 @@ Still to do for Phase 1:
 
 ## Open product questions
 
+- **Should instructors choose who sees each post?** Today the New post screen asks "Who can see it?" with Everyone who follows me or Premium only, and the instructor picks per post. Lo isn't sure instructors should decide this. Options to weigh: keep the per-post choice; make all feed posts free and keep premium for one on one access and extras only; or set fixed rules by post type (for example, recipes and updates free, meal plans premium). Related: Premium only playlists raise the Spotify terms question below. Code: `src/app/post/new.tsx` (audience picker) and `PostCard` in `src/components/cards.tsx` (lock).
+
 - Playlist access sits in premium. Sharing a Spotify or Apple Music link is normal, but putting it behind a paywall needs a closer look against those services' terms before launch.
 - Price of client premium, and the instructor's share.
 - Final app name.
