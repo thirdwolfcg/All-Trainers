@@ -92,11 +92,12 @@ export function Card({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
-  tone?: 'surface' | 'plain' | 'purple' | 'blush' | 'warn';
+  tone?: 'surface' | 'plain' | 'gray' | 'purple' | 'blush' | 'warn';
 }) {
   const toneStyle = {
     surface: { backgroundColor: Colors.surface, borderColor: Colors.surface },
     plain: { backgroundColor: Colors.background, borderColor: Colors.border },
+    gray: { backgroundColor: Colors.gray, borderColor: Colors.gray },
     purple: { backgroundColor: Colors.primarySoft, borderColor: Colors.primarySoft },
     blush: { backgroundColor: Colors.blush, borderColor: Colors.blush },
     warn: { backgroundColor: Colors.warn, borderColor: Colors.warn },
@@ -132,8 +133,21 @@ function tintFor(name: string) {
   return AvatarTints[h % AvatarTints.length];
 }
 
-export function Avatar({ name, size = 44, ring = false, square = false }: { name: string; size?: number; ring?: boolean; square?: boolean }) {
-  const tint = tintFor(name);
+export function Avatar({
+  name,
+  size = 44,
+  ring = false,
+  square = false,
+  plain = false,
+}: {
+  name: string;
+  size?: number;
+  ring?: boolean;
+  square?: boolean;
+  /** White circle with purple initials, for use on tinted cards. */
+  plain?: boolean;
+}) {
+  const tint = plain ? { bg: Colors.background, fg: Colors.primary } : tintFor(name);
   const initials = name
     .split(' ')
     .filter(Boolean)

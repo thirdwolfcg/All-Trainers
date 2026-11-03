@@ -21,7 +21,8 @@ export const Colors = {
   primarySoft: '#EFEAF7',
   onPrimary: '#FFFFFF',
 
-  blush: '#F6E4EC', // birthdays and premium
+  gray: '#F1F0F3', // birthday card
+  blush: '#F6E4EC', // premium
   blushDeep: '#8E2F5A',
   mint: '#E2F2EA',
   mintDeep: '#1F6B4E',

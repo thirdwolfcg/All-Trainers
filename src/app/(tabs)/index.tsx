@@ -177,10 +177,10 @@ function InstructorWeek() {
         </Pressable>
       }>
       {soonBirthdays.length ? (
-        <Card tone="blush" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+        <Card tone="gray" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
           <View style={styles.inline}>
-            <Icon name="gift-outline" size={18} color="blushDeep" />
-            <Text variant="eyebrow" color="blushDeep">
+            <Icon name="gift-outline" size={18} color="primary" />
+            <Text variant="eyebrow" color="primary">
               Birthday szn
             </Text>
           </View>
@@ -193,7 +193,7 @@ function InstructorWeek() {
                   onPress={() => router.push({ pathname: '/client/[id]', params: { id: c.id } })}
                   accessibilityRole="link"
                   accessibilityLabel={`Open ${clientName(c.name)}'s profile`}>
-                  <Avatar name={c.name} size={32} />
+                  <Avatar name={c.name} size={32} plain />
                   <Text variant="body" style={{ flex: 1 }}>
                     <Text variant="bodyStrong" style={{ textDecorationLine: 'underline' }}>
                       {clientName(c.name)}
