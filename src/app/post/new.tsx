@@ -18,6 +18,13 @@ const kinds: { kind: PostKind; label: string; icon: IconName; titleHint: string;
     bodyHint: 'Schedule changes, a shoutout, a pep talk. Whatever your people should know.',
   },
   {
+    kind: 'video',
+    label: 'Video',
+    icon: 'play-circle-outline',
+    titleHint: 'Form check: footwork',
+    bodyHint: 'What is it and why should they watch? Paste the Reel or TikTok link below.',
+  },
+  {
     kind: 'recipe',
     label: 'Recipe',
     icon: 'restaurant-outline',
@@ -45,7 +52,8 @@ export default function NewPost() {
   const current = kinds.find((k) => k.kind === kind)!;
   const trimmedLink = link.trim();
   const linkOk = !trimmedLink || /^https:\/\/\S+\.\S+/i.test(trimmedLink);
-  const canPost = title.trim().length > 1 && body.trim().length > 0 && linkOk;
+  const needsLink = kind === 'video' && !trimmedLink;
+  const canPost = title.trim().length > 1 && body.trim().length > 0 && linkOk && !needsLink;
 
   const post = () => {
     store.addPost({
@@ -86,13 +94,23 @@ export default function NewPost() {
           style={{ minHeight: 120, paddingTop: 12, textAlignVertical: 'top' }}
         />
         <Field
-          label={kind === 'playlist' ? 'Playlist link' : 'Link'}
+          label={kind === 'playlist' ? 'Playlist link' : kind === 'video' ? 'Video link' : 'Link'}
           value={link}
           onChangeText={setLink}
-          placeholder={kind === 'playlist' ? 'https://open.spotify.com/…' : 'https://…'}
+          placeholder={
+            kind === 'playlist'
+              ? 'https://open.spotify.com/…'
+              : kind === 'video'
+                ? 'https://www.instagram.com/reel/… or a TikTok link'
+                : 'https://…'
+          }
           autoCapitalize="none"
           keyboardType="url"
-          hint="Optional."
+          hint={
+            kind === 'video'
+              ? 'Instagram, TikTok or YouTube. In the app, tap Share on your video, then Copy link.'
+              : 'Optional. Instagram, TikTok, Spotify or any link.'
+          }
           error={linkOk ? undefined : 'Links need to start with https://'}
         />
       </View>
@@ -120,7 +138,7 @@ export default function NewPost() {
       <Button label="Post it" icon="send" disabled={!canPost} onPress={post} style={{ marginTop: Spacing.xxl }} />
       {!canPost ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
-          Add a title and a few words to post.
+          {needsLink ? 'Add a title, a few words and your video link to post.' : 'Add a title and a few words to post.'}
         </Text>
       ) : null}
     </Screen>

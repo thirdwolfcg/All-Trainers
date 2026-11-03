@@ -17,3 +17,21 @@ export function instagramUrl(handle: string) {
 export function tiktokUrl(handle: string) {
   return `https://www.tiktok.com/@${encodeURIComponent(handle.replace(/^@/, ''))}`;
 }
+
+/** What a post's link button should say, based on where the link goes. */
+export function linkButton(url: string, kind?: string): { label: string; icon: 'logo-instagram' | 'logo-tiktok' | 'logo-youtube' | 'musical-notes-outline' | 'play-circle-outline' | 'open-outline' } {
+  let host = '';
+  try {
+    host = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    // not a valid URL; fall through to the generic label
+  }
+  if (host === 'instagram.com' || host.endsWith('.instagram.com')) return { label: 'Watch on Instagram', icon: 'logo-instagram' };
+  if (host === 'tiktok.com' || host.endsWith('.tiktok.com')) return { label: 'Watch on TikTok', icon: 'logo-tiktok' };
+  if (host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be') return { label: 'Watch on YouTube', icon: 'logo-youtube' };
+  if (host.endsWith('spotify.com')) return { label: 'Open in Spotify', icon: 'musical-notes-outline' };
+  if (host.endsWith('music.apple.com')) return { label: 'Open in Apple Music', icon: 'musical-notes-outline' };
+  if (kind === 'playlist') return { label: 'Open playlist', icon: 'musical-notes-outline' };
+  if (kind === 'video') return { label: 'Watch video', icon: 'play-circle-outline' };
+  return { label: 'Open link', icon: 'open-outline' };
+}

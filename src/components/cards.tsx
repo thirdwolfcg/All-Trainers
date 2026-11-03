@@ -11,6 +11,7 @@ import { StyleLabels, type ClassSession, type Instructor, type Post } from '@/li
 
 import { BookingSheet } from './booking-sheet';
 import { Avatar, Button, Chip, Icon, Row, Text, type IconName } from './ui';
+import { linkButton } from '@/lib/links';
 
 function clock(d: Date) {
   const h = d.getHours() % 12 || 12;
@@ -213,6 +214,7 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
 
 const postIcons: Record<Post['kind'], IconName> = {
   photo: 'image-outline',
+  video: 'play-circle-outline',
   recipe: 'restaurant-outline',
   playlist: 'musical-notes-outline',
   note: 'chatbubble-ellipses-outline',
@@ -220,6 +222,7 @@ const postIcons: Record<Post['kind'], IconName> = {
 
 const postKindLabel: Record<Post['kind'], string> = {
   photo: 'Photo',
+  video: 'Video',
   recipe: 'Recipe',
   playlist: 'Playlist',
   note: 'Update',
@@ -268,8 +271,8 @@ export function PostCard({ post }: { post: Post }) {
             <Button
               size="sm"
               kind="outline"
-              icon="open-outline"
-              label={post.kind === 'playlist' ? 'Open playlist' : 'Open link'}
+              icon={linkButton(post.linkUrl, post.kind).icon}
+              label={linkButton(post.linkUrl, post.kind).label}
               onPress={() => Linking.openURL(post.linkUrl!)}
               style={{ alignSelf: 'flex-start', marginTop: 4 }}
             />

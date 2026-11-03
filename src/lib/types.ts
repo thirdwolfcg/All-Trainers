@@ -74,7 +74,7 @@ export type SubRequest = {
   createdAt: string; // ISO
 };
 
-export type PostKind = 'photo' | 'recipe' | 'playlist' | 'note';
+export type PostKind = 'photo' | 'video' | 'recipe' | 'playlist' | 'note';
 
 export type Post = {
   id: string;
