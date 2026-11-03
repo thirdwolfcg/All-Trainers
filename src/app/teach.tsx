@@ -11,22 +11,22 @@ const points: { icon: IconName; title: string; body: string }[] = [
   {
     icon: 'calendar-outline',
     title: 'Post your week once',
-    body: 'Every class at every studio, in one place. Your followers always know where to find you.',
+    body: 'Every class you teach, in one schedule. Your clients always know where to find you.',
   },
   {
     icon: 'people-outline',
-    title: 'Your clients follow you',
-    body: "Not the studio. When you switch studios or add a new one, your people come with you.",
+    title: 'Your clientele, organized',
+    body: 'Everyone who follows you in one list, with how often they come and when they last took your class.',
   },
   {
     icon: 'swap-horizontal',
     title: 'Find a sub in two taps',
-    body: 'Ask instructors who teach at the same studio. No more group text chaos at 6am.',
+    body: 'Ask instructors who teach at the same studio, right in the app.',
   },
   {
     icon: 'gift-outline',
-    title: 'Remember everyone',
-    body: 'Birthdays, private notes, who came to what. Be the instructor who remembers.',
+    title: 'Remember the little things',
+    body: 'Birthdays, goals, injuries, music taste. Private notes only you can see.',
   },
   {
     icon: 'qr-code-outline',
@@ -75,10 +75,10 @@ export default function Teach() {
               For instructors · Denver
             </Text>
             <Text variant="display" align="center">
-              Your people follow you, not the studio.
+              All your clients, one place.
             </Text>
             <Text variant="body" color="textSecondary" align="center">
-              You teach at three studios. Your clients shouldn&apos;t need three apps and a 24 hour IG story to find you.
+              Teach at one studio or five. Keep your schedule, your people and the little details that matter together in one app.
             </Text>
           </View>
 
