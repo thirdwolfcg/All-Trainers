@@ -121,11 +121,11 @@ Still to do for Phase 1:
 8. **Instructors edit or delete a class**, and **add a new studio** (today they can only cancel, and pick from existing studios).
 9. **Delete account.** Built (Me, Privacy, Delete my account) with `delete_my_account()` from migration 0009, and run in Supabase. Test with a throwaway account. Messages the person sent go with their conversations, so the other side loses that history too.
 10. **Photo uploads.** Instructors can pick a photo for a post (expo-image-picker, photo library permission in app.json). It only lives on the device for now: upload it to Supabase Storage and save the path in `posts.media_path`.
+11. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
+12. **App Store and Google Play release.** EAS builds, store listings, privacy labels, and review notes (test account for Apple).
 13. **Run migration 0011** (`class_series`, `classes.series_id`, `playlist_url`, `recipe_post_id`) in the Supabase SQL Editor. Then save repeating classes as one `class_series` row plus the generated `classes` rows. The app already builds them (Add class, How often).
 14. **Possible addition: merch and other sales.** Instructors selling merch, programs or class packs. Decide between linking out (Shopify, Instagram shop) and selling in the app (Stripe; Apple's in-app purchase rules apply to digital goods, not physical merch).
 15. **Possible addition: virtual classes.** A class with a join link (Zoom, YouTube Live, Instagram Live) instead of a studio, free or paid. Paid virtual classes count as digital content, so Apple and Google in-app purchase rules apply.
-11. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
-12. **App Store and Google Play release.** EAS builds, store listings, privacy labels, and review notes (test account for Apple).
 
 Done since the first list: Dave's review (no birthday in onboarding, Home vs Discover, Discover filters behind a button, My classes lists followed instructors, New message, tips instead of a tour, premium posts removed, Followers tab, repeating classes, photos on posts, playlist and recipe on classes); instructor and client profile editing, birthday add/change/remove (`profile_private`), Privacy screen, role locked in the database (0008), video posts and post titles (0007), instructor landing page at `/teach`.
 
