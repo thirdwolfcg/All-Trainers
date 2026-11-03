@@ -43,6 +43,9 @@ type Store = {
   /** Set by the instructor landing page so onboarding starts on "I teach classes". */
   pendingRole: Role | null;
   setPendingRole: (r: Role | null) => void;
+  /** Show the app tour once the person lands in the app (after onboarding or entering preview). */
+  pendingTour: boolean;
+  setPendingTour: (v: boolean) => void;
 
   following: Set<string>;
   premium: Set<string>; // instructors the client has premium with
@@ -101,6 +104,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
+  const [pendingTour, setPendingTour] = useState(false);
 
   const meId = role === 'client' ? ME_CLIENT_ID : ME_INSTRUCTOR_ID;
 
@@ -167,6 +171,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pendingFollow,
       pendingRole,
       setPendingRole,
+      pendingTour,
+      setPendingTour,
       setPendingFollow,
       posts,
       clients,
@@ -348,7 +354,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole]);
+  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, pendingTour]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

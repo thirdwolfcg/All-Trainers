@@ -5,10 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Icon, Text } from '@/components/ui';
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { useStore } from '@/lib/store';
 
 export default function Welcome() {
   const insets = useSafeAreaInsets();
   const { enterDemo } = useAuth();
+  const { setPendingTour } = useStore();
 
   return (
     <ScrollView
@@ -60,7 +62,14 @@ export default function Welcome() {
         <View style={{ gap: Spacing.sm }}>
           <Button label="Let's go" onPress={() => router.push('/sign-up')} />
           <Button kind="outline" label="I already have one" onPress={() => router.push('/sign-in')} />
-          <Button kind="ghost" label="Just let me look around" onPress={enterDemo} />
+          <Button
+            kind="ghost"
+            label="Just let me look around"
+            onPress={() => {
+              setPendingTour(true);
+              enterDemo();
+            }}
+          />
           <Text
             variant="smallStrong"
             color="primary"

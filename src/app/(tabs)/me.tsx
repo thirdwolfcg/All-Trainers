@@ -169,6 +169,8 @@ export default function MeScreen() {
         <SettingRow icon="notifications-outline" label="Notifications" />
         <Divider />
         <SettingRow icon="shield-checkmark-outline" label="Privacy" onPress={() => router.push('/settings/privacy')} />
+        <Divider />
+        <SettingRow icon="compass-outline" label="Take the tour" onPress={() => router.push('/tour')} />
       </Card>
 
       <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.xl }}>

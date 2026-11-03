@@ -34,7 +34,7 @@ function RoleCard({ icon, title, body, selected, onPress }: { icon: IconName; ti
 export default function Onboarding() {
   const { createProfile, signOut, session } = useAuth();
   const [step, setStep] = useState(0);
-  const { pendingRole } = useStore();
+  const { pendingRole, setPendingTour } = useStore();
   const [role, setRole] = useState<Role | null>(pendingRole);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -56,6 +56,7 @@ export default function Onboarding() {
   const finish = async (withBirthday: boolean) => {
     if (!role) return;
     setBusy(true);
+    setPendingTour(true);
     setError(undefined);
     const res = await createProfile({
       role,
@@ -69,12 +70,18 @@ export default function Onboarding() {
       birthday: withBirthday && month && dayOk ? { month, day: dayNum } : undefined,
     });
     setBusy(false);
-    if (res.error) setError(res.error);
+    if (res.error) {
+      setPendingTour(false);
+      setError(res.error);
+    }
   };
+
+  const totalSteps = role === 'instructor' ? 2 : 3;
+  const stepLabel = (n: number) => `Step ${n} of ${totalSteps}`;
 
   if (step === 0) {
     return (
-      <Screen title="Hiii, taking a class or teaching it?" subtitle="Teach and take? Love that. Just use a separate email for each side.">
+      <Screen eyebrow={role ? stepLabel(1) : undefined} title="Hiii, taking a class or teaching it?" subtitle="Teach and take? Love that. Just use a separate email for each side.">
         <View style={{ gap: Spacing.md, marginBottom: Spacing.xxl }}>
           <RoleCard
             icon="heart-outline"
@@ -100,7 +107,7 @@ export default function Onboarding() {
   if (step === 1) {
     const canContinue = name.trim().length > 0 && (!isInstructor || (handleOk && teach.length > 0));
     return (
-      <Screen title={isInstructor ? 'Set up your profile' : 'What should we call you?'} subtitle={isInstructor ? 'This is what clients see when they find you.' : 'Your instructors will see this name.'}>
+      <Screen eyebrow={stepLabel(2)} title={isInstructor ? 'Set up your profile' : 'What should we call you?'} subtitle={isInstructor ? 'This is what clients see when they find you.' : 'Your instructors will see this name.'}>
         <View style={{ gap: Spacing.lg, marginBottom: Spacing.xxl }}>
           <Field label="Name" value={name} onChangeText={setName} placeholder={isInstructor ? 'Maya Chen' : 'First name and last initial is fine'} autoComplete="name" />
           {isInstructor ? (
@@ -165,7 +172,7 @@ export default function Onboarding() {
   }
 
   return (
-    <Screen title="When's your birthday?" subtitle="So your instructors can celebrate you. We only ask for the month and day.">
+    <Screen eyebrow={stepLabel(3)} title="When's your birthday?" subtitle="So your instructors can celebrate you. We only ask for the month and day.">
       <Text variant="caption" color="textSecondary" style={{ marginBottom: Spacing.sm }}>
         MONTH
       </Text>

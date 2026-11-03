@@ -39,7 +39,10 @@ export function PreviewSwitch() {
         })}
       </View>
       <Text variant="small" color="textSecondary">
-        Switch sides to see the app the way clients and instructors will.
+        Switch sides to see the app the way clients and instructors will.{' '}
+        <Text variant="smallStrong" color="primary" onPress={() => router.push('/tour')} accessibilityRole="link">
+          Take the tour ›
+        </Text>
       </Text>
     </Card>
   );
