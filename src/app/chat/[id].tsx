@@ -7,6 +7,7 @@ import { EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { timeLabel } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { clientName } from '@/lib/names';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,7 +23,7 @@ export default function ChatScreen() {
 
   const isInstructor = store.role === 'instructor';
   const otherName = isInstructor
-    ? (store.clients.find((c) => c.id === conv.clientId)?.name ?? 'Client')
+    ? clientName(store.clients.find((c) => c.id === conv.clientId)?.name ?? 'Client')
     : (store.instructor(conv.instructorId)?.name ?? 'Instructor');
 
   const send = () => {

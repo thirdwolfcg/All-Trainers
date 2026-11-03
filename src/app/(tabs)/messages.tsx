@@ -6,6 +6,7 @@ import { Avatar, Row, EmptyState, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { clientName } from '@/lib/names';
 
 export default function MessagesScreen() {
   const store = useStore();
@@ -18,7 +19,7 @@ export default function MessagesScreen() {
 
   const nameFor = (otherId: string) =>
     isInstructor
-      ? (store.clients.find((c) => c.id === otherId)?.name ?? 'Client')
+      ? clientName(store.clients.find((c) => c.id === otherId)?.name ?? 'Client')
       : (store.instructor(otherId)?.name ?? 'Instructor');
 
   return (

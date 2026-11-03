@@ -7,6 +7,7 @@ import { Avatar, Card, Row, Chip, EmptyState, Icon, SectionHeader, Text } from '
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { daysUntilBirthday, sinceLabel } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { clientName } from '@/lib/names';
 
 export default function ActivityScreen() {
   const { role } = useStore();
@@ -149,7 +150,7 @@ function ClientList() {
               style={styles.clientRow}>
               <Avatar name={client.name} size={46} />
               <View style={{ flex: 1, gap: 4 }}>
-                <Text variant="heading">{client.name}</Text>
+                <Text variant="heading">{clientName(client.name)}</Text>
                 <Text variant="small" color="textSecondary">
                   {count} {count === 1 ? 'class' : 'classes'} with you
                   {last ? ` · last class ${sinceLabel(last)}` : ' · new follower'}

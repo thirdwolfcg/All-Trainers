@@ -12,6 +12,7 @@ import { addDays, dayLabel, daysUntilBirthday, isSameDay, shortDay, startOfDay }
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
+import { clientName } from '@/lib/names';
 
 export default function HomeScreen() {
   const { role } = useStore();
@@ -191,11 +192,11 @@ function InstructorWeek() {
                   style={[styles.inline, { flex: 1 }]}
                   onPress={() => router.push({ pathname: '/client/[id]', params: { id: c.id } })}
                   accessibilityRole="link"
-                  accessibilityLabel={`Open ${c.name}'s profile`}>
+                  accessibilityLabel={`Open ${clientName(c.name)}'s profile`}>
                   <Avatar name={c.name} size={32} />
                   <Text variant="body" style={{ flex: 1 }}>
                     <Text variant="bodyStrong" style={{ textDecorationLine: 'underline' }}>
-                      {c.name.split(' ')[0]}
+                      {clientName(c.name)}
                     </Text>
                     {n === 0 ? ' is celebrating today' : n === 1 ? ' tomorrow' : ` in ${n} days`}
                   </Text>

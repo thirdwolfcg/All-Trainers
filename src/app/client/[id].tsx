@@ -7,6 +7,7 @@ import { Avatar, Button, Card, Chip, EmptyState, Icon, Text } from '@/components
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { birthdayLabel, daysUntilBirthday, sinceLabel } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { clientName } from '@/lib/names';
 
 export default function ClientDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,12 +32,12 @@ export default function ClientDetail() {
 
   return (
     <>
-      <Stack.Screen options={{ title: client.name }} />
+      <Stack.Screen options={{ title: clientName(client.name) }} />
       <Screen padTop={false}>
         <View style={styles.header}>
           <Avatar name={client.name} size={72} />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text variant="title">{client.name}</Text>
+            <Text variant="title">{clientName(client.name)}</Text>
             <Text variant="small" color="textSecondary">
               Followed you {sinceLabel(client.followedAt)}
             </Text>
