@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, Text } from '@/components/ui';
@@ -11,7 +11,9 @@ export default function Welcome() {
   const { enterDemo } = useAuth();
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }]}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }}>
       <View style={styles.column}>
         <View style={styles.hero}>
           <View style={styles.stack}>
@@ -41,6 +43,7 @@ export default function Welcome() {
           {[
             { icon: 'calendar-outline' as const, text: 'Every class, every studio, one schedule' },
             { icon: 'heart-outline' as const, text: 'Know when your instructor adds a class or gets a sub' },
+            { icon: 'musical-notes-outline' as const, text: 'Their playlists, recipes, videos and tips, all in their feed' },
             { icon: 'stats-chart-outline' as const, text: 'See your stats. Yes, all of them.' },
           ].map((p) => (
             <View key={p.text} style={styles.point}>
@@ -69,7 +72,7 @@ export default function Welcome() {
           </Text>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
