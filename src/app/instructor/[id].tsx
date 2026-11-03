@@ -108,6 +108,9 @@ export default function InstructorProfile() {
           ) : null}
 
           {isOwnProfile ? (
+            <Button kind="outline" icon="create-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} style={{ marginBottom: Spacing.sm }} />
+          ) : null}
+          {isOwnProfile ? (
             <View style={styles.buttons}>
               <Button kind="primary" icon="qr-code-outline" label="My QR code" onPress={() => router.push('/qr')} style={{ flex: 1 }} />
               <Button

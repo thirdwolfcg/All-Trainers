@@ -14,7 +14,7 @@ import {
   buildMayaClients,
   buildPosts,
   buildSubRequests,
-  instructors,
+  instructors as sampleInstructors,
   studios,
 } from '@/data/sample';
 
@@ -34,6 +34,7 @@ type Store = {
   conversations: Conversation[];
 
   instructorByHandle: (handle: string) => Instructor | undefined;
+  updateInstructor: (id: string, patch: Partial<Omit<Instructor, 'id' | 'isFounding'>>) => void;
   /** Someone scanned an instructor's QR code before signing in: follow them once inside. */
   pendingFollow: string | null;
   setPendingFollow: (instructorId: string | null) => void;
@@ -74,6 +75,7 @@ const Ctx = createContext<Store | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [now] = useState(() => new Date());
   const [role, setRole] = useState<Role>('client');
+  const [instructors, setInstructors] = useState(sampleInstructors);
   const [classes, setClasses] = useState(() => buildClasses(now));
   const [posts, setPosts] = useState(() => buildPosts(now));
   const [clients, setClients] = useState(() => buildMayaClients(now));
@@ -97,6 +99,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructors,
       studios,
       classes,
+      updateInstructor(id, patch) {
+        setInstructors((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+      },
       instructorByHandle: (handle) => instructors.find((i) => i.handle.toLowerCase() === handle.replace(/^@/, '').toLowerCase()),
       pendingFollow,
       setPendingFollow,
@@ -269,7 +274,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow]);
+  }, [role, meId, instructors, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

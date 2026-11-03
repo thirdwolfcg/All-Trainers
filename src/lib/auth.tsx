@@ -28,6 +28,16 @@ export type NewProfile = {
   birthday?: { month: number; day: number };
 };
 
+export type ProfileEdits = {
+  displayName: string;
+  handle?: string;
+  bio?: string;
+  styles?: Style[];
+  neighborhood?: string;
+  instagram?: string;
+  tiktok?: string;
+};
+
 type Result = { error?: string; needsConfirmation?: boolean };
 
 type Auth = {
@@ -41,6 +51,7 @@ type Auth = {
   signIn: (email: string, password: string) => Promise<Result>;
   signOut: () => Promise<void>;
   createProfile: (p: NewProfile) => Promise<Result>;
+  updateProfile: (p: ProfileEdits) => Promise<Result>;
 };
 
 const Ctx = createContext<Auth | null>(null);
@@ -154,6 +165,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (bdayError) return { error: friendlyError(bdayError.message) };
         }
 
+        await loadProfile(userId);
+        return {};
+      },
+
+      async updateProfile(p) {
+        const userId = session?.user.id;
+        if (!userId) return { error: 'Please sign in again.' };
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            display_name: p.displayName.trim(),
+            handle: p.handle?.trim().toLowerCase() || null,
+            bio: p.bio?.trim() || null,
+            styles: p.styles ?? [],
+            neighborhood: p.neighborhood?.trim() || null,
+            instagram_handle: p.instagram?.trim().replace(/^@/, '') || null,
+            tiktok_handle: p.tiktok?.trim().replace(/^@/, '') || null,
+          })
+          .eq('id', userId);
+        if (error) return { error: friendlyError(error.message) };
         await loadProfile(userId);
         return {};
       },

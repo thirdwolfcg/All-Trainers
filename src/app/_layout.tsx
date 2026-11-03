@@ -102,6 +102,7 @@ function Navigator() {
         <Stack.Screen name="client/[id]" options={{ title: 'Client' }} />
         <Stack.Screen name="schedule/new" options={{ title: 'Add a class', presentation: 'modal' }} />
         <Stack.Screen name="post/new" options={{ title: 'New post', presentation: 'modal' }} />
+        <Stack.Screen name="profile/edit" options={{ title: 'Edit profile', presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>
   );

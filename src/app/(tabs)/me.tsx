@@ -166,6 +166,7 @@ export default function MeScreen() {
       <Card tone="plain" style={{ paddingVertical: Spacing.xs }}>
         {isInstructor ? (
           <>
+            <SettingRow icon="create-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} />
             <SettingRow icon="qr-code-outline" label="My QR code" onPress={() => router.push('/qr')} />
             <Divider />
             <SettingRow icon="calendar-outline" label="Calendar sync" />
