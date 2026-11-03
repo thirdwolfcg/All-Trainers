@@ -65,8 +65,8 @@ export default function MyQr() {
 }
 
 const styles = StyleSheet.create({
-  // Soft, background-feel helper text: serif italic, smaller, secondary gray (still readable).
-  aside: { fontSize: 15, lineHeight: 22 },
+  // Faded, background-feel helper text: serif italic, smaller, see-through.
+  aside: { fontSize: 15, lineHeight: 22, opacity: 0.55 },
   card: {
     alignItems: 'center',
     gap: Spacing.sm,
