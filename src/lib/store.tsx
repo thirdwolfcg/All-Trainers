@@ -36,6 +36,7 @@ type Store = {
 
   instructorByHandle: (handle: string) => Instructor | undefined;
   updateInstructor: (id: string, patch: Partial<Omit<Instructor, 'id' | 'isFounding'>>) => void;
+  updateClient: (id: string, patch: Partial<Omit<Client, 'id'>>) => void;
   /** Someone scanned an instructor's QR code before signing in: follow them once inside. */
   pendingFollow: string | null;
   setPendingFollow: (instructorId: string | null) => void;
@@ -144,6 +145,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructors,
       studios,
       classes,
+      updateClient(id, patch) {
+        setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      },
+
       updateInstructor(id, patch) {
         setInstructors((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
       },

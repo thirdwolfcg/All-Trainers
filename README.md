@@ -59,7 +59,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0008 in order)
+supabase/migrations/     database schema with row level security (run 0001 through 0009 in order)
 supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
@@ -116,7 +116,7 @@ Still to do for Phase 1:
 3. **Instructors edit or delete a class**, and **add a new studio** (today they can only cancel, and pick from existing studios).
 4. **Profile editing.** Instructors can edit their profile (Edit profile on their profile and in Me), saved to `profiles` when signed in. Still missing: clients editing their name and birthday (Me shows "Soon").
 5. **Push notifications** for sub asks, new messages and client birthdays (`push_tokens` table exists).
-6. **Delete account in the app.** Apple requires it, and the Privacy Policy promises it.
+6. **Delete account in the app.** Built (Me, Privacy, Delete my account) using `delete_my_account()` from migration 0009. Test it with a throwaway account. Note: messages the person sent are deleted with their conversations, so the other side loses that history too.
 7. **Photo posts.** Posts support updates, recipes and playlists with links. Photos need Supabase Storage.
 8. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
 

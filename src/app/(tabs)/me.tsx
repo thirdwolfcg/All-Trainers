@@ -44,6 +44,7 @@ export default function MeScreen() {
   const isInstructor = store.role === 'instructor';
   const me = isInstructor ? store.instructor(store.meId) : undefined;
   const myClientRecord = store.clients.find((c) => c.id === 'me');
+  const myBirthday = live ? auth.birthday : myClientRecord?.birthday;
 
   return (
     <Screen eyebrow="Account" title="Me">
@@ -149,7 +150,8 @@ export default function MeScreen() {
             <SettingRow
               icon="gift-outline"
               label="Birthday"
-              value={myClientRecord?.birthday ? birthdayLabel(myClientRecord.birthday) : 'Add'}
+              value={myBirthday ? birthdayLabel(myBirthday) : 'Add'}
+              onPress={() => router.push('/settings/birthday')}
             />
             <Divider />
             <SettingRow icon="calendar-outline" label="Calendar sync" />
@@ -160,7 +162,7 @@ export default function MeScreen() {
         <Divider />
         <SettingRow icon="notifications-outline" label="Notifications" />
         <Divider />
-        <SettingRow icon="shield-checkmark-outline" label="Privacy" />
+        <SettingRow icon="shield-checkmark-outline" label="Privacy" onPress={() => router.push('/settings/privacy')} />
       </Card>
 
       <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.xl }}>

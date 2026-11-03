@@ -74,7 +74,7 @@ export default function Onboarding() {
 
   if (step === 0) {
     return (
-      <Screen title="Hi! Who are you here as?" subtitle="You can't switch later without a new account, so pick the one that fits.">
+      <Screen title="Hiii, taking a class or teaching it?" subtitle="You can't switch later without a new account, so pick the one that fits.">
         <View style={{ gap: Spacing.md, marginBottom: Spacing.xxl }}>
           <RoleCard
             icon="heart-outline"

@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { friendlyError, supabase } from './supabase';
-import type { Role, Style } from './types';
+import type { Birthday, Role, Style } from './types';
 
 export type Profile = {
   id: string;
@@ -44,6 +44,8 @@ type Auth = {
   loading: boolean;
   session: Session | null;
   profile: Profile | null;
+  /** Month and day from profile_private, for signed-in accounts. */
+  birthday: Birthday | null;
   demo: boolean;
   enterDemo: () => void;
   exitDemo: () => void;
@@ -52,6 +54,8 @@ type Auth = {
   signOut: () => Promise<void>;
   createProfile: (p: NewProfile) => Promise<Result>;
   updateProfile: (p: ProfileEdits) => Promise<Result>;
+  saveBirthday: (b: Birthday | null) => Promise<Result>;
+  deleteAccount: () => Promise<Result>;
 };
 
 const Ctx = createContext<Auth | null>(null);
@@ -59,14 +63,18 @@ const Ctx = createContext<Auth | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [birthday, setBirthday] = useState<Birthday | null>(null);
   const [loading, setLoading] = useState(true);
   const [demo, setDemo] = useState(false);
 
   const loadProfile = useCallback(async (userId: string | undefined) => {
     if (!userId) {
       setProfile(null);
+      setBirthday(null);
       return;
     }
+    const { data: priv } = await supabase.from('profile_private').select('birthday_month, birthday_day').eq('user_id', userId).maybeSingle();
+    setBirthday(priv?.birthday_month && priv?.birthday_day ? { month: priv.birthday_month, day: priv.birthday_day } : null);
     const { data } = await supabase
       .from('profiles')
       .select('id, role, display_name, handle, bio, styles, neighborhood, instagram_handle, tiktok_handle')
@@ -112,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       session,
       profile,
+      birthday,
       demo,
       enterDemo: () => setDemo(true),
       exitDemo: () => setDemo(false),
@@ -169,6 +178,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {};
       },
 
+      async saveBirthday(b) {
+        const userId = session?.user.id;
+        if (!userId) return { error: 'Please sign in again.' };
+        const { error } = await supabase
+          .from('profile_private')
+          .upsert({ user_id: userId, birthday_month: b?.month ?? null, birthday_day: b?.day ?? null });
+        if (error) return { error: friendlyError(error.message) };
+        setBirthday(b);
+        return {};
+      },
+
+      async deleteAccount() {
+        const { error } = await supabase.rpc('delete_my_account');
+        if (error) return { error: friendlyError(error.message) };
+        await supabase.auth.signOut({ scope: 'local' });
+        setProfile(null);
+        setBirthday(null);
+        return {};
+      },
+
       async updateProfile(p) {
         const userId = session?.user.id;
         if (!userId) return { error: 'Please sign in again.' };
@@ -189,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {};
       },
     }),
-    [loading, session, profile, demo, loadProfile],
+    [loading, session, profile, birthday, demo, loadProfile],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
