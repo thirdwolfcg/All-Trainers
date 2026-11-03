@@ -104,6 +104,22 @@ Still to do for Phase 1:
 - [ ] App icon, splash screen and final name
 - [ ] Real domain for invite and QR links (`PUBLIC_APP_URL` in `src/lib/links.ts` points at the GitHub Pages preview) and push notifications for sub asks
 
+## To-do for David
+
+1. **Turn on AI writing help.** The `describe-class` Edge Function is deployed and migration 0006 has been run. Remaining:
+   - In Supabase, Edge Functions, describe-class, Settings: switch off "Verify JWT with legacy secret" and save. The project signs user tokens with an ECC (P-256) key, so the legacy check rejects every signed-in user. The function verifies the user itself with `auth.getUser()` (see `supabase/config.toml`).
+   - Create an Anthropic API key at console.anthropic.com. Add a small credit balance and set a monthly spend limit.
+   - Add it in Supabase under Edge Functions, Secrets as `ANTHROPIC_API_KEY`. Never commit it or put it in the app.
+   - Test: sign in as maya@alltrainers.test, Add class, type a name, tap Help me write it. Check the function logs and the `ai_usage` table. Until this is done, instructors see "Writing help isn't switched on yet."
+   - Lo will add Anthropic to the Privacy Policy as an AI service provider.
+2. **Connect screens to live Supabase data.** After sign in, every screen still reads the in-memory sample store (`src/lib/store.tsx`). Classes, posts, follows, messages, sub requests and attendance need to read and write the real tables.
+3. **Instructors edit or delete a class**, and **add a new studio** (today they can only cancel, and pick from existing studios).
+4. **Profile editing** after sign up (name, bio, socials, birthday). These rows say "Soon" in Me.
+5. **Push notifications** for sub asks, new messages and client birthdays (`push_tokens` table exists).
+6. **Delete account in the app.** Apple requires it, and the Privacy Policy promises it.
+7. **Photo posts.** Posts support updates, recipes and playlists with links. Photos need Supabase Storage.
+8. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
+
 ## Decisions for David to review
 
 1. **Stack.** Everything above. Easier to change now than later.

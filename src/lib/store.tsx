@@ -46,6 +46,9 @@ type Store = {
   toggleAttended: (session: ClassSession) => void;
 
   addClass: (c: Omit<ClassSession, 'id' | 'status'>) => void;
+  addPost: (p: Omit<Post, 'id' | 'createdAt' | 'instructorId'>) => void;
+  deletePost: (id: string) => Post | undefined;
+  restorePost: (p: Post) => void;
   setClassStatus: (id: string, status: ClassSession['status']) => void;
 
   subRequests: SubRequest[];
@@ -72,7 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [now] = useState(() => new Date());
   const [role, setRole] = useState<Role>('client');
   const [classes, setClasses] = useState(() => buildClasses(now));
-  const [posts] = useState(() => buildPosts(now));
+  const [posts, setPosts] = useState(() => buildPosts(now));
   const [clients, setClients] = useState(() => buildMayaClients(now));
   const [attendance, setAttendance] = useState(() => buildAttendance(now));
   const [conversations, setConversations] = useState(() => buildConversations(now));
@@ -153,6 +156,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
           ),
         );
+      },
+
+      addPost(p) {
+        setPosts((prev) => [{ ...p, id: `p${Date.now()}`, instructorId: meId, createdAt: new Date().toISOString() }, ...prev]);
+      },
+
+      deletePost(id) {
+        const found = posts.find((x) => x.id === id);
+        setPosts((prev) => prev.filter((x) => x.id !== id));
+        return found;
+      },
+
+      restorePost(p) {
+        setPosts((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev]));
       },
 
       setClassStatus(id, status) {

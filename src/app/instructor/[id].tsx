@@ -190,14 +190,25 @@ export default function InstructorProfile() {
           ) : (
             <EmptyState icon="calendar-outline" title="Nothing on the books" body="Follow to get a ping the second new classes drop." />
           )
-        ) : posts.length ? (
-          <View>
-            {posts.map((p) => (
-              <PostCard key={p.id} post={p} />
-            ))}
-          </View>
         ) : (
-          <EmptyState icon="images-outline" title="No posts yet" body="Recipes, playlists and updates land here." />
+          <>
+            {isOwnProfile ? (
+              <Button icon="create-outline" label="New post" onPress={() => router.push('/post/new')} style={{ marginBottom: Spacing.md }} />
+            ) : null}
+            {posts.length ? (
+              <View>
+                {posts.map((p) => (
+                  <PostCard key={p.id} post={p} />
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                icon="images-outline"
+                title="No posts yet"
+                body={isOwnProfile ? 'Share an update, a recipe or a playlist. Your followers see it here.' : 'Recipes, playlists and updates land here.'}
+              />
+            )}
+          </>
         )}
       </Screen>
     </>

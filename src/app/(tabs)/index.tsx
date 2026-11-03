@@ -281,7 +281,10 @@ function InstructorWeek() {
         onClose={() => setConfirmAsk(null)}
       />
 
-      <Button kind="primary" icon="add" label="Add a class" onPress={() => router.push('/schedule/new')} style={{ marginBottom: Spacing.xl }} />
+      <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl }}>
+        <Button kind="primary" icon="add" label="Add class" accessibilityLabel="Add a class" onPress={() => router.push('/schedule/new')} style={{ flex: 1 }} />
+        <Button kind="outline" icon="create-outline" label="Post" accessibilityLabel="Post to your feed" onPress={() => router.push('/post/new')} style={{ flex: 1 }} />
+      </View>
 
       {byDay.length ? (
         byDay.map((g) => (

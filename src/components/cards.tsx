@@ -227,6 +227,7 @@ const postKindLabel: Record<Post['kind'], string> = {
 
 export function PostCard({ post }: { post: Post }) {
   const store = useStore();
+  const toast = useToast();
   const instructor = store.instructor(post.instructorId);
   if (!instructor) return null;
 
@@ -242,6 +243,18 @@ export function PostCard({ post }: { post: Post }) {
         </Text>
         <View style={{ flex: 1 }} />
         {post.isPremium ? <Chip label="Premium" icon="diamond-outline" tone="blush" /> : null}
+        {isOwner ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Delete post ${post.title}`}
+            hitSlop={10}
+            onPress={() => {
+              const removed = store.deletePost(post.id);
+              if (removed) toast('Post deleted.', { label: 'Undo', onPress: () => store.restorePost(removed) });
+            }}>
+            <Icon name="trash-outline" size={18} color="textSecondary" />
+          </Pressable>
+        ) : null}
       </View>
 
       <Text variant="heading">{post.title}</Text>
