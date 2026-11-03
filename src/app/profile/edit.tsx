@@ -13,8 +13,63 @@ import { StyleLabels, type Style } from '@/lib/types';
 const STYLE_OPTIONS: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 const cleanHandle = (t: string) => t.replace(/[^A-Za-z0-9_.@]/g, '').replace(/^@+/, '');
 
-/** Instructors edit what clients see on their profile. */
+/** Instructors edit what clients see; clients edit their name and neighborhood. */
 export default function EditProfile() {
+  const store = useStore();
+  return store.role === 'client' ? <EditClientProfile /> : <EditInstructorProfile />;
+}
+
+function EditClientProfile() {
+  const store = useStore();
+  const auth = useAuth();
+  const toast = useToast();
+  const live = !auth.demo && !!auth.session && !!auth.profile;
+  const demoMe = store.clients.find((c) => c.id === 'me');
+  const [name, setName] = useState(live ? (auth.profile?.display_name ?? '') : (demoMe?.name ?? 'Lo S.'));
+  const [neighborhood, setNeighborhood] = useState(live ? (auth.profile?.neighborhood ?? '') : '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const save = async () => {
+    setBusy(true);
+    setError(undefined);
+    if (live) {
+      const res = await auth.updateProfile({ displayName: name, neighborhood });
+      if (res.error) {
+        setBusy(false);
+        setError(res.error);
+        return;
+      }
+    } else {
+      store.updateClient('me', { name: name.trim() });
+    }
+    setBusy(false);
+    toast('Profile updated.');
+    router.back();
+  };
+
+  return (
+    <Screen padTop={false}>
+      <Text variant="body" color="textSecondary">
+        Instructors you follow see your first name and last initial.
+      </Text>
+      <View style={{ marginTop: Spacing.xl, gap: Spacing.xl }}>
+        <Field label="Name" value={name} onChangeText={setName} placeholder="First name and last initial is fine" autoComplete="name" maxLength={60} />
+        <Field label="Neighborhood" value={neighborhood} onChangeText={setNeighborhood} placeholder="LoHi, RiNo, Wash Park…" hint="Optional. Helps us show classes near you." />
+        <Button kind="outline" icon="gift-outline" label="Birthday" onPress={() => router.push('/settings/birthday')} style={{ alignSelf: 'flex-start' }} />
+      </View>
+      {error ? (
+        <Text variant="small" color="blushDeep" style={{ marginTop: Spacing.lg }}>
+          {error}
+        </Text>
+      ) : null}
+      <Button label={busy ? 'Saving…' : 'Save'} icon="checkmark" disabled={!name.trim() || busy} onPress={save} style={{ marginTop: Spacing.xxl }} />
+      <Button kind="ghost" label="Cancel" onPress={() => router.back()} style={{ marginTop: Spacing.sm }} />
+    </Screen>
+  );
+}
+
+function EditInstructorProfile() {
   const store = useStore();
   const auth = useAuth();
   const toast = useToast();

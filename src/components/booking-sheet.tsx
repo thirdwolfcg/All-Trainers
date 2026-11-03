@@ -27,9 +27,12 @@ export function BookingSheet({
   session,
   instructor,
   studio,
+  onOpened,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Called after a booking link opens, so the app can ask "did you book it?" */
+  onOpened?: () => void;
   session: ClassSession;
   instructor: Instructor;
   studio: Studio;
@@ -67,6 +70,7 @@ export function BookingSheet({
                   onPress={() => {
                     onClose();
                     Linking.openURL(o.url);
+                    onOpened?.();
                   }}
                   accessibilityRole="link"
                   style={({ pressed }) => [styles.option, pressed && { backgroundColor: Colors.surface }]}>

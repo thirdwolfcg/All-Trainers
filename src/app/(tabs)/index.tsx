@@ -9,7 +9,7 @@ import { PreviewSwitch } from '@/components/preview-switch';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
-import { addDays, dayLabel, isSameDay, shortDay, startOfDay } from '@/lib/dates';
+import { addDays, dayLabel, isSameDay, shortDay, startOfDay, timeLabel } from '@/lib/dates';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
@@ -77,6 +77,16 @@ function ClientHome() {
   const today = counts[0];
   const suggestions = store.instructors.filter((i) => !store.following.has(i.id)).slice(0, 3);
   const followingCount = store.following.size;
+  const now = new Date();
+  const myWeek = store.classes
+    .filter(
+      (c) =>
+        store.booked.has(c.id) &&
+        c.status !== 'cancelled' &&
+        new Date(c.startsAt).getTime() + c.durationMin * 60000 > now.getTime() &&
+        new Date(c.startsAt) < addDays(startOfDay(now), 7),
+    )
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 
   return (
     <Screen
@@ -102,11 +112,55 @@ function ClientHome() {
         <Icon name="arrow-forward" size={18} color="primary" />
       </Pressable>
 
+      <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+        <View style={styles.inline}>
+          <Icon name="checkmark-circle" size={18} color="primary" />
+          <Text variant="eyebrow" color="primary">
+            Your week{myWeek.length ? ` · ${myWeek.length} booked` : ''}
+          </Text>
+        </View>
+        {myWeek.length ? (
+          myWeek.map((c) => {
+            const start = new Date(c.startsAt);
+            const who = store.instructor(c.instructorId);
+            return (
+              <Pressable
+                key={c.id}
+                onPress={() => router.push({ pathname: '/class/[id]', params: { id: c.id } })}
+                accessibilityRole="link"
+                accessibilityLabel={`${c.title}, ${dayLabel(start)} at ${timeLabel(start)}`}
+                style={styles.weekRow}>
+                <View style={{ width: 92 }}>
+                  <Text variant="smallStrong" color="primaryDeep">
+                    {dayLabel(start) === 'Today' || dayLabel(start) === 'Tomorrow' ? dayLabel(start) : shortDay(start)}
+                  </Text>
+                  <Text variant="small" color="textSecondary">
+                    {timeLabel(start)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text variant="bodyStrong">{c.title}</Text>
+                  <Text variant="small" color="textSecondary">
+                    {who ? `with ${who.name.split(' ')[0]} · ` : ''}
+                    {store.studio(c.studioId)?.name}
+                  </Text>
+                </View>
+                <Icon name="chevron-forward" size={16} color="textSecondary" />
+              </Pressable>
+            );
+          })
+        ) : (
+          <Text variant="small" color="textSecondary">
+            Nothing booked yet. Booked a class? Tap &quot;Booked it&quot; on it and it lands here.
+          </Text>
+        )}
+      </Card>
+
       {followingCount === 0 ? (
         <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
       ) : (
         <>
-          <SectionHeader title={`Your people · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
+          <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
           <DayTabs selected={day} onSelect={setDay} counts={counts} />
           <View style={{ marginBottom: Spacing.xxl }}>
             {dayClasses.length ? (
@@ -273,6 +327,7 @@ function InstructorWeek() {
 }
 
 const styles = StyleSheet.create({
+  weekRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 4 },
   qrButton: {
     width: 64,
     height: 64,

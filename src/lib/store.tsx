@@ -48,6 +48,9 @@ type Store = {
   premium: Set<string>; // instructors the client has premium with
   toggleFollow: (instructorId: string) => void;
 
+  /** Classes the client says they're booked into (they book outside the app). */
+  booked: Set<string>;
+  toggleBooked: (classId: string) => void;
   attended: (classId: string) => boolean;
   toggleAttended: (session: ClassSession) => void;
 
@@ -88,6 +91,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState(() => buildConversations(now));
   const [following, setFollowing] = useState(() => new Set(['maya', 'jordan', 'priya']));
   const [premium, setPremium] = useState(() => new Set(['maya']));
+  // Demo: Lo is booked into the next two upcoming classes from people she follows.
+  const [booked, setBooked] = useState(() => {
+    const upcoming = buildClasses(now)
+      .filter((c) => ['maya', 'jordan', 'priya'].includes(c.instructorId) && c.status !== 'cancelled' && new Date(c.startsAt) > now)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    return new Set(upcoming.filter((_, i) => i === 0 || i === 3).map((c) => c.id));
+  });
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
@@ -105,6 +115,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const notMine = <T extends Record<string, unknown>>(rows: T[], keys: (keyof T)[]) => rows.filter((r) => !keys.some((k) => r[k] === me));
     setFollowing(new Set());
     setPremium(new Set());
+    setBooked(new Set());
     setAttendance((prev) => notMine(prev, ['clientId', 'instructorId']));
     setConversations((prev) => notMine(prev, ['clientId', 'instructorId']));
     if (profile.role === 'instructor') {
@@ -180,6 +191,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               );
             }
           }
+          return next;
+        });
+      },
+
+      booked,
+
+      toggleBooked(classId) {
+        setBooked((prev) => {
+          const next = new Set(prev);
+          if (next.has(classId)) next.delete(classId);
+          else next.add(classId);
           return next;
         });
       },
@@ -326,7 +348,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, instructors, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole]);
+  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

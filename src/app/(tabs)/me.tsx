@@ -52,7 +52,9 @@ export default function MeScreen() {
         <Card
           tone="plain"
           style={[styles.profile, { marginBottom: Spacing.md }]}
-          onPress={auth.profile.role === 'instructor' ? () => router.push({ pathname: '/instructor/[id]', params: { id: store.meId } }) : undefined}>
+          onPress={() =>
+            auth.profile?.role === 'instructor' ? router.push({ pathname: '/instructor/[id]', params: { id: store.meId } }) : router.push('/profile/edit')
+          }>
           <Avatar name={auth.profile.display_name} size={64} ring />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="title">{auth.profile.display_name}</Text>
@@ -61,6 +63,7 @@ export default function MeScreen() {
               {auth.profile.role === 'instructor' ? 'Instructor' : 'Client'} · {auth.session?.user.email}
             </Text>
           </View>
+          <Icon name="chevron-forward" size={18} color="textSecondary" />
         </Card>
       ) : null}
 
@@ -89,14 +92,15 @@ export default function MeScreen() {
           <Icon name="chevron-forward" size={18} color="textSecondary" />
         </Card>
       ) : (
-        <Card tone="plain" style={styles.profile}>
-          <Avatar name="Lo S." size={64} ring />
+        <Card tone="plain" style={styles.profile} onPress={() => router.push('/profile/edit')}>
+          <Avatar name={meInfo.name} size={64} ring />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text variant="title">Lo S.</Text>
+            <Text variant="title">{meInfo.name}</Text>
             <Text variant="small" color="textSecondary">
               Following {store.following.size} instructors in Denver
             </Text>
           </View>
+          <Icon name="chevron-forward" size={18} color="textSecondary" />
         </Card>
       )}
 
@@ -147,6 +151,8 @@ export default function MeScreen() {
           </>
         ) : (
           <>
+            <SettingRow icon="create-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} />
+            <Divider />
             <SettingRow
               icon="gift-outline"
               label="Birthday"

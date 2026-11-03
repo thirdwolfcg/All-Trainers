@@ -59,7 +59,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0009 in order)
+supabase/migrations/     database schema with row level security (run 0001 through 0010 in order)
 supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
@@ -112,13 +112,19 @@ Still to do for Phase 1:
    - Add it in Supabase under Edge Functions, Secrets as `ANTHROPIC_API_KEY`. Never commit it or put it in the app.
    - Test: sign in as maya@alltrainers.test, Add class, type a name, tap Help me write it. Check the function logs and the `ai_usage` table. Until this is done, instructors see "Writing help isn't switched on yet."
    - Lo will add Anthropic to the Privacy Policy as an AI service provider.
-2. **Connect screens to live Supabase data.** After sign in, every screen still reads the in-memory sample store (`src/lib/store.tsx`). Classes, posts, follows, messages, sub requests and attendance need to read and write the real tables.
-3. **Instructors edit or delete a class**, and **add a new studio** (today they can only cancel, and pick from existing studios).
-4. **Profile editing.** Instructors can edit their profile (Edit profile on their profile and in Me), saved to `profiles` when signed in. Still missing: clients editing their name and birthday (Me shows "Soon").
-5. **Push notifications** for sub asks, new messages and client birthdays (`push_tokens` table exists).
-6. **Delete account in the app.** Built (Me, Privacy, Delete my account) using `delete_my_account()` from migration 0009. Test it with a throwaway account. Note: messages the person sent are deleted with their conversations, so the other side loses that history too.
-7. **Photo posts.** Posts support updates, recipes and playlists with links. Photos need Supabase Storage.
-8. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
+2. **Connect screens to live Supabase data.** After sign in, every screen still reads the in-memory sample store (`src/lib/store.tsx`). Classes, posts, follows, messages, sub requests, attendance and bookings need to read and write the real tables. Real accounts already start with empty follows, bookings and messages; the store keeps "me" under its sample id until this is done.
+3. **"Booked it" for real accounts.** Clients mark classes they booked elsewhere; they show in "Your week" on Home. Table `class_bookings` (migration 0010) is ready, the screens still use the sample store. The class's instructor can see who's coming, which could become a "who's coming" list on their week.
+4. **Push notifications.** Needed for sub asks, new messages, client birthdays and "your instructor added a class." `push_tokens` table exists. Needs Expo push setup for iPhone and Android, and a settings screen (Me, Notifications says "Soon").
+5. **Calendar sync.** A subscribable calendar link (an iCal feed per client) that keeps their booked classes up to date, served by an Edge Function. One-tap "Add to cal" per class already works. Me, Calendar sync says "Soon."
+6. **Premium and payments.** Client premium subscriptions with the instructor's share: App Store and Google Play in-app purchases (Apple requires them for digital content), Stripe for instructor payouts, webhooks that write `premium_subscriptions`. Me, Premium says "Soon." Decide pricing and the open questions below first.
+7. **Founding plan to paid plan.** When founding instructors start paying, and how (`instructor_plans`).
+8. **Instructors edit or delete a class**, and **add a new studio** (today they can only cancel, and pick from existing studios).
+9. **Delete account.** Built (Me, Privacy, Delete my account) with `delete_my_account()` from migration 0009, and run in Supabase. Test with a throwaway account. Messages the person sent go with their conversations, so the other side loses that history too.
+10. **Photo posts.** Posts support updates, videos (Instagram, TikTok, YouTube links), recipes and playlists. Photos need Supabase Storage.
+11. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
+12. **App Store and Google Play release.** EAS builds, store listings, privacy labels, and review notes (test account for Apple).
+
+Done since the first list: instructor and client profile editing, birthday add/change/remove (`profile_private`), Privacy screen, role locked in the database (0008), video posts and post titles (0007), instructor landing page at `/teach`.
 
 ## Decisions for David to review
 

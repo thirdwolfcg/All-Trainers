@@ -65,21 +65,62 @@ export function ClassActions({ session, size = 'sm' }: { session: ClassSession; 
           }}
         />
       ) : (
-        <>
-          <Button size={size} kind="ink" label="Book it" onPress={() => setBooking(true)} />
-          <Button
-            size={size}
-            kind="outline"
-            label="Add to cal"
-            onPress={async () => {
-              await addToCalendar(session, instructor, studio);
-              toast(Platform.OS === 'web' ? 'Calendar file downloaded. Open it to add the class.' : 'Opening your calendar…');
-            }}
-          />
-        </>
+        store.booked.has(session.id) ? (
+          <>
+            <Button
+              size={size}
+              kind="primary"
+              icon="checkmark-circle"
+              label="I'm booked"
+              accessibilityLabel={`You're booked for ${session.title}. Tap to undo.`}
+              onPress={() => {
+                store.toggleBooked(session.id);
+                toast(`Took ${session.title} off your week.`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
+              }}
+            />
+            <Button
+              size={size}
+              kind="outline"
+              label="Add to cal"
+              onPress={async () => {
+                await addToCalendar(session, instructor, studio);
+                toast(Platform.OS === 'web' ? 'Calendar file downloaded. Open it to add the class.' : 'Opening your calendar…');
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Button size={size} kind="ink" label="Book it" onPress={() => setBooking(true)} />
+            <Button
+              size={size}
+              kind="outline"
+              icon="checkmark"
+              label="Booked it"
+              accessibilityLabel={`I already booked ${session.title}`}
+              onPress={() => {
+                store.toggleBooked(session.id);
+                toast(`${session.title} is on your week. See you there!`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
+              }}
+            />
+          </>
+        )
       )}
       {booking ? (
-        <BookingSheet open={booking} onClose={() => setBooking(false)} session={session} instructor={instructor} studio={studio} />
+        <BookingSheet
+          open={booking}
+          onClose={() => setBooking(false)}
+          session={session}
+          instructor={instructor}
+          studio={studio}
+          onOpened={() =>
+            toast('Got your spot? Add it to your week.', {
+              label: 'Booked it',
+              onPress: () => {
+                if (!store.booked.has(session.id)) store.toggleBooked(session.id);
+              },
+            })
+          }
+        />
       ) : null}
     </View>
   );
@@ -108,10 +149,12 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
   const { time, meridiem } = clock(start);
   const cancelled = session.status === 'cancelled';
 
+  const isBooked = store.role === 'client' && store.booked.has(session.id) && !cancelled;
+
   return (
     <Row
       onPress={() => router.push({ pathname: '/class/[id]', params: { id: session.id } })}
-      style={[styles.classRow, cancelled && { opacity: 0.55 }]}>
+      style={[styles.classRow, cancelled && { opacity: 0.55 }, isBooked && styles.bookedRow]}>
       <View style={styles.timeCol}>
         <Text variant="title" style={cancelled && styles.struck}>
           {time}
@@ -122,6 +165,11 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
       </View>
 
       <View style={{ flex: 1, gap: 4 }}>
+        {isBooked ? (
+          <Text variant="eyebrow" color="primary">
+            ✓ You&apos;re booked
+          </Text>
+        ) : null}
         <Text variant="heading" style={cancelled && styles.struck}>
           {session.title}
         </Text>
@@ -299,6 +347,7 @@ const styles = StyleSheet.create({
   classRow: { flexDirection: 'row', gap: Spacing.lg, alignItems: 'flex-start' },
   timeCol: { width: 64, gap: 2 },
   struck: { textDecorationLine: 'line-through' },
+  bookedRow: { borderLeftWidth: 3, borderLeftColor: Colors.primary, paddingLeft: Spacing.md, backgroundColor: Colors.primarySoft },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },
   instructorRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
