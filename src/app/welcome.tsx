@@ -40,7 +40,7 @@ export default function Welcome() {
         <View style={styles.points}>
           {[
             { icon: 'calendar-outline' as const, text: 'Every class, every studio, one schedule' },
-            { icon: 'heart-outline' as const, text: 'Get a ping when they drop a class or need a sub' },
+            { icon: 'heart-outline' as const, text: 'Know when your instructor adds a class or gets a sub' },
             { icon: 'stats-chart-outline' as const, text: 'See your stats. Yes, all of them.' },
           ].map((p) => (
             <View key={p.text} style={styles.point}>
