@@ -52,13 +52,17 @@ export default function TabLayout() {
               <TabButton label="Discover" icon="search-outline" activeIcon="search" />
             </TabTrigger>
           ) : null}
-          <TabTrigger name="activity" href="/activity" asChild>
-            <TabButton
-              label={isInstructor ? 'Followers' : 'My classes'}
-              icon={isInstructor ? 'people-outline' : 'stats-chart-outline'}
-              activeIcon={isInstructor ? 'people' : 'stats-chart'}
-            />
-          </TabTrigger>
+          {isInstructor ? (
+            <TabTrigger name="activity" href="/activity" asChild>
+              <TabButton label="Followers" icon="people-outline" activeIcon="people" />
+            </TabTrigger>
+          ) : (
+            <TabTrigger name="feed" href="/feed" asChild>
+              <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
+            </TabTrigger>
+          )}
+          {/* Clients reach My classes from Home now; keep the route for old links. */}
+          {!isInstructor ? <TabTrigger name="activity" href="/activity" style={{ display: 'none' }} /> : null}
           <TabTrigger name="messages" href="/messages" asChild>
             <TabButton label="Messages" icon="chatbubbles-outline" activeIcon="chatbubbles" />
           </TabTrigger>

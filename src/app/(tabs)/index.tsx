@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ClassCard, InstructorRow, PostCard } from '@/components/cards';
 import { ConfirmSheet } from '@/components/confirm-sheet';
 import { InstructorClassActions } from '@/components/instructor-class-actions';
+import { MyClassesPanel } from '@/components/my-classes';
 import { PreviewSwitch } from '@/components/preview-switch';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
@@ -63,27 +64,19 @@ function ClientHome() {
   const me = useMe();
   const firstName = greetName(me.name);
   const [day, setDay] = useState(() => startOfDay(new Date()));
+  const [view, setView] = useState<'week' | 'mine'>('week');
 
-  const followedClasses = useMemo(
-    () => store.classes.filter((c) => store.following.has(c.instructorId)),
-    [store.classes, store.following],
-  );
+  const followedClasses = useMemo(() => store.classes.filter((c) => store.following.has(c.instructorId)), [store.classes, store.following]);
 
   const counts = useMemo(() => {
     const today = startOfDay(new Date());
-    return Array.from({ length: 7 }, (_, i) =>
-      followedClasses.filter((c) => isSameDay(new Date(c.startsAt), addDays(today, i))).length,
-    );
+    return Array.from({ length: 7 }, (_, i) => followedClasses.filter((c) => isSameDay(new Date(c.startsAt), addDays(today, i))).length);
   }, [followedClasses]);
 
   const dayClasses = followedClasses.filter((c) => isSameDay(new Date(c.startsAt), day));
   const today = counts[0];
   const suggestions = store.instructors.filter((i) => !store.following.has(i.id)).slice(0, 3);
   const followingCount = store.following.size;
-  const latestPosts = store.posts
-    .filter((p) => store.following.has(p.instructorId))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 3);
   const auth = useAuth();
   const hasBirthday = !auth.demo && auth.session ? !!auth.birthday : !!store.clients.find((c) => c.id === 'me')?.birthday;
   const needsBirthday = !hasBirthday && !store.dismissedTips.has('birthday-nudge');
@@ -110,115 +103,137 @@ function ClientHome() {
             : `Hiii ${firstName}! Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
-      <Tip id="tip-schedule" text="This is your schedule. Booked a class somewhere? Tap “Booked it” on it and it lands here." />
-      <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-        <View style={styles.inline}>
-          <Icon name="checkmark-circle" size={18} color="primary" />
-          <Text variant="eyebrow" color="primary">
-            Your schedule{myWeek.length ? ` · ${myWeek.length} this week` : ''}
-          </Text>
-        </View>
-        {myWeek.length ? (
-          myWeek.map((c) => {
-            const start = new Date(c.startsAt);
-            const who = store.instructor(c.instructorId);
-            return (
-              <Pressable
-                key={c.id}
-                onPress={() => router.push({ pathname: '/class/[id]', params: { id: c.id } })}
-                accessibilityRole="link"
-                accessibilityLabel={`${c.title}, ${dayLabel(start)} at ${timeLabel(start)}`}
-                style={styles.weekRow}>
-                <View style={{ width: 92 }}>
-                  <Text variant="smallStrong" color="primaryDeep">
-                    {dayLabel(start) === 'Today' || dayLabel(start) === 'Tomorrow' ? dayLabel(start) : shortDay(start)}
-                  </Text>
-                  <Text variant="small" color="textSecondary">
-                    {timeLabel(start)}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodyStrong">{c.title}</Text>
-                  <Text variant="small" color="textSecondary">
-                    {who ? `with ${who.name.split(' ')[0]} · ` : ''}
-                    {store.studio(c.studioId)?.name}
-                  </Text>
-                </View>
-                <Icon name="chevron-forward" size={16} color="textSecondary" />
-              </Pressable>
-            );
-          })
-        ) : (
-          <Text variant="small" color="textSecondary">
-            Nothing on your schedule yet. Booked a class? Tap &quot;Booked it&quot; on it below and it shows up here.
-          </Text>
-        )}
-      </Card>
-
-
-      {followingCount === 0 ? (
-        <>
-          <Tip id="tip-follow" text="Start here. Find the instructors you take class with and follow them." pointer="none" />
-          <EmptyState icon="heart-outline" title="Your feed is empty (for now)" body="Follow your favorite instructors and every class they teach, at every studio, shows up here." />
+      <View style={styles.segment}>
+        {(['week', 'mine'] as const).map((v) => (
           <Pressable
-            onPress={() => router.push('/discover')}
-            style={styles.findButton}
-            accessibilityRole="button"
-            accessibilityLabel="Find instructors to follow">
-            <Icon name="search" size={18} color="textSecondary" />
-            <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
-              Find instructors to follow
+            key={v}
+            onPress={() => setView(v)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: view === v }}
+            style={[styles.segmentItem, view === v && styles.segmentActive]}>
+            <Text variant="smallStrong" color={view === v ? 'primaryDeep' : 'textSecondary'}>
+              {v === 'week' ? 'This week' : 'My classes'}
             </Text>
-            <Icon name="arrow-forward" size={18} color="primary" />
           </Pressable>
-          {suggestions.length ? (
-            <>
-              <SectionHeader title="Start with these" action="See all" onAction={() => router.push('/discover')} />
-              {suggestions.map((i) => (
-                <InstructorRow key={i.id} instructor={i} />
-              ))}
-            </>
-          ) : null}
-        </>
+        ))}
+      </View>
+      {view === 'mine' ? (
+        <MyClassesPanel />
       ) : (
         <>
-          <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
-          <DayTabs selected={day} onSelect={setDay} counts={counts} />
-          <Tip id="tip-book" text="“Book it” opens the studio’s app, Mindbody or ClassPass. Tap a class to see the details." style={{ marginTop: Spacing.md }} />
-          <View style={{ marginBottom: Spacing.xxl }}>
-            {dayClasses.length ? (
-              dayClasses.map((c) => <ClassCard key={c.id} session={c} />)
-            ) : (
-              <EmptyState icon="cafe-outline" title="Rest day energy" body="None of your people are teaching that day. Pick another day or find someone new." />
-            )}
-          </View>
-
-          {needsBirthday ? (
-            <Card tone="gray" style={{ gap: Spacing.sm, marginBottom: Spacing.xxl }}>
-              <View style={styles.inline}>
-                <Icon name="gift-outline" size={18} color="primary" />
-                <Text variant="eyebrow" color="primary">
-                  Share your birthday?
-                </Text>
-              </View>
-              <Text variant="small" color="textSecondary">
-                Only if you want to. Instructors you follow can wish you a happy birthday. Month and day only.
+          <Tip id="tip-schedule" text="This is your schedule. Booked a class somewhere? Tap “Booked it” on it and it lands here." />
+          <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+            <View style={styles.inline}>
+              <Icon name="checkmark-circle" size={18} color="primary" />
+              <Text variant="eyebrow" color="primary">
+                Your schedule{myWeek.length ? ` · ${myWeek.length} this week` : ''}
               </Text>
-              <View style={[styles.inline, { marginTop: 4 }]}>
-                <Button size="sm" label="Choose" onPress={() => router.push('/settings/birthday')} />
-                <Button size="sm" kind="ghost" label="Not now" onPress={() => store.dismissTip('birthday-nudge')} />
-              </View>
-            </Card>
-          ) : null}
+            </View>
+            {myWeek.length ? (
+              myWeek.map((c) => {
+                const start = new Date(c.startsAt);
+                const who = store.instructor(c.instructorId);
+                return (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => router.push({ pathname: '/class/[id]', params: { id: c.id } })}
+                    accessibilityRole="link"
+                    accessibilityLabel={`${c.title}, ${dayLabel(start)} at ${timeLabel(start)}`}
+                    style={styles.weekRow}>
+                    <View style={{ width: 92 }}>
+                      <Text variant="smallStrong" color="primaryDeep">
+                        {dayLabel(start) === 'Today' || dayLabel(start) === 'Tomorrow' ? dayLabel(start) : shortDay(start)}
+                      </Text>
+                      <Text variant="small" color="textSecondary">
+                        {timeLabel(start)}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodyStrong">{c.title}</Text>
+                      <Text variant="small" color="textSecondary">
+                        {who ? `with ${who.name.split(' ')[0]} · ` : ''}
+                        {store.studio(c.studioId)?.name}
+                      </Text>
+                    </View>
+                    <Icon name="chevron-forward" size={16} color="textSecondary" />
+                  </Pressable>
+                );
+              })
+            ) : (
+              <Text variant="small" color="textSecondary">
+                Nothing on your schedule yet. Booked a class? Tap &quot;Booked it&quot; on it below and it shows up here.
+              </Text>
+            )}
+          </Card>
 
-          {latestPosts.length ? (
+          {followingCount === 0 ? (
             <>
-              <SectionHeader title="Latest from your people" />
-              {latestPosts.map((p) => (
-                <PostCard key={p.id} post={p} showAuthor />
-              ))}
+              <Tip id="tip-follow" text="Start here. Find the instructors you take class with and follow them." pointer="none" />
+              <EmptyState
+                icon="heart-outline"
+                title="Your feed is empty (for now)"
+                body="Follow your favorite instructors and every class they teach, at every studio, shows up here."
+              />
+              <Pressable
+                onPress={() => router.push('/discover')}
+                style={styles.findButton}
+                accessibilityRole="button"
+                accessibilityLabel="Find instructors to follow">
+                <Icon name="search" size={18} color="textSecondary" />
+                <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
+                  Find instructors to follow
+                </Text>
+                <Icon name="arrow-forward" size={18} color="primary" />
+              </Pressable>
+              {suggestions.length ? (
+                <>
+                  <SectionHeader title="Start with these" action="See all" onAction={() => router.push('/discover')} />
+                  {suggestions.map((i) => (
+                    <InstructorRow key={i.id} instructor={i} />
+                  ))}
+                </>
+              ) : null}
             </>
-          ) : null}
+          ) : (
+            <>
+              <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
+              <DayTabs selected={day} onSelect={setDay} counts={counts} />
+              <Tip
+                id="tip-book"
+                text="“Book it” opens the studio’s app, Mindbody or ClassPass. Tap a class to see the details."
+                style={{ marginTop: Spacing.md }}
+              />
+              <View style={{ marginBottom: Spacing.xxl }}>
+                {dayClasses.length ? (
+                  dayClasses.map((c) => <ClassCard key={c.id} session={c} />)
+                ) : (
+                  <EmptyState
+                    icon="cafe-outline"
+                    title="Rest day energy"
+                    body="None of your people are teaching that day. Pick another day or find someone new."
+                  />
+                )}
+              </View>
+
+              {needsBirthday ? (
+                <Card tone="gray" style={{ gap: Spacing.sm, marginBottom: Spacing.xxl }}>
+                  <View style={styles.inline}>
+                    <Icon name="gift-outline" size={18} color="primary" />
+                    <Text variant="eyebrow" color="primary">
+                      Share your birthday?
+                    </Text>
+                  </View>
+                  <Text variant="small" color="textSecondary">
+                    Only if you want to. Instructors you follow can wish you a happy birthday. Month and day only.
+                  </Text>
+                  <View style={[styles.inline, { marginTop: 4 }]}>
+                    <Button size="sm" label="Choose" onPress={() => router.push('/settings/birthday')} />
+                    <Button size="sm" kind="ghost" label="Not now" onPress={() => store.dismissTip('birthday-nudge')} />
+                  </View>
+                </Card>
+              ) : null}
+            </>
+          )}
         </>
       )}
     </Screen>
@@ -233,10 +248,7 @@ function InstructorWeek() {
   const today = startOfDay(new Date());
   // My classes, plus any I'm covering for someone else
   const mine = store.classes.filter(
-    (c) =>
-      (c.instructorId === me.id || c.subInstructorId === me.id) &&
-      new Date(c.startsAt) >= today &&
-      new Date(c.startsAt) < addDays(today, 7),
+    (c) => (c.instructorId === me.id || c.subInstructorId === me.id) && new Date(c.startsAt) >= today && new Date(c.startsAt) < addDays(today, 7),
   );
   // Open asks, plus ones I said no to that still need a sub (so a mis-tap can be taken back)
   const asksForMe = store.subRequests.filter((r) => {
@@ -298,14 +310,11 @@ function InstructorWeek() {
             const declined = r.status === 'declined';
             return (
               <View key={r.id} style={{ gap: Spacing.sm, opacity: declined ? 0.8 : 1 }}>
-                <Pressable
-                  style={styles.inline}
-                  onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })}
-                  accessibilityRole="link">
+                <Pressable style={styles.inline} onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })} accessibilityRole="link">
                   <Avatar name={from.name} size={32} />
                   <Text variant="body" style={{ flex: 1 }}>
-                    <Text variant="bodyStrong">{fromFirst}</Text> needs a sub for {cls.title} at {studio.name},{' '}
-                    {dayLabel(start)} at {start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    <Text variant="bodyStrong">{fromFirst}</Text> needs a sub for {cls.title} at {studio.name}, {dayLabel(start)} at{' '}
+                    {start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                   </Text>
                 </Pressable>
                 {declined ? (
@@ -358,8 +367,22 @@ function InstructorWeek() {
         <>
           <Tip id="tip-add" text="Add every class you teach, at every studio. Set it to repeat so you only do it once." />
           <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl }}>
-            <Button kind="primary" icon="add" label="Add class" accessibilityLabel="Add a class" onPress={() => router.push('/schedule/new')} style={{ flex: 1 }} />
-            <Button kind="outline" icon="create-outline" label="Post" accessibilityLabel="Post to your feed" onPress={() => router.push('/post/new')} style={{ flex: 1 }} />
+            <Button
+              kind="primary"
+              icon="add"
+              label="Add class"
+              accessibilityLabel="Add a class"
+              onPress={() => router.push('/schedule/new')}
+              style={{ flex: 1 }}
+            />
+            <Button
+              kind="outline"
+              icon="create-outline"
+              label="Post"
+              accessibilityLabel="Post to your feed"
+              onPress={() => router.push('/post/new')}
+              style={{ flex: 1 }}
+            />
           </View>
         </>
       ) : null}
@@ -401,6 +424,9 @@ function InstructorWeek() {
 }
 
 const styles = StyleSheet.create({
+  segment: { flexDirection: 'row', backgroundColor: Colors.surfaceStrong, borderRadius: Radius.pill, padding: 4, marginBottom: Spacing.xl },
+  segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: Radius.pill },
+  segmentActive: { backgroundColor: Colors.background },
   weekRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 4 },
   qrButton: {
     width: 64,
@@ -428,5 +454,12 @@ const styles = StyleSheet.create({
   dayTabActive: { borderBottomColor: Colors.primary },
   dayDot: { alignSelf: 'center', width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primary, marginTop: 4 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  instructorActions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.xs, justifyContent: 'flex-end', marginTop: -Spacing.sm, marginBottom: Spacing.sm },
+  instructorActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: Spacing.xs,
+    justifyContent: 'flex-end',
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
 });
