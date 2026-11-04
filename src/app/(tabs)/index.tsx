@@ -261,7 +261,7 @@ function InstructorWeek() {
       title={`Hiii ${greetName(me.name)}`}
       subtitle={
         mine.length === 0
-          ? 'Your week is a blank canvas. Your people are waiting to see where you’ll be.'
+          ? 'Empty week, full potential.'
           : `${mine.length} ${mine.length === 1 ? 'class' : 'classes'}, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`
       }
       right={
