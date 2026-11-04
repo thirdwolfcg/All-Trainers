@@ -129,3 +129,23 @@ export type Conversation = {
   clientId: string;
   messages: Message[];
 };
+
+/** A note from the instructor to everyone booked into a class ("Heat's out, bring layers"). */
+export type ClassUpdate = {
+  id: string;
+  classId: string;
+  instructorId: string;
+  body: string;
+  createdAt: string; // ISO
+};
+
+/** A booked client offering their spot to someone else on the app. */
+export type SpotOffer = {
+  id: string;
+  classId: string;
+  fromClientId: string;
+  fromName: string;
+  status: 'open' | 'claimed' | 'cancelled';
+  claimedBy?: string;
+  createdAt: string; // ISO
+};

@@ -6,10 +6,12 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
 import { addToCalendar } from '@/lib/calendar';
 import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
+import { useMe } from '@/lib/me';
 import { useToast } from '@/lib/toast';
 import { StyleLabels, type ClassSession, type Instructor, type Post } from '@/lib/types';
 
 import { BookingSheet } from './booking-sheet';
+import { ConfirmSheet } from './confirm-sheet';
 import { Avatar, Button, Chip, Icon, Row, Text, type IconName } from './ui';
 import { linkButton } from '@/lib/links';
 
@@ -33,6 +35,88 @@ export function useFollowToggle() {
       toast(`Following ${first}. Their classes show up on your home screen now.`);
     }
   };
+}
+
+/** Waitlist, open spots and "offer my spot" for a client on an upcoming class. */
+function SpotRow({ session }: { session: ClassSession }) {
+  const store = useStore();
+  const toast = useToast();
+  const me = useMe();
+  const [confirmOffer, setConfirmOffer] = useState(false);
+  const instructor = store.instructor(session.instructorId);
+  const hasStarted = new Date(session.startsAt).getTime() <= Date.now();
+  if (store.role !== 'client' || hasStarted || session.status === 'cancelled' || !instructor) return null;
+
+  const booked = store.booked.has(session.id);
+  const offers = store.spotOffers.filter((o) => o.classId === session.id && o.status === 'open');
+  const mine = offers.find((o) => o.fromClientId === 'me');
+  const theirs = offers.find((o) => o.fromClientId !== 'me');
+  const waiting = store.waitlist.has(session.id);
+  const first = instructor.name.split(' ')[0];
+
+  return (
+    <View style={styles.spot}>
+      {mine ? (
+        <View style={styles.spotBanner}>
+          <Icon name="swap-horizontal" size={16} color="primaryDeep" />
+          <Text variant="small" style={{ flex: 1 }}>
+            You offered your spot. We&apos;ll tell you when someone claims it.
+          </Text>
+          <Text variant="smallStrong" color="primary" accessibilityRole="button" onPress={() => store.cancelOffer(mine.id)}>
+            Take it back
+          </Text>
+        </View>
+      ) : !booked && theirs ? (
+        <View style={styles.spotBanner}>
+          <Icon name="sparkles" size={16} color="primaryDeep" />
+          <Text variant="small" style={{ flex: 1 }}>
+            <Text variant="smallStrong">Spot open!</Text> {theirs.fromName} can&apos;t make it.
+          </Text>
+          <Button
+            size="sm"
+            label="Claim it"
+            onPress={() => {
+              store.claimSpot(theirs.id);
+              toast(`It's yours! ${theirs.fromName} will move the booking to your name. ${session.title} is on your week.`);
+            }}
+          />
+        </View>
+      ) : booked ? (
+        <Pressable onPress={() => setConfirmOffer(true)} accessibilityRole="button" style={styles.spotLink}>
+          <Text variant="smallStrong" color="primary">
+            Can&apos;t make it? Offer your spot ›
+          </Text>
+          <Chip label="Premium" icon="diamond-outline" tone="plum" />
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => {
+            store.toggleWaitlist(session.id);
+            toast(waiting ? 'Off the waitlist.' : `You're on the waitlist. If someone offers their spot in ${session.title}, you'll hear first.`);
+          }}
+          accessibilityRole="button"
+          style={styles.spotLink}>
+          <Icon name={waiting ? 'notifications' : 'notifications-outline'} size={14} color="primary" />
+          <Text variant="smallStrong" color="primary">
+            {waiting ? "You're on the waitlist · Leave" : 'Class full? Get alerted if a spot opens ›'}
+          </Text>
+        </Pressable>
+      )}
+
+      <ConfirmSheet
+        open={confirmOffer}
+        title="Offer your spot?"
+        body={`We'll tell people waiting for this class and ${first}'s followers. When someone claims it, move your booking to their name with the studio (or where you booked) so you skip the late cancel fee.`}
+        confirmLabel="Offer my spot"
+        cancelLabel="Keep my spot"
+        onConfirm={() => {
+          store.offerSpot(session.id, me.name);
+          toast('Your spot is up for grabs. We’ll let you know when someone claims it.');
+        }}
+        onClose={() => setConfirmOffer(false)}
+      />
+    </View>
+  );
 }
 
 /** Book it, Add to cal, or I went, depending on whether the class has started. Used on cards and the class page. */
@@ -105,6 +189,7 @@ export function ClassActions({ session, size = 'sm' }: { session: ClassSession; 
           </>
         )
       )}
+      <SpotRow session={session} />
       {booking ? (
         <BookingSheet
           open={booking}
@@ -342,6 +427,9 @@ const styles = StyleSheet.create({
   classRow: { flexDirection: 'row', gap: Spacing.lg, alignItems: 'flex-start' },
   timeCol: { width: 64, gap: 2 },
   struck: { textDecorationLine: 'line-through' },
+  spot: { marginTop: Spacing.sm },
+  spotLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
+  spotBanner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: Colors.primarySoft, borderRadius: Radius.sm, padding: Spacing.sm },
   bookedRow: { borderLeftWidth: 3, borderLeftColor: Colors.primary, paddingLeft: Spacing.md, backgroundColor: Colors.primarySoft },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },

@@ -19,7 +19,7 @@ import {
 } from '@/data/sample';
 
 import { useAuth } from './auth';
-import type { AttendanceEntry, ClassSession, Client, Conversation, Instructor, Post, Role, Studio, SubRequest } from './types';
+import type { AttendanceEntry, ClassSession, ClassUpdate, Client, Conversation, Instructor, Post, Role, SpotOffer, Studio, SubRequest } from './types';
 
 type Store = {
   role: Role;
@@ -57,6 +57,18 @@ type Store = {
   /** Classes the client says they're booked into (they book outside the app). */
   booked: Set<string>;
   toggleBooked: (classId: string) => void;
+  /** Client ids booked into a class through the app (the instructor's view). */
+  bookersOf: (classId: string) => string[];
+  classUpdates: ClassUpdate[];
+  /** Instructor: send an update to everyone booked. Also lands in each client's Messages. */
+  postClassUpdate: (classId: string, body: string) => number;
+  /** Classes the client is on the waitlist for (in the app). */
+  waitlist: Set<string>;
+  toggleWaitlist: (classId: string) => void;
+  spotOffers: SpotOffer[];
+  offerSpot: (classId: string, fromName: string) => void;
+  cancelOffer: (offerId: string) => void;
+  claimSpot: (offerId: string) => void;
   attended: (classId: string) => boolean;
   toggleAttended: (session: ClassSession) => void;
 
@@ -106,6 +118,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
     return new Set(upcoming.filter((_, i) => i === 0 || i === 3).map((c) => c.id));
   });
+  // Demo: other followers booked into Maya's classes, so her "message everyone booked" has people to reach.
+  const [sampleBookers] = useState(() => {
+    const m: Record<string, string[]> = {};
+    buildClasses(now)
+      .filter((c) => c.instructorId === 'maya')
+      .forEach((c, i) => (m[c.id] = i % 2 ? ['k1', 'k3'] : ['k1', 'k2', 'k4']));
+    return m;
+  });
+  const [classUpdates, setClassUpdates] = useState<ClassUpdate[]>(() => {
+    // Demo: Lo's first booked class has a heads-up from the instructor.
+    const first = buildClasses(now)
+      .filter((c) => ['maya', 'jordan', 'priya'].includes(c.instructorId) && c.status !== 'cancelled' && new Date(c.startsAt) > now)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+    return first
+      ? [
+          {
+            id: 'u1',
+            classId: first.id,
+            instructorId: first.instructorId,
+            body: 'Heads up, the heat at the studio is on the fritz tonight. Bring a layer, we warm up fast!',
+            createdAt: new Date(now.getTime() - 40 * 60000).toISOString(),
+          },
+        ]
+      : [];
+  });
+  const [waitlist, setWaitlist] = useState<Set<string>>(() => new Set());
+  const [spotOffers, setSpotOffers] = useState<SpotOffer[]>(() => {
+    // Demo: Kendall can't make an upcoming Jordan class and offered her spot.
+    const jordan = buildClasses(now)
+      .filter((c) => c.instructorId === 'jordan' && c.status !== 'cancelled' && new Date(c.startsAt) > now)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+    return jordan
+      ? [{ id: 'o1', classId: jordan.id, fromClientId: 'k1', fromName: 'Kendall B.', status: 'open', createdAt: new Date(now.getTime() - 25 * 60000).toISOString() }]
+      : [];
+  });
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
@@ -126,6 +173,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setFollowing(new Set());
     setPremium(new Set());
     setBooked(new Set());
+    setWaitlist(new Set());
+    setSpotOffers([]);
+    setClassUpdates([]);
     setAttendance((prev) => notMine(prev, ['clientId', 'instructorId']));
     setConversations((prev) => notMine(prev, ['clientId', 'instructorId']));
     if (profile.role === 'instructor') {
@@ -221,6 +271,78 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const next = new Set(prev);
           if (next.has(classId)) next.delete(classId);
           else next.add(classId);
+          return next;
+        });
+      },
+
+      bookersOf(classId) {
+        const others = sampleBookers[classId] ?? [];
+        return booked.has(classId) && role === 'client' ? [...others, ME_CLIENT_ID] : others;
+      },
+
+      classUpdates,
+
+      postClassUpdate(classId, body) {
+        const text = body.trim();
+        const cls = classes.find((c) => c.id === classId);
+        if (!text || !cls) return 0;
+        const people = sampleBookers[classId] ?? [];
+        const sentAt = new Date().toISOString();
+        setClassUpdates((prev) => [{ id: `u${Date.now()}`, classId, instructorId: meId, body: text, createdAt: sentAt }, ...prev]);
+        // Each booked client also gets it as a message from the instructor.
+        setConversations((prev) => {
+          const next = [...prev];
+          people.forEach((clientId, n) => {
+            const id = `conv-${meId}-${clientId}`;
+            const msg = { id: `m${Date.now()}-${n}`, senderId: meId, body: `${cls.title} update: ${text}`, sentAt };
+            const i = next.findIndex((c) => c.instructorId === meId && c.clientId === clientId);
+            if (i >= 0) next[i] = { ...next[i], messages: [...next[i].messages, msg] };
+            else next.push({ id, instructorId: meId, clientId, messages: [msg] });
+          });
+          return next;
+        });
+        return people.length;
+      },
+
+      waitlist,
+
+      toggleWaitlist(classId) {
+        setWaitlist((prev) => {
+          const next = new Set(prev);
+          if (next.has(classId)) next.delete(classId);
+          else next.add(classId);
+          return next;
+        });
+      },
+
+      spotOffers,
+
+      offerSpot(classId, fromName) {
+        setBooked((prev) => {
+          const next = new Set(prev);
+          next.delete(classId);
+          return next;
+        });
+        setSpotOffers((prev) => [
+          { id: `o${Date.now()}`, classId, fromClientId: ME_CLIENT_ID, fromName, status: 'open', createdAt: new Date().toISOString() },
+          ...prev,
+        ]);
+      },
+
+      cancelOffer(offerId) {
+        const offer = spotOffers.find((o) => o.id === offerId);
+        setSpotOffers((prev) => prev.map((o) => (o.id === offerId ? { ...o, status: 'cancelled' } : o)));
+        if (offer?.fromClientId === ME_CLIENT_ID) setBooked((prev) => new Set(prev).add(offer.classId));
+      },
+
+      claimSpot(offerId) {
+        const offer = spotOffers.find((o) => o.id === offerId && o.status === 'open');
+        if (!offer) return;
+        setSpotOffers((prev) => prev.map((o) => (o.id === offerId ? { ...o, status: 'claimed', claimedBy: ME_CLIENT_ID } : o)));
+        setBooked((prev) => new Set(prev).add(offer.classId));
+        setWaitlist((prev) => {
+          const next = new Set(prev);
+          next.delete(offer.classId);
           return next;
         });
       },
@@ -376,7 +498,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, instructors, booked, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, tipsOn, dismissedTips]);
+  }, [role, meId, instructors, booked, sampleBookers, classUpdates, waitlist, spotOffers, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, tipsOn, dismissedTips]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

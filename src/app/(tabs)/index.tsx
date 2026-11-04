@@ -80,6 +80,15 @@ function ClientHome() {
   const auth = useAuth();
   const hasBirthday = !auth.demo && auth.session ? !!auth.birthday : !!store.clients.find((c) => c.id === 'me')?.birthday;
   const needsBirthday = !hasBirthday && !store.dismissedTips.has('birthday-nudge');
+  const toast = useToast();
+  const latestUpdate = (classId: string) => store.classUpdates.find((u) => u.classId === classId);
+  const openSpots = store.spotOffers
+    .filter((o) => o.status === 'open' && o.fromClientId !== 'me' && !store.booked.has(o.classId))
+    .map((o) => ({ offer: o, cls: store.classes.find((c) => c.id === o.classId) }))
+    .filter(
+      (x): x is { offer: (typeof store.spotOffers)[number]; cls: NonNullable<typeof x.cls> } =>
+        !!x.cls && new Date(x.cls.startsAt) > new Date() && (store.following.has(x.cls.instructorId) || store.waitlist.has(x.cls.id)),
+    );
   const now = new Date();
   const myWeek = store.classes
     .filter(
@@ -154,6 +163,14 @@ function ClientHome() {
                         {who ? `with ${who.name.split(' ')[0]} · ` : ''}
                         {store.studio(c.studioId)?.name}
                       </Text>
+                      {latestUpdate(c.id) ? (
+                        <View style={styles.update}>
+                          <Icon name="megaphone" size={14} color="onPrimary" />
+                          <Text variant="small" style={{ flex: 1, color: Colors.onPrimary }} numberOfLines={3}>
+                            {who?.name.split(' ')[0]}: {latestUpdate(c.id)!.body}
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
                     <Icon name="chevron-forward" size={16} color="textSecondary" />
                   </Pressable>
@@ -196,7 +213,38 @@ function ClientHome() {
             </>
           ) : (
             <>
-              <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
+              {openSpots.length ? (
+            <Card tone="gray" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+              <View style={styles.inline}>
+                <Icon name="sparkles" size={18} color="primary" />
+                <Text variant="eyebrow" color="primary">
+                  Open spots · {openSpots.length}
+                </Text>
+              </View>
+              {openSpots.map(({ offer, cls }) => {
+                const start = new Date(cls.startsAt);
+                return (
+                  <View key={offer.id} style={styles.inline}>
+                    <Pressable style={{ flex: 1 }} onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })} accessibilityRole="link">
+                      <Text variant="bodyStrong">{cls.title}</Text>
+                      <Text variant="small" color="textSecondary">
+                        {dayLabel(start)} {timeLabel(start)} · {offer.fromName} can&apos;t make it
+                      </Text>
+                    </Pressable>
+                    <Button
+                      size="sm"
+                      label="Claim it"
+                      onPress={() => {
+                        store.claimSpot(offer.id);
+                        toast(`It's yours! ${offer.fromName} will move the booking to your name.`);
+                      }}
+                    />
+                  </View>
+                );
+              })}
+            </Card>
+          ) : null}
+          <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
               <DayTabs selected={day} onSelect={setDay} counts={counts} />
               <Tip
                 id="tip-book"
@@ -424,6 +472,7 @@ function InstructorWeek() {
 }
 
 const styles = StyleSheet.create({
+  update: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', backgroundColor: Colors.primary, borderRadius: Radius.sm, padding: Spacing.sm, marginTop: 6 },
   segment: { flexDirection: 'row', backgroundColor: Colors.surfaceStrong, borderRadius: Radius.pill, padding: 4, marginBottom: Spacing.xl },
   segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: Radius.pill },
   segmentActive: { backgroundColor: Colors.background },

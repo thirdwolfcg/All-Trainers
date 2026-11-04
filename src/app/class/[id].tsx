@@ -6,7 +6,7 @@ import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Chip, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
-import { dayLabel, timeRange } from '@/lib/dates';
+import { dayLabel, relativeTime, timeRange } from '@/lib/dates';
 import { linkButton } from '@/lib/links';
 import { useStore } from '@/lib/store';
 import { StyleLabels } from '@/lib/types';
@@ -17,6 +17,7 @@ export default function ClassDetail() {
   const toggleFollow = useFollowToggle();
   const session = store.classes.find((c) => c.id === id);
   const instructor = session ? store.instructor(session.instructorId) : undefined;
+  const updates = session ? store.classUpdates.filter((u) => u.classId === session.id) : [];
   const recipe = session?.recipePostId ? store.posts.find((p) => p.id === session.recipePostId) : undefined;
   const studio = session ? store.studio(session.studioId) : undefined;
 
@@ -87,6 +88,24 @@ export default function ClassDetail() {
           )}
         </Pressable>
 
+        {updates.length ? (
+          <View style={{ gap: Spacing.sm, marginTop: Spacing.xl }}>
+            {updates.map((u) => (
+              <View key={u.id} style={styles.update}>
+                <Icon name="megaphone" size={16} color="onPrimary" />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text variant="smallStrong" style={{ color: Colors.onPrimary }}>
+                    Update from {instructor.name.split(' ')[0]} · {relativeTime(u.createdAt)}
+                  </Text>
+                  <Text variant="body" style={{ color: Colors.onPrimary }}>
+                    {u.body}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <View style={{ gap: Spacing.sm, marginVertical: Spacing.xl }}>
           <Text variant="eyebrow" color="textSecondary">
             What to expect
@@ -142,6 +161,7 @@ function Fact({ icon, title, sub }: { icon: React.ComponentProps<typeof Icon>['n
 }
 
 const styles = StyleSheet.create({
+  update: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start', backgroundColor: Colors.primary, borderRadius: 4, padding: Spacing.md },
   facts: { borderTopWidth: StyleSheet.hairlineWidth, borderColor: Colors.border },
   fact: {
     flexDirection: 'row',

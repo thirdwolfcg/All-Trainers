@@ -59,7 +59,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0012 in order; all have been run in Supabase)
+supabase/migrations/     database schema with row level security (run 0001 through 0013 in order; all have been run in Supabase)
 supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
@@ -126,6 +126,7 @@ Still to do for Phase 1:
 13. **Repeating classes in the database.** Migration 0011 (`class_series`, `classes.series_id`, `playlist_url`, `recipe_post_id`) has been run. Save repeating classes as one `class_series` row plus the generated `classes` rows. The app already builds them (Add class, How often).
 14. **Possible addition: merch and other sales.** Instructors selling merch, programs or class packs. Decide between linking out (Shopify, Instagram shop) and selling in the app (Stripe; Apple's in-app purchase rules apply to digital goods, not physical merch).
 15. **Possible addition: virtual classes.** A class with a join link (Zoom, YouTube Live, Instagram Live) instead of a studio, free or paid. Paid virtual classes count as digital content, so Apple and Google in-app purchase rules apply.
+16. **Class updates, waitlist and offer my spot (migration 0013).** Built in the demo: instructors message everyone booked into a class (shows on the class, on client Home and in Messages), clients join an in-app waitlist, booked clients offer their spot and others claim it (the claim moves `class_bookings`). Wire the screens to `class_updates`, `class_waitlist`, `spot_offers`. Alerts need push notifications (#4): waitlisted clients first, then the instructor's followers. "Offer my spot" is marked Premium in the app but nothing enforces it yet.
 
 Done since the first list: Dave's review (no birthday in onboarding, Home vs Discover, Discover filters behind a button, My classes lists followed instructors, New message, tips instead of a tour, premium posts removed, Followers tab, repeating classes, photos on posts, playlist and recipe on classes); instructor and client profile editing, birthday add/change/remove (`profile_private`), Privacy screen, role locked in the database (0008), video posts and post titles (0007), instructor landing page at `/teach`.
 
@@ -138,6 +139,10 @@ Done since the first list: Dave's review (no birthday in onboarding, Home vs Dis
 5. **Instructor billing.** Founding instructors are free (`instructor_plans.plan = 'founding'`) until a date we set, then move to a paid plan.
 
 ## Open product questions
+
+- **Offer my spot needs studio buy-in.** The app can match a giver and a taker, but the reservation itself lives with the studio, ClassPass or Mindbody, and many of those bookings are non-transferable (ClassPass in particular ties the reservation to the member). Options: studios agree to swap names at the front desk for All Trainers transfers, or an API partnership later. Until then it's a coordination tool, not a guaranteed way to avoid the late cancel fee.
+- **True waitlist alerts need booking data.** The in-app waitlist only covers spots offered on All Trainers. Alerts for a studio's own waitlist (a spot opening in Mindbody or ClassPass) need an integration with those systems.
+- **Which premium?** "Offer my spot" is meant for a client premium subscription to the app, while the earlier premium idea was per instructor (one on one access). Decide whether there is one app-wide client premium, per-instructor premium, or both.
 
 - **Premium posts:** removed for now (Dave: showing locked posts to followers made no sense). All posts are free to followers. Revisit when premium is designed.
 - Playlist access sits in premium. Sharing a Spotify or Apple Music link is normal, but putting it behind a paywall needs a closer look against those services' terms before launch.

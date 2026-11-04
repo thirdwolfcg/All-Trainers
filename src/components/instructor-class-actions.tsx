@@ -7,6 +7,7 @@ import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import type { ClassSession } from '@/lib/types';
 
+import { ClassUpdateSheet } from './class-update-sheet';
 import { ConfirmSheet } from './confirm-sheet';
 import { SubSheet } from './sub-sheet';
 import { Button } from './ui';
@@ -18,6 +19,9 @@ export function InstructorClassActions({ session, align = 'end' }: { session: Cl
   const [findingSub, setFindingSub] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
+  const [messaging, setMessaging] = useState(false);
+  const bookedCount = store.bookersOf(session.id).length;
+  const upcoming = new Date(session.startsAt).getTime() + session.durationMin * 60000 > Date.now();
 
   const followers = store.clients.length;
   const when = `${dayLabel(new Date(session.startsAt))}`;
@@ -50,7 +54,18 @@ export function InstructorClassActions({ session, align = 'end' }: { session: Cl
       ) : session.status === 'scheduled' ? (
         <Button size="sm" kind="ghost" icon="swap-horizontal" label="Need a sub" onPress={() => setFindingSub(true)} />
       ) : null}
+      {upcoming ? (
+        <Button
+          size="sm"
+          kind="ghost"
+          icon="megaphone-outline"
+          label={bookedCount ? `Message booked (${bookedCount})` : 'Post an update'}
+          accessibilityLabel={`Message everyone booked into ${session.title}`}
+          onPress={() => setMessaging(true)}
+        />
+      ) : null}
       <Button size="sm" kind="ghost" icon="close" label="Cancel my class" onPress={() => setConfirmCancel(true)} />
+      {messaging ? <ClassUpdateSheet session={session} open={messaging} onClose={() => setMessaging(false)} /> : null}
 
       {findingSub ? <SubSheet session={session} open={findingSub} onClose={() => setFindingSub(false)} /> : null}
 
