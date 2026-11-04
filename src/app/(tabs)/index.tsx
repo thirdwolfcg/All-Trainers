@@ -369,11 +369,7 @@ function InstructorWeek() {
         ))
       ) : (
         <View style={{ gap: Spacing.lg }}>
-          <EmptyState
-            icon="calendar-outline"
-            title="Your stage is empty"
-            body="Drop your first class and your followers see it the second you post. Set it to repeat and your whole month is done in one go."
-          />
+          <EmptyState icon="calendar-outline" title="Your stage is empty" />
           <Button icon="add" label="Add my first class" onPress={() => router.push('/schedule/new')} />
         </View>
       )}

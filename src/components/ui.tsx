@@ -229,7 +229,7 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
 
 /* ---------- Empty state ---------- */
 
-export function EmptyState({ icon, title, body }: { icon: IconName; title: string; body: string }) {
+export function EmptyState({ icon, title, body }: { icon: IconName; title: string; body?: string }) {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
@@ -238,9 +238,11 @@ export function EmptyState({ icon, title, body }: { icon: IconName; title: strin
       <Text variant="heading" align="center">
         {title}
       </Text>
-      <Text variant="small" color="textSecondary" align="center">
-        {body}
-      </Text>
+      {body ? (
+        <Text variant="small" color="textSecondary" align="center">
+          {body}
+        </Text>
+      ) : null}
     </View>
   );
 }
