@@ -59,7 +59,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0011 in order; 0011 is not run in Supabase yet)
+supabase/migrations/     database schema with row level security (run 0001 through 0011 in order; all have been run in Supabase)
 supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```
@@ -123,7 +123,7 @@ Still to do for Phase 1:
 10. **Photo uploads.** Instructors can pick a photo for a post (expo-image-picker, photo library permission in app.json). It only lives on the device for now: upload it to Supabase Storage and save the path in `posts.media_path`.
 11. **Real domain.** QR codes and invite links point at the GitHub Pages address (`src/lib/links.ts`). Change before anyone prints a QR code.
 12. **App Store and Google Play release.** EAS builds, store listings, privacy labels, and review notes (test account for Apple).
-13. **Run migration 0011** (`class_series`, `classes.series_id`, `playlist_url`, `recipe_post_id`) in the Supabase SQL Editor. Then save repeating classes as one `class_series` row plus the generated `classes` rows. The app already builds them (Add class, How often).
+13. **Repeating classes in the database.** Migration 0011 (`class_series`, `classes.series_id`, `playlist_url`, `recipe_post_id`) has been run. Save repeating classes as one `class_series` row plus the generated `classes` rows. The app already builds them (Add class, How often).
 14. **Possible addition: merch and other sales.** Instructors selling merch, programs or class packs. Decide between linking out (Shopify, Instagram shop) and selling in the app (Stripe; Apple's in-app purchase rules apply to digital goods, not physical merch).
 15. **Possible addition: virtual classes.** A class with a join link (Zoom, YouTube Live, Instagram Live) instead of a studio, free or paid. Paid virtual classes count as digital content, so Apple and Google in-app purchase rules apply.
 
