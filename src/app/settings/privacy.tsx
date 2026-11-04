@@ -12,7 +12,7 @@ import { useStore } from '@/lib/store';
 type Item = { icon: IconName; title: string; body: string };
 
 const forClients: Item[] = [
-  { icon: 'gift-outline', title: 'Your birthday', body: 'Month and day only, never the year. Only instructors you follow see it.' },
+  { icon: 'gift-outline', title: 'Your birthday', body: 'Only shared if you say yes. Month and day, never the year, and only with instructors you follow.' },
   { icon: 'stats-chart-outline', title: 'Your classes', body: 'An instructor sees the classes you took with them, not your classes with anyone else.' },
   { icon: 'chatbubbles-outline', title: 'Your messages', body: 'Only you and the instructor in the conversation can read them.' },
   { icon: 'person-outline', title: 'Your name', body: 'In the app, instructors see your first name and last initial. Your full name is stored with your profile.' },

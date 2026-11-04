@@ -59,7 +59,7 @@ src/components/          design system (ui.tsx, cards.tsx, screen.tsx)
 src/constants/theme.ts   colors, type, spacing
 src/lib/                 types, dates, calendar, in-memory store
 src/data/sample.ts       made-up instructors, studios, classes, clients
-supabase/migrations/     database schema with row level security (run 0001 through 0011 in order; all have been run in Supabase)
+supabase/migrations/     database schema with row level security (run 0001 through 0012 in order; all have been run in Supabase)
 supabase/functions/       Edge Functions (describe-class: AI writing help for class descriptions)
 supabase/seed.sql        test accounts and data (run after the migrations)
 ```

@@ -73,8 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBirthday(null);
       return;
     }
-    const { data: priv } = await supabase.from('profile_private').select('birthday_month, birthday_day').eq('user_id', userId).maybeSingle();
-    setBirthday(priv?.birthday_month && priv?.birthday_day ? { month: priv.birthday_month, day: priv.birthday_day } : null);
+    const { data: priv } = await supabase.from('profile_private').select('birthday_month, birthday_day, share_birthday').eq('user_id', userId).maybeSingle();
+    setBirthday(priv?.share_birthday && priv?.birthday_month && priv?.birthday_day ? { month: priv.birthday_month, day: priv.birthday_day } : null);
     const { data } = await supabase
       .from('profiles')
       .select('id, role, display_name, handle, bio, styles, neighborhood, instagram_handle, tiktok_handle')
@@ -170,6 +170,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user_id: userId,
             birthday_month: p.birthday.month,
             birthday_day: p.birthday.day,
+            share_birthday: true,
+            birthday_shared_at: new Date().toISOString(),
           });
           if (bdayError) return { error: friendlyError(bdayError.message) };
         }
@@ -181,9 +183,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async saveBirthday(b) {
         const userId = session?.user.id;
         if (!userId) return { error: 'Please sign in again.' };
-        const { error } = await supabase
-          .from('profile_private')
-          .upsert({ user_id: userId, birthday_month: b?.month ?? null, birthday_day: b?.day ?? null });
+        // Only stored when the person chose to share it. Saying no clears it.
+        const { error } = await supabase.from('profile_private').upsert({
+          user_id: userId,
+          birthday_month: b?.month ?? null,
+          birthday_day: b?.day ?? null,
+          share_birthday: !!b,
+          birthday_shared_at: b ? new Date().toISOString() : null,
+        });
         if (error) return { error: friendlyError(error.message) };
         setBirthday(b);
         return {};

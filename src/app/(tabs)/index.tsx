@@ -198,14 +198,14 @@ function ClientHome() {
               <View style={styles.inline}>
                 <Icon name="gift-outline" size={18} color="primary" />
                 <Text variant="eyebrow" color="primary">
-                  When&apos;s your birthday?
+                  Share your birthday?
                 </Text>
               </View>
               <Text variant="small" color="textSecondary">
-                Your instructors love to celebrate. Month and day only, and only people you follow see it.
+                Only if you want to. Instructors you follow can wish you a happy birthday. Month and day only.
               </Text>
               <View style={[styles.inline, { marginTop: 4 }]}>
-                <Button size="sm" label="Add it" onPress={() => router.push('/settings/birthday')} />
+                <Button size="sm" label="Choose" onPress={() => router.push('/settings/birthday')} />
                 <Button size="sm" kind="ghost" label="Not now" onPress={() => store.dismissTip('birthday-nudge')} />
               </View>
             </Card>

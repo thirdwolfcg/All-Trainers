@@ -1,7 +1,7 @@
 -- All Trainers: test data for the Supabase project.
 --
 -- HOW TO RUN: Supabase dashboard, SQL Editor, paste this whole file, Run.
--- Needs migrations 0001 through 0005 to have been run first, in order.
+-- Needs migrations 0001 through 0012 to have been run first, in order.
 -- Safe to run again: it deletes the previous test data first.
 --
 -- Every test account uses an @alltrainers.test email and the password below.
@@ -100,8 +100,9 @@ update public.profiles set instagram_handle = 'priya.flows', tiktok_handle = 'pr
 update public.profiles set tiktok_handle = 'sashabarre' where id = '11111111-0000-4000-8000-000000000005';
 
 -- Birthdays (month and day only), spread so some show up this week
-insert into public.profile_private (user_id, birthday_month, birthday_day)
-select id::uuid, extract(month from pg_temp.day(n))::smallint, extract(day from pg_temp.day(n))::smallint
+-- Test clients said yes to sharing their birthday with instructors they follow.
+insert into public.profile_private (user_id, birthday_month, birthday_day, share_birthday, birthday_shared_at)
+select id::uuid, extract(month from pg_temp.day(n))::smallint, extract(day from pg_temp.day(n))::smallint, true, now()
 from (values
   ('22222222-0000-4000-8000-000000000001', 2),    -- Kendall, in 2 days
   ('22222222-0000-4000-8000-000000000002', 0),    -- Marcus, today

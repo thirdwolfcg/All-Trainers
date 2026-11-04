@@ -156,7 +156,7 @@ export default function MeScreen() {
             <SettingRow
               icon="gift-outline"
               label="Birthday"
-              value={myBirthday ? birthdayLabel(myBirthday) : 'Add'}
+              value={myBirthday ? `Shared · ${birthdayLabel(myBirthday)}` : 'Not shared'}
               onPress={() => router.push('/settings/birthday')}
             />
             <Divider />
@@ -181,7 +181,7 @@ export default function MeScreen() {
       </Card>
 
       <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.xl }}>
-        Your birthday shows as month and day only, and only to instructors you follow.
+        Your birthday is only shared if you say yes, as month and day, with instructors you follow.
       </Text>
 
       {auth.demo ? (
