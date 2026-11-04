@@ -34,7 +34,7 @@ export default function Welcome() {
             All Trainers · Denver
           </Text>
           <Text variant="display" align="center">
-            Your favorite instructors, all in one place.
+            Never miss a class with your faves.
           </Text>
           <Text variant="body" color="textSecondary" align="center">
             Every class your faves teach, every studio, one feed. No more screenshotting IG stories at 11pm.
