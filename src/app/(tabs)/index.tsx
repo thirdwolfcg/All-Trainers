@@ -259,7 +259,11 @@ function InstructorWeek() {
     <Screen
       eyebrow={todayEyebrow()}
       title={`Hiii ${greetName(me.name)}`}
-      subtitle={`${mine.length} classes, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`}
+      subtitle={
+        mine.length === 0
+          ? 'Your week is a blank canvas. Your people are waiting to see where you’ll be.'
+          : `${mine.length} ${mine.length === 1 ? 'class' : 'classes'}, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`
+      }
       right={
         <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
           <Icon name="qr-code-outline" size={22} color="primary" />
@@ -364,7 +368,14 @@ function InstructorWeek() {
           </View>
         ))
       ) : (
-        <EmptyState icon="calendar-outline" title="Nothing on the books" body="Add your classes so your people know where to find you." />
+        <View style={{ gap: Spacing.lg }}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Your stage is empty"
+            body="Drop your first class and your followers see it the second you post. Set it to repeat and your whole month is done in one go."
+          />
+          <Button icon="add" label="Add my first class" onPress={() => router.push('/schedule/new')} />
+        </View>
       )}
     </Screen>
   );
