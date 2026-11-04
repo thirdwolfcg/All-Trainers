@@ -48,7 +48,7 @@ export default function BirthdaySettings() {
   };
 
   return (
-    <Screen padTop={false}>
+    <Screen nav padTop={false}>
       <Text variant="title">Share your birthday with instructors you follow?</Text>
       <Text variant="body" color="textSecondary" style={{ marginTop: Spacing.sm }}>
         Totally up to you. If you share it, instructors you follow can wish you a happy birthday. Month and day only, never the year.

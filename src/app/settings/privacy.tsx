@@ -45,7 +45,7 @@ export default function PrivacySettings() {
   };
 
   return (
-    <Screen padTop={false}>
+    <Screen nav padTop={false}>
       <Text variant="body" color="textSecondary">
         Here&apos;s who can see what.
       </Text>

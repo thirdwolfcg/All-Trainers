@@ -17,7 +17,7 @@ export default function ClientDetail() {
 
   if (!client) {
     return (
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <EmptyState icon="person-outline" title="Client not found" body="They may have unfollowed." />
       </Screen>
     );
@@ -33,7 +33,7 @@ export default function ClientDetail() {
   return (
     <>
       <Stack.Screen options={{ title: clientName(client.name) }} />
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <View style={styles.header}>
           <Avatar name={client.name} size={72} />
           <View style={{ flex: 1, gap: 4 }}>

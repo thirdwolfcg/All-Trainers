@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
+import { BottomNav } from './bottom-nav';
 import { Icon, Text } from './ui';
 
 /** Page wrapper: white background, safe area, centered column on wide screens. */
@@ -17,6 +18,7 @@ export function Screen({
   scroll = true,
   padTop = true,
   back = false,
+  nav = false,
 }: {
   eyebrow?: string;
   title?: string;
@@ -27,6 +29,8 @@ export function Screen({
   padTop?: boolean;
   /** Show a back arrow above the title. Goes home if there is nothing to go back to. */
   back?: boolean;
+  /** Show the bottom bar (for pages that open on top of the tabs). */
+  nav?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const backButton = back ? (
@@ -72,7 +76,7 @@ export function Screen({
     );
   }
 
-  return (
+  const scrollView = (
     <ScrollView
       style={styles.root}
       contentContainerStyle={{ paddingTop: top, paddingBottom: Spacing.xxl * 3 }}
@@ -83,6 +87,13 @@ export function Screen({
         {children}
       </View>
     </ScrollView>
+  );
+  if (!nav) return scrollView;
+  return (
+    <View style={styles.root}>
+      {scrollView}
+      <BottomNav />
+    </View>
   );
 }
 

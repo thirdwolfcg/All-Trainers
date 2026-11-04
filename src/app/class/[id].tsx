@@ -23,7 +23,7 @@ export default function ClassDetail() {
 
   if (!session || !instructor || !studio) {
     return (
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <EmptyState icon="calendar-outline" title="Class not found" body="It may have been removed from the schedule." />
       </Screen>
     );
@@ -38,7 +38,7 @@ export default function ClassDetail() {
   return (
     <>
       <Stack.Screen options={{ title: '' }} />
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <View style={{ gap: Spacing.sm, marginBottom: Spacing.xl }}>
           <Text variant="eyebrow" color="textSecondary">
             {dayLabel(start)} · {StyleLabels[session.style]}

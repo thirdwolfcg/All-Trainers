@@ -27,7 +27,7 @@ export default function InstructorProfile() {
 
   if (!instructor) {
     return (
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <EmptyState icon="alert-circle-outline" title="Instructor not found" body="This profile may have moved." />
       </Screen>
     );
@@ -53,7 +53,7 @@ export default function InstructorProfile() {
   return (
     <>
       <Stack.Screen options={{ title: `@${instructor.handle}` }} />
-      <Screen padTop={false}>
+      <Screen nav padTop={false}>
         <View style={styles.header}>
           {instructor.isFounding ? (
             <Text variant="eyebrow" color="primary">

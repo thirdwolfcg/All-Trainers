@@ -42,23 +42,16 @@ export default function TabLayout() {
           <TabTrigger name="index" href="/" asChild>
             <TabButton label={isInstructor ? 'My week' : 'Home'} icon="home-outline" activeIcon="home" />
           </TabTrigger>
-          {isInstructor ? (
-            <TabTrigger name="feed" href="/feed" asChild>
-              <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
-            </TabTrigger>
-          ) : null}
-          {!isInstructor ? (
-            <TabTrigger name="discover" href="/discover" asChild>
-              <TabButton label="Discover" icon="search-outline" activeIcon="search" />
-            </TabTrigger>
-          ) : null}
+          <TabTrigger name="feed" href="/feed" asChild>
+            <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
+          </TabTrigger>
           {isInstructor ? (
             <TabTrigger name="activity" href="/activity" asChild>
               <TabButton label="Followers" icon="people-outline" activeIcon="people" />
             </TabTrigger>
           ) : (
-            <TabTrigger name="feed" href="/feed" asChild>
-              <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
+            <TabTrigger name="discover" href="/discover" asChild>
+              <TabButton label="Discover" icon="search-outline" activeIcon="search" />
             </TabTrigger>
           )}
           {/* Clients reach My classes from Home now; keep the route for old links. */}

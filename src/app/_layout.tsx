@@ -7,7 +7,9 @@ import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect } from 'react';
+import { Pressable } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Colors, FontFamily } from '@/constants/theme';
@@ -79,6 +81,17 @@ function Navigator() {
         headerTintColor: Colors.primaryDeep,
         headerTitleStyle: { color: Colors.text, fontFamily: FontFamily.serif, fontSize: 18 },
         headerBackTitle: 'Back',
+        // Always show a back arrow, even after a refresh with nothing to go back to.
+        headerLeft: () => (
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={12}
+            style={{ paddingHorizontal: 8 }}>
+            <Ionicons name="arrow-back" size={24} color={Colors.primaryDeep} />
+          </Pressable>
+        ),
         contentStyle: { backgroundColor: Colors.background },
       }}>
       {/* Open to everyone: where instructor QR codes and shared links land */}
