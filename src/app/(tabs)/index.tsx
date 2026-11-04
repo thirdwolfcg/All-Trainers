@@ -249,6 +249,12 @@ function InstructorWeek() {
   const askToConfirm = confirmAsk ? store.subRequests.find((r) => r.id === confirmAsk) : undefined;
   const classToConfirm = askToConfirm ? store.classes.find((c) => c.id === askToConfirm.classId) : undefined;
   const studiosThisWeek = new Set(mine.map((c) => c.studioId)).size;
+  // Before the first class, the page is just a stage with one button.
+  const hasAnyClass = store.classes.some((c) => c.instructorId === me.id || c.subInstructorId === me.id);
+  const myPosts = store.posts
+    .filter((p) => p.instructorId === me.id)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 3);
 
   const byDay = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(today, i);
@@ -348,31 +354,48 @@ function InstructorWeek() {
         onClose={() => setConfirmAsk(null)}
       />
 
-      <Tip id="tip-add" text="Add every class you teach, at every studio. Set it to repeat so you only do it once." />
-      <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl }}>
-        <Button kind="primary" icon="add" label="Add class" accessibilityLabel="Add a class" onPress={() => router.push('/schedule/new')} style={{ flex: 1 }} />
-        <Button kind="outline" icon="create-outline" label="Post" accessibilityLabel="Post to your feed" onPress={() => router.push('/post/new')} style={{ flex: 1 }} />
-      </View>
-
-      <Tip id="tip-sub" text="Can’t make a class? Tap “Need a sub” under it to ask instructors at the same studio." />
-      {byDay.length ? (
-        byDay.map((g) => (
-          <View key={g.day.toISOString()} style={{ marginBottom: Spacing.xl }}>
-            <SectionHeader title={dayLabel(g.day)} />
-            {g.classes.map((c) => (
-              <View key={c.id}>
-                <ClassCard session={c} showInstructor={false} />
-                {c.instructorId === me.id ? <InstructorClassActions session={c} /> : null}
-              </View>
-            ))}
+      {hasAnyClass ? (
+        <>
+          <Tip id="tip-add" text="Add every class you teach, at every studio. Set it to repeat so you only do it once." />
+          <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl }}>
+            <Button kind="primary" icon="add" label="Add class" accessibilityLabel="Add a class" onPress={() => router.push('/schedule/new')} style={{ flex: 1 }} />
+            <Button kind="outline" icon="create-outline" label="Post" accessibilityLabel="Post to your feed" onPress={() => router.push('/post/new')} style={{ flex: 1 }} />
           </View>
-        ))
+        </>
+      ) : null}
+
+      {byDay.length ? (
+        <>
+          <Tip id="tip-sub" text="Can’t make a class? Tap “Need a sub” under it to ask instructors at the same studio." />
+          {byDay.map((g) => (
+            <View key={g.day.toISOString()} style={{ marginBottom: Spacing.xl }}>
+              <SectionHeader title={dayLabel(g.day)} />
+              {g.classes.map((c) => (
+                <View key={c.id}>
+                  <ClassCard session={c} showInstructor={false} />
+                  {c.instructorId === me.id ? <InstructorClassActions session={c} /> : null}
+                </View>
+              ))}
+            </View>
+          ))}
+        </>
+      ) : hasAnyClass ? (
+        <EmptyState icon="calendar-outline" title="Nothing on this week" body="Add a class and your followers see it right away." />
       ) : (
-        <View style={{ gap: Spacing.lg }}>
+        <View style={{ gap: Spacing.lg, marginBottom: Spacing.xxl }}>
           <EmptyState icon="calendar-outline" title="Your stage is empty" />
           <Button icon="add" label="Add my first class" onPress={() => router.push('/schedule/new')} />
         </View>
       )}
+
+      {myPosts.length ? (
+        <View style={{ marginTop: Spacing.lg }}>
+          <SectionHeader title="Your latest posts" action="See all" onAction={() => router.push('/feed')} />
+          {myPosts.map((p) => (
+            <PostCard key={p.id} post={p} />
+          ))}
+        </View>
+      ) : null}
     </Screen>
   );
 }
