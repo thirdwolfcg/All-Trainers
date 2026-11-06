@@ -6,6 +6,7 @@ import { ClassCard, InstructorRow, PostCard } from '@/components/cards';
 import { ConfirmSheet } from '@/components/confirm-sheet';
 import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { MyClassesPanel } from '@/components/my-classes';
+import { PostIdeaCard } from '@/components/post-idea-card';
 import { PreviewSwitch } from '@/components/preview-switch';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
@@ -214,37 +215,40 @@ function ClientHome() {
           ) : (
             <>
               {openSpots.length ? (
-            <Card tone="gray" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
-              <View style={styles.inline}>
-                <Icon name="sparkles" size={18} color="primary" />
-                <Text variant="eyebrow" color="primary">
-                  Open spots · {openSpots.length}
-                </Text>
-              </View>
-              {openSpots.map(({ offer, cls }) => {
-                const start = new Date(cls.startsAt);
-                return (
-                  <View key={offer.id} style={styles.inline}>
-                    <Pressable style={{ flex: 1 }} onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })} accessibilityRole="link">
-                      <Text variant="bodyStrong">{cls.title}</Text>
-                      <Text variant="small" color="textSecondary">
-                        {dayLabel(start)} {timeLabel(start)} · {offer.fromName} can&apos;t make it
-                      </Text>
-                    </Pressable>
-                    <Button
-                      size="sm"
-                      label="Claim it"
-                      onPress={() => {
-                        store.claimSpot(offer.id);
-                        toast(`It's yours! ${offer.fromName} will move the booking to your name.`);
-                      }}
-                    />
+                <Card tone="gray" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
+                  <View style={styles.inline}>
+                    <Icon name="sparkles" size={18} color="primary" />
+                    <Text variant="eyebrow" color="primary">
+                      Open spots · {openSpots.length}
+                    </Text>
                   </View>
-                );
-              })}
-            </Card>
-          ) : null}
-          <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
+                  {openSpots.map(({ offer, cls }) => {
+                    const start = new Date(cls.startsAt);
+                    return (
+                      <View key={offer.id} style={styles.inline}>
+                        <Pressable
+                          style={{ flex: 1 }}
+                          onPress={() => router.push({ pathname: '/class/[id]', params: { id: cls.id } })}
+                          accessibilityRole="link">
+                          <Text variant="bodyStrong">{cls.title}</Text>
+                          <Text variant="small" color="textSecondary">
+                            {dayLabel(start)} {timeLabel(start)} · {offer.fromName} can&apos;t make it
+                          </Text>
+                        </Pressable>
+                        <Button
+                          size="sm"
+                          label="Claim it"
+                          onPress={() => {
+                            store.claimSpot(offer.id);
+                            toast(`It's yours! ${offer.fromName} will move the booking to your name.`);
+                          }}
+                        />
+                      </View>
+                    );
+                  })}
+                </Card>
+              ) : null}
+              <SectionHeader title={`What your people are teaching · ${followingCount}`} action="Find more" onAction={() => router.push('/discover')} />
               <DayTabs selected={day} onSelect={setDay} counts={counts} />
               <Tip
                 id="tip-book"
@@ -432,6 +436,7 @@ function InstructorWeek() {
               style={{ flex: 1 }}
             />
           </View>
+          <PostIdeaCard myClasses={store.classes.filter((c) => c.instructorId === me.id || c.subInstructorId === me.id)} />
         </>
       ) : null}
 
@@ -472,7 +477,15 @@ function InstructorWeek() {
 }
 
 const styles = StyleSheet.create({
-  update: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', backgroundColor: Colors.primary, borderRadius: Radius.sm, padding: Spacing.sm, marginTop: 6 },
+  update: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'flex-start',
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.sm,
+    padding: Spacing.sm,
+    marginTop: 6,
+  },
   segment: { flexDirection: 'row', backgroundColor: Colors.surfaceStrong, borderRadius: Radius.pill, padding: 4, marginBottom: Spacing.xl },
   segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: Radius.pill },
   segmentActive: { backgroundColor: Colors.background },

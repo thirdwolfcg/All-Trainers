@@ -1,11 +1,12 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Image, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
-import { Button, Chip, Field, Text, type IconName } from '@/components/ui';
+import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
+import { findIdea } from '@/lib/post-ideas';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import type { PostKind } from '@/lib/types';
@@ -44,7 +45,9 @@ const kinds: { kind: PostKind; label: string; icon: IconName; titleHint: string;
 export default function NewPost() {
   const store = useStore();
   const toast = useToast();
-  const [kind, setKind] = useState<PostKind>('note');
+  const { idea: ideaId } = useLocalSearchParams<{ idea?: string }>();
+  const idea = findIdea(ideaId);
+  const [kind, setKind] = useState<PostKind>(idea?.kind ?? 'note');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [link, setLink] = useState('');
@@ -79,6 +82,14 @@ export default function NewPost() {
       <Text variant="body" color="textSecondary">
         Shows on your profile&apos;s Feed for your followers.
       </Text>
+      {idea ? (
+        <View style={styles.idea}>
+          <Icon name="sparkles-outline" size={16} color="primary" />
+          <Text variant="small" color="primaryDeep" style={{ flex: 1 }}>
+            {idea.prompt}
+          </Text>
+        </View>
+      ) : null}
 
       <Text variant="eyebrow" color="textSecondary" style={styles.label}>
         What are you posting?
@@ -90,7 +101,13 @@ export default function NewPost() {
       </View>
 
       <View style={{ marginTop: Spacing.xl, gap: Spacing.xl }}>
-        <Field label="Title" value={title} onChangeText={setTitle} placeholder={current.titleHint} maxLength={120} />
+        <Field
+          label="Title"
+          value={title}
+          onChangeText={setTitle}
+          placeholder={idea && idea.kind === kind ? idea.titleHint : current.titleHint}
+          maxLength={120}
+        />
         <Field
           label="Post"
           value={body}
@@ -121,11 +138,7 @@ export default function NewPost() {
           value={link}
           onChangeText={setLink}
           placeholder={
-            kind === 'playlist'
-              ? 'https://open.spotify.com/…'
-              : kind === 'video'
-                ? 'https://www.instagram.com/reel/… or a TikTok link'
-                : 'https://…'
+            kind === 'playlist' ? 'https://open.spotify.com/…' : kind === 'video' ? 'https://www.instagram.com/reel/… or a TikTok link' : 'https://…'
           }
           autoCapitalize="none"
           keyboardType="url"
@@ -150,6 +163,15 @@ export default function NewPost() {
 
 const styles = StyleSheet.create({
   photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.sm, backgroundColor: Colors.surface },
+  idea: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'center',
+    backgroundColor: Colors.primarySoft,
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+  },
   label: { marginBottom: Spacing.sm, marginTop: Spacing.xl },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   option: {
