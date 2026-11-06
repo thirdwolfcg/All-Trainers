@@ -20,9 +20,9 @@ export default function Welcome() {
           <PingHero
             pings={[
               { title: 'Maya added a class', detail: 'Sat 9:00 · Reformer at Lumen' },
-              { title: 'Jordan has a sub', detail: 'Tue 6:30 · Cycle at Ride Denver' },
+              { title: 'Jordan posted a playlist', detail: "Tuesday's Throwback Ride · Spotify" },
             ]}
-            label="Example notifications. Maya added a class. Jordan has a sub."
+            label="Example notifications. Maya added a class. Jordan posted a playlist."
           />
 
           <Image source={require('@/assets/images/zomi-wordmark.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Zomi" />
