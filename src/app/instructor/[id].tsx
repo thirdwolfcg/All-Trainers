@@ -118,7 +118,7 @@ export default function InstructorProfile() {
                 kind="outline"
                 icon="share-outline"
                 label="Share my link"
-                onPress={() => shareInvite(`Follow me on All Trainers to see where I'm teaching this week: ${followUrl(instructor.handle)}`)}
+                onPress={() => shareInvite(`Follow me on Zomi to see where I'm teaching this week: ${followUrl(instructor.handle)}`)}
                 style={{ flex: 1 }}
               />
             </View>

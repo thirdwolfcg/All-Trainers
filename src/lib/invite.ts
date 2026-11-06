@@ -18,7 +18,7 @@ const first = (name: string) => name.split(' ')[0];
 /** Instructor to a coworker at the same studio. */
 export function coworkerInviteMessage(opts: { fromName: string; fromHandle: string; studioName: string }) {
   return (
-    `Hey! It's ${first(opts.fromName)}. I'm on All Trainers, where my clients follow my schedule across every studio I teach at. ` +
+    `Hey! It's ${first(opts.fromName)}. I'm on Zomi, where my clients follow my schedule across every studio I teach at. ` +
     `It's also how ${opts.studioName} instructors find subs for each other. Founding instructors are free right now, join me: ` +
     inviteLink({ ref: opts.fromHandle, forInstructors: true })
   );
@@ -27,7 +27,7 @@ export function coworkerInviteMessage(opts: { fromName: string; fromHandle: stri
 /** Client to a friend. */
 export function friendInviteMessage(opts: { fromName: string; refId: string }) {
   return (
-    `Ok you need this. All Trainers shows you where your favorite instructors are teaching all week, every studio, one app. ` +
+    `Ok you need this. Zomi shows you where your favorite instructors are teaching all week, every studio, one app. ` +
     `No more digging through IG stories. Come work out with me: ${inviteLink({ ref: opts.refId })}`
   );
 }
@@ -36,7 +36,7 @@ export function friendInviteMessage(opts: { fromName: string; refId: string }) {
 export function bringAFriendMessage(opts: { fromName: string; refId: string; instructorName: string; instructorHandle: string }) {
   return (
     `Take a class with me?? ${first(opts.instructorName)} is my favorite instructor in Denver. ` +
-    `Follow ${first(opts.instructorName)} on All Trainers to see where they're teaching this week: ` +
+    `Follow ${first(opts.instructorName)} on Zomi to see where they're teaching this week: ` +
     inviteLink({ ref: opts.refId, instructor: opts.instructorHandle })
   );
 }
@@ -44,7 +44,7 @@ export function bringAFriendMessage(opts: { fromName: string; refId: string; ins
 /** Client to an instructor who isn't on the app yet. */
 export function instructorInviteMessage(opts: { fromName: string; refId: string }) {
   return (
-    `Hi! It's ${first(opts.fromName)} from your class. I'd follow you everywhere if you were on All Trainers, ` +
+    `Hi! It's ${first(opts.fromName)} from your class. I'd follow you everywhere if you were on Zomi, ` +
     `it's an app where clients can see your schedule across every studio you teach at, no more hunting for IG stories. ` +
     `It's free for founding instructors right now: ${inviteLink({ ref: opts.refId, forInstructors: true })}`
   );

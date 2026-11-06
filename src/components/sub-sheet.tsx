@@ -51,7 +51,7 @@ export function SubSheet({ session, open, onClose }: { session: ClassSession; op
           </Text>
 
           <Text variant="eyebrow" color="textSecondary">
-            Your {studio.name} crew on All Trainers
+            Your {studio.name} crew on Zomi
           </Text>
 
           {colleagues.length === 0 ? (

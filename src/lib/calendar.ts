@@ -13,7 +13,7 @@ function details(session: ClassSession, instructor: Instructor, studio: Studio) 
   return {
     title: `${session.title} with ${instructor.name}`,
     location: `${studio.name}, ${studio.address}`,
-    description: `Booked through ${studio.name}. Found on All Trainers.`,
+    description: `Booked through ${studio.name}. Found on Zomi.`,
     start,
     end,
   };
@@ -37,9 +37,9 @@ export function icsFile(session: ClassSession, instructor: Instructor, studio: S
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//All Trainers//EN',
+    'PRODID:-//Zomi Fit//EN',
     'BEGIN:VEVENT',
-    `UID:${session.id}@alltrainers.app`,
+    `UID:${session.id}@zomifit.com`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(d.start)}`,
     `DTEND:${stamp(d.end)}`,

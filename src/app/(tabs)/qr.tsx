@@ -45,7 +45,7 @@ export default function MyQr() {
         <Button
           icon="share-outline"
           label="Share my link"
-          onPress={() => shareInvite(`Follow me on All Trainers to see where I'm teaching this week: ${url}`)}
+          onPress={() => shareInvite(`Follow me on Zomi to see where I'm teaching this week: ${url}`)}
           style={{ marginTop: Spacing.xl }}
         />
 

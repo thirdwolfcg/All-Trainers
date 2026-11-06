@@ -90,7 +90,7 @@ export function BookingSheet({
           )}
 
           <Text variant="small" color="textSecondary" style={{ marginTop: Spacing.md }}>
-            Booking, payment and late cancel fees are handled by where you book, not by All Trainers.
+            Booking, payment and late cancel fees are handled by where you book, not by Zomi.
           </Text>
         </View>
       </View>

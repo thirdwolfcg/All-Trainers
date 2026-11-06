@@ -45,8 +45,8 @@ export function ClassUpdateSheet({ session, open, onClose }: { session: ClassSes
           <Text variant="title">Message everyone booked</Text>
           <Text variant="small" color="textSecondary" style={{ marginBottom: Spacing.md }}>
             {count
-              ? `Goes to the ${count} ${count === 1 ? 'person' : 'people'} booked into ${session.title} on All Trainers, and shows on the class.`
-              : `No one has marked this class booked on All Trainers yet. Your update still shows on the class page.`}
+              ? `Goes to the ${count} ${count === 1 ? 'person' : 'people'} booked into ${session.title} on Zomi, and shows on the class.`
+              : `No one has marked this class booked on Zomi yet. Your update still shows on the class page.`}
           </Text>
           <View style={styles.quick}>
             {QUICK.map((q) => (

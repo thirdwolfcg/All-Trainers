@@ -1,5 +1,5 @@
 /**
- * All Trainers design tokens: "Studio Editorial".
+ * Zomi design tokens: "Studio Editorial".
  * White ground, plum accent, soft gray surfaces, thin rules instead of boxes.
  * Serif display (Fraunces) over a clean sans (Inter).
  */

@@ -26,7 +26,7 @@ export default function FollowLanding() {
     return (
       <Screen>
         <EmptyState icon="search" title="Can't find that instructor" body="The code may be old. Ask them to show you their QR code again." />
-        <Button label="Go to All Trainers" onPress={() => router.replace('/')} />
+        <Button label="Go to Zomi" onPress={() => router.replace('/')} />
       </Screen>
     );
   }
@@ -47,7 +47,7 @@ export default function FollowLanding() {
       <Screen>
         <View style={styles.card}>
           <Text variant="eyebrow" color="primary">
-            All Trainers
+            Zomi
           </Text>
           <Avatar name={instructor.name} size={88} ring />
           <Text variant="display" align="center">

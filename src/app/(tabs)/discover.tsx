@@ -137,7 +137,7 @@ export default function Discover() {
 
       <InviteCard
         eyebrow="Your fave not on here?"
-        title="Get them on All Trainers"
+        title="Get them on Zomi"
         body="Text your instructor an invite. Founding instructors join free."
         message={instructorInviteMessage({
           fromName: me.name,

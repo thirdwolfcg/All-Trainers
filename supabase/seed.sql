@@ -1,4 +1,4 @@
--- All Trainers: test data for the Supabase project.
+-- Zomi (formerly All Trainers): test data for the Supabase project.
 --
 -- HOW TO RUN: Supabase dashboard, SQL Editor, paste this whole file, Run.
 -- Needs migrations 0001 through 0012 to have been run first, in order.

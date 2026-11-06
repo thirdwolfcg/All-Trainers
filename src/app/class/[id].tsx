@@ -138,7 +138,7 @@ export default function ClassDetail() {
 
         {isClient ? (
           <Text variant="small" color="textSecondary" style={{ marginTop: Spacing.lg }}>
-            Booking, payment and late cancel fees are handled by where you book, not by All Trainers.
+            Booking, payment and late cancel fees are handled by where you book, not by Zomi.
           </Text>
         ) : null}
       </Screen>

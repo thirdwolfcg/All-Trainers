@@ -3,6 +3,12 @@
  * TODO before launch: switch to the real domain (and set up universal links
  * so the same URL opens the installed app on phones).
  */
+// Brand: the app is "Zomi"; the domain, handles and store listing are "Zomi Fit".
+export const BRAND_DOMAIN = 'https://zomifit.com';
+export const BRAND_HANDLE = '@zomifit';
+
+// Where shared links, invites and QR codes point. Still the test site until
+// zomifit.com is set up for the app; then switch this to BRAND_DOMAIN.
 export const PUBLIC_APP_URL = 'https://thirdwolfcg.github.io/All-Trainers';
 
 /** The page a QR code or shared link opens: shows the instructor with a Follow button. */

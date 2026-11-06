@@ -31,7 +31,7 @@ export default function Welcome() {
           </View>
 
           <Text variant="eyebrow" color="primary" align="center">
-            All Trainers · Denver
+            Zomi · Denver
           </Text>
           <Text variant="display" align="center">
             Never miss a class with your faves.

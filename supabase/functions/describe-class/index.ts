@@ -22,7 +22,7 @@ const json = (body: unknown, status = 200) =>
 
 const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-const SYSTEM = `You write short class descriptions for All Trainers, an app where people follow their favorite fitness instructors in Denver.
+const SYSTEM = `You write short class descriptions for Zomi, an app where people follow their favorite fitness instructors in Denver.
 
 Write in the instructor's voice: warm, upbeat, a little playful, like a text from your favorite instructor. Plain words, no corporate speak, no hashtags, at most one emoji.
 

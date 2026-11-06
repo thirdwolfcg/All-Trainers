@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "All Trainers",
-    "slug": "all-trainers",
+    "name": "Zomi",
+    "slug": "zomi",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "alltrainers",
+    "scheme": "zomi",
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",
@@ -37,7 +37,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "All Trainers uses your photos so you can add a picture to your posts.",
+          "photosPermission": "Zomi uses your photos so you can add a picture to your posts.",
           "cameraPermission": false,
           "microphonePermission": false
         }
