@@ -6,11 +6,11 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
 export type Ping = { title: string; detail: string };
 
 /** Two stacked "notifications" that show what Zomi does at a glance. Decorative, so screen readers get one summary label. */
-export function PingHero({ pings, label }: { pings: [Ping, Ping]; label: string }) {
+export function PingHero({ pings, label }: { pings: Ping[]; label: string }) {
   return (
     <View style={styles.wrap} accessible accessibilityLabel={label}>
       {pings.map((p, i) => (
-        <View key={p.title} style={[styles.ping, i === 0 ? styles.first : styles.second]}>
+        <View key={p.title} style={[styles.ping, i === 0 ? styles.first : i === pings.length - 1 ? styles.last : styles.middle]}>
           <Image source={require('@/assets/images/zomi-icon-small.png')} style={styles.icon} />
           <View style={{ flex: 1 }}>
             <Text variant="smallStrong" numberOfLines={1}>
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   first: { marginRight: Spacing.xl },
-  second: { marginLeft: Spacing.xl, opacity: 0.9 },
+  middle: { marginHorizontal: Spacing.md },
+  last: { marginLeft: Spacing.xl, opacity: 0.9 },
   icon: { width: 36, height: 36, borderRadius: 9 },
 });

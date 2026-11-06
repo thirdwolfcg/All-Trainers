@@ -61,10 +61,11 @@ export default function Teach() {
           <View style={styles.hero}>
             <PingHero
               pings={[
-                { title: 'Sarah booked your class', detail: 'Sat 9:00 · Reformer at Lumen' },
-                { title: "It's Priya's birthday", detail: "She's in your 6:30 Cycle tonight" },
+                { title: 'Kendall needs a sub', detail: 'Thu 6:30 Barre · Can you cover?' },
+                { title: 'Sarah booked a private', detail: 'Fri 7:00 · 1:1 Reformer session' },
+                { title: 'Marcus booked your class', detail: 'Sat 9:00 · Reformer at Lumen' },
               ]}
-              label="Example notifications. Sarah booked your class. It's Priya's birthday."
+              label="Example notifications. Kendall needs a sub. Sarah booked a private. Marcus booked your class."
             />
             <Image source={require('@/assets/images/zomi-wordmark.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Zomi" />
             <Text variant="eyebrow" color="primary" align="center">
