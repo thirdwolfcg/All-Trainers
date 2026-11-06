@@ -2,7 +2,8 @@ import { Stack, router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Button, Icon, Text, type IconName } from '@/components/ui';
+import { Button, Icon, Text, type IconName } from '@/components/ui';
+import { PingHero } from '@/components/ping-hero';
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
@@ -55,22 +56,16 @@ export default function Teach() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView
-        style={styles.root}
-        contentContainerStyle={{ paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xxl }}>
+      <ScrollView style={styles.root} contentContainerStyle={{ paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xxl }}>
         <View style={styles.column}>
           <View style={styles.hero}>
-            <View style={styles.stack}>
-              <View style={[styles.bubble, { left: 0, top: 18 }]}>
-                <Avatar name="Kendall Brooks" size={48} />
-              </View>
-              <View style={[styles.bubble, styles.center]}>
-                <Avatar name="Maya Chen" size={72} ring />
-              </View>
-              <View style={[styles.bubble, { right: 0, top: 18 }]}>
-                <Avatar name="Dev Patel" size={48} />
-              </View>
-            </View>
+            <PingHero
+              pings={[
+                { title: 'Sarah booked your class', detail: 'Sat 9:00 · Reformer at Lumen' },
+                { title: "It's Priya's birthday", detail: "She's in your 6:30 Cycle tonight" },
+              ]}
+              label="Example notifications. Sarah booked your class. It's Priya's birthday."
+            />
             <Image source={require('@/assets/images/zomi-wordmark.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Zomi" />
             <Text variant="eyebrow" color="primary" align="center">
               For instructors · Denver
@@ -142,9 +137,6 @@ const styles = StyleSheet.create({
     gap: Spacing.xxl,
   },
   hero: { gap: Spacing.md, alignItems: 'center' },
-  stack: { width: 200, height: 96, marginBottom: Spacing.md },
-  bubble: { position: 'absolute' },
-  center: { left: 64, top: 0 },
   founding: {
     flexDirection: 'row',
     alignItems: 'center',

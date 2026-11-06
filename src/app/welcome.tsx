@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Button, Icon, Text } from '@/components/ui';
+import { Button, Icon, Text } from '@/components/ui';
+import { PingHero } from '@/components/ping-hero';
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
@@ -13,22 +14,16 @@ export default function Welcome() {
   const { showTips } = useStore();
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }}>
+    <ScrollView style={styles.root} contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }}>
       <View style={styles.column}>
         <View style={styles.hero}>
-          <View style={styles.stack}>
-            <View style={[styles.bubble, { left: 0, top: 18 }]}>
-              <Avatar name="Maya Chen" size={56} />
-            </View>
-            <View style={[styles.bubble, styles.center]}>
-              <Avatar name="Priya Raman" size={72} ring />
-            </View>
-            <View style={[styles.bubble, { right: 0, top: 18 }]}>
-              <Avatar name="Jordan Ellis" size={56} />
-            </View>
-          </View>
+          <PingHero
+            pings={[
+              { title: 'Maya added a class', detail: 'Sat 9:00 · Reformer at Lumen' },
+              { title: 'Jordan has a sub', detail: 'Tue 6:30 · Cycle at Ride Denver' },
+            ]}
+            label="Example notifications. Maya added a class. Jordan has a sub."
+          />
 
           <Image source={require('@/assets/images/zomi-wordmark.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Zomi" />
           <Text variant="display" align="center">
@@ -96,9 +91,6 @@ const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
   hero: { gap: Spacing.md, alignItems: 'center' },
-  stack: { width: 200, height: 96, marginBottom: Spacing.md },
-  bubble: { position: 'absolute' },
-  center: { left: 64, top: 0 },
   points: { gap: Spacing.md, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg },
   point: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   pointIcon: {
