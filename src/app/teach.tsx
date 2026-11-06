@@ -1,5 +1,5 @@
 import { Stack, router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Button, Icon, Text, type IconName } from '@/components/ui';
@@ -71,6 +71,7 @@ export default function Teach() {
                 <Avatar name="Dev Patel" size={48} />
               </View>
             </View>
+            <Image source={require('@/assets/images/zomi-wordmark.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Zomi" />
             <Text variant="eyebrow" color="primary" align="center">
               For instructors · Denver
             </Text>
@@ -131,6 +132,7 @@ export default function Teach() {
 }
 
 const styles = StyleSheet.create({
+  wordmark: { width: 126, height: 60, alignSelf: 'center' },
   root: { flex: 1, backgroundColor: Colors.background },
   column: {
     width: '100%',
