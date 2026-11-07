@@ -482,7 +482,7 @@ function InstructorWeek() {
               kind="outline"
               icon="create-outline"
               label="Post"
-              accessibilityLabel="Post to your feed"
+              accessibilityLabel="New post"
               onPress={() => router.push('/post/new')}
               style={{ flex: 1 }}
             />
@@ -526,7 +526,7 @@ function InstructorWeek() {
           <SectionHeader
             title={week === 0 ? 'Your posts this week' : isPast ? 'What you posted' : 'Your posts'}
             action={allMyPosts.length ? 'See all' : undefined}
-            onAction={() => router.push('/feed')}
+            onAction={() => router.push(`/instructor/${me.id}`)}
           />
           {weekPosts.length ? (
             weekPosts.map((p) => <PostCard key={p.id} post={p} />)

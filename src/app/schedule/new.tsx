@@ -383,7 +383,7 @@ export default function NewClass() {
             </View>
           ) : (
             <Text variant="small" color="textSecondary">
-              Post a recipe to your feed first, then you can attach it to classes.
+              Post a recipe first, then you can attach it to classes.
             </Text>
           )}
         </View>

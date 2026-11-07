@@ -42,9 +42,14 @@ export default function TabLayout() {
           <TabTrigger name="index" href="/" asChild>
             <TabButton label={isInstructor ? 'My week' : 'Home'} icon="home-outline" activeIcon="home" />
           </TabTrigger>
-          <TabTrigger name="feed" href="/feed" asChild>
-            <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
-          </TabTrigger>
+          {/* Instructors see their posts week by week on My Week, so they get no Feed tab. */}
+          {isInstructor ? (
+            <TabTrigger name="feed" href="/feed" style={{ display: 'none' }} />
+          ) : (
+            <TabTrigger name="feed" href="/feed" asChild>
+              <TabButton label="Feed" icon="newspaper-outline" activeIcon="newspaper" />
+            </TabTrigger>
+          )}
           {isInstructor ? (
             <TabTrigger name="activity" href="/activity" asChild>
               <TabButton label="Followers" icon="people-outline" activeIcon="people" />

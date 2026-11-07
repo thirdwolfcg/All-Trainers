@@ -73,14 +73,14 @@ export default function NewPost() {
       imageUrl: photo,
       isPremium: false,
     });
-    toast('Posted. Your followers can see it on your feed.');
+    toast('Posted. Your followers see it in their feed and on your profile.');
     router.back();
   };
 
   return (
     <Screen padTop={false}>
       <Text variant="body" color="textSecondary">
-        Shows on your profile&apos;s Feed for your followers.
+        Shows on your profile and in your followers&apos; feeds.
       </Text>
       {idea ? (
         <View style={styles.idea}>

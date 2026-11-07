@@ -14,7 +14,6 @@ export function navItems(isInstructor: boolean): Item[] {
   return isInstructor
     ? [
         { label: 'My week', href: '/', icon: 'home-outline' },
-        { label: 'Feed', href: '/feed', icon: 'newspaper-outline' },
         { label: 'Followers', href: '/activity', icon: 'people-outline' },
         { label: 'Messages', href: '/messages', icon: 'chatbubbles-outline' },
         { label: 'Me', href: '/me', icon: 'person-circle-outline' },
