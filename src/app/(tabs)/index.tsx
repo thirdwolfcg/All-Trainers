@@ -355,8 +355,11 @@ function InstructorWeek() {
   // Open asks, plus ones I said no to that still need a sub (so a mis-tap can be taken back)
   const asksForMe = store.subRequests.filter((r) => {
     if (r.toInstructorId !== me.id) return false;
+    const cls = store.classes.find((c) => c.id === r.classId);
+    // A class that already started can't be covered anymore.
+    if (!cls || new Date(cls.startsAt).getTime() <= Date.now()) return false;
     if (r.status === 'pending') return true;
-    return r.status === 'declined' && store.classes.find((c) => c.id === r.classId)?.status === 'sub_needed';
+    return r.status === 'declined' && cls.status === 'sub_needed';
   });
   const toast = useToast();
   const [confirmAsk, setConfirmAsk] = useState<string | null>(null);
@@ -386,12 +389,20 @@ function InstructorWeek() {
       title={`Hiii ${greetName(me.name)}`}
       subtitle={weekLine({ classes: active.length, studios: studiosThisWeek, studioName: store.studio(active[0]?.studioId ?? '')?.name }, lineSeed)}
       right={
-        <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
-          <Icon name="qr-code-outline" size={22} color="primary" />
-          <Text variant="eyebrow" color="primary" style={{ fontSize: 9 }}>
-            My QR
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+          <Pressable onPress={() => router.push('/feed')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My feed, everything I've posted">
+            <Icon name="newspaper-outline" size={22} color="primary" />
+            <Text variant="eyebrow" color="primary" style={{ fontSize: 9 }}>
+              My feed
+            </Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
+            <Icon name="qr-code-outline" size={22} color="primary" />
+            <Text variant="eyebrow" color="primary" style={{ fontSize: 9 }}>
+              My QR
+            </Text>
+          </Pressable>
+        </View>
       }>
       <PreviewSwitch />
       <Tip id="tip-qr" text="Tap My QR (top right) and flash it after class. One scan and they’re following you." pointer="none" />
@@ -526,7 +537,7 @@ function InstructorWeek() {
           <SectionHeader
             title={week === 0 ? 'Your posts this week' : isPast ? 'What you posted' : 'Your posts'}
             action={allMyPosts.length ? 'See all' : undefined}
-            onAction={() => router.push(`/instructor/${me.id}`)}
+            onAction={() => router.push('/feed')}
           />
           {weekPosts.length ? (
             weekPosts.map((p) => <PostCard key={p.id} post={p} />)
