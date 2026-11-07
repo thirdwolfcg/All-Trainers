@@ -294,14 +294,63 @@ function ClientHome() {
 
 /* ---------- Instructor week ---------- */
 
+/** ‹ This week › with the dates, for paging through the instructor's weeks. */
+function WeekNav({ week, start, onChange }: { week: number; start: Date; onChange: (w: number) => void }) {
+  const end = addDays(start, 6);
+  const name =
+    week === 0 ? 'This week' : week === 1 ? 'Next week' : week === -1 ? 'Last week' : start.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const sameMonth = start.getMonth() === end.getMonth();
+  const range = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${end.toLocaleDateString('en-US', sameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' })}`;
+  const canBack = week > -12;
+  const canForward = week < 52;
+  return (
+    <View style={styles.weekNav}>
+      <Pressable
+        onPress={() => canBack && onChange(week - 1)}
+        disabled={!canBack}
+        hitSlop={12}
+        style={styles.weekArrow}
+        accessibilityRole="button"
+        accessibilityLabel="Previous week">
+        <Icon name="chevron-back" size={22} color={canBack ? 'primary' : 'border'} />
+      </Pressable>
+      <Pressable
+        onPress={() => week !== 0 && onChange(0)}
+        style={{ flex: 1, alignItems: 'center' }}
+        accessibilityRole="button"
+        accessibilityLabel={week === 0 ? `${name}, ${range}` : `${name}, ${range}. Tap to go back to this week`}>
+        <Text variant="heading">{name}</Text>
+        <Text variant="small" color="textSecondary">
+          {week === 0 || Math.abs(week) === 1 ? range : week === 0 ? '' : `${range} · Back to this week`}
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={() => canForward && onChange(week + 1)}
+        disabled={!canForward}
+        hitSlop={12}
+        style={styles.weekArrow}
+        accessibilityRole="button"
+        accessibilityLabel="Next week">
+        <Icon name="chevron-forward" size={22} color={canForward ? 'primary' : 'border'} />
+      </Pressable>
+    </View>
+  );
+}
+
 function InstructorWeek() {
   const store = useStore();
   const me = store.instructor(store.meId)!;
   const today = startOfDay(new Date());
-  // My classes, plus any I'm covering for someone else
-  const mine = store.classes.filter(
-    (c) => (c.instructorId === me.id || c.subInstructorId === me.id) && new Date(c.startsAt) >= today && new Date(c.startsAt) < addDays(today, 7),
-  );
+  // Calendar weeks, Monday to Sunday. 0 is this week, 1 next week, -1 last week.
+  const [week, setWeek] = useState(0);
+  const thisMonday = addDays(today, -((today.getDay() + 6) % 7));
+  const weekStart = addDays(thisMonday, week * 7);
+  const weekEnd = addDays(weekStart, 7);
+  const inWindow = (iso: string, from: Date, to: Date) => new Date(iso) >= from && new Date(iso) < to;
+  const allMine = store.classes.filter((c) => c.instructorId === me.id || c.subInstructorId === me.id);
+  // My classes in the next 7 days (for the greeting), plus any I'm covering for someone else
+  const mine = allMine.filter((c) => inWindow(c.startsAt, today, addDays(today, 7)));
+  const weekClasses = allMine.filter((c) => inWindow(c.startsAt, weekStart, weekEnd));
   // Open asks, plus ones I said no to that still need a sub (so a mis-tap can be taken back)
   const asksForMe = store.subRequests.filter((r) => {
     if (r.toInstructorId !== me.id) return false;
@@ -316,15 +365,18 @@ function InstructorWeek() {
   const active = mine.filter((c) => c.status !== 'cancelled');
   const studiosThisWeek = new Set(active.map((c) => c.studioId)).size;
   // Before the first class, the page is just a stage with one button.
-  const hasAnyClass = store.classes.some((c) => c.instructorId === me.id || c.subInstructorId === me.id);
-  const myPosts = store.posts
-    .filter((p) => p.instructorId === me.id)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 3);
+  const hasAnyClass = allMine.length > 0;
+  const allMyPosts = store.posts.filter((p) => p.instructorId === me.id);
+  // Posts land in the week they were made in.
+  const weekPosts = allMyPosts
+    .filter((p) => inWindow(p.createdAt, weekStart, weekEnd))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const showWeeks = hasAnyClass || allMyPosts.length > 0;
+  const isPast = week < 0;
 
   const byDay = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(today, i);
-    return { day: d, classes: mine.filter((c) => isSameDay(new Date(c.startsAt), d)) };
+    const d = addDays(weekStart, i);
+    return { day: d, classes: weekClasses.filter((c) => isSameDay(new Date(c.startsAt), d)) };
   }).filter((g) => g.classes.length);
 
   return (
@@ -442,6 +494,8 @@ function InstructorWeek() {
         </>
       ) : null}
 
+      {showWeeks ? <WeekNav week={week} start={weekStart} onChange={setWeek} /> : null}
+
       {byDay.length ? (
         <>
           <Tip id="tip-sub" text="Can’t make a class? Tap “Need a sub” under it to ask instructors at the same studio." />
@@ -451,14 +505,18 @@ function InstructorWeek() {
               {g.classes.map((c) => (
                 <View key={c.id}>
                   <ClassCard session={c} showInstructor={false} />
-                  {c.instructorId === me.id ? <InstructorClassActions session={c} /> : null}
+                  {c.instructorId === me.id && new Date(c.startsAt) > new Date() ? <InstructorClassActions session={c} /> : null}
                 </View>
               ))}
             </View>
           ))}
         </>
-      ) : hasAnyClass ? (
-        <EmptyState icon="calendar-outline" title="Nothing on this week" body="Add a class and your followers see it right away." />
+      ) : showWeeks ? (
+        <EmptyState
+          icon="calendar-outline"
+          title={isPast ? 'No classes that week' : week === 0 ? 'Nothing on this week' : 'Nothing on yet'}
+          body={isPast ? undefined : 'Add a class and your followers see it right away.'}
+        />
       ) : (
         <View style={{ gap: Spacing.lg, marginBottom: Spacing.xxl }}>
           <EmptyState icon="calendar-outline" title="Your stage is empty" />
@@ -466,12 +524,24 @@ function InstructorWeek() {
         </View>
       )}
 
-      {myPosts.length ? (
+      {showWeeks ? (
         <View style={{ marginTop: Spacing.lg }}>
-          <SectionHeader title="Your latest posts" action="See all" onAction={() => router.push('/feed')} />
-          {myPosts.map((p) => (
-            <PostCard key={p.id} post={p} />
-          ))}
+          <SectionHeader
+            title={week === 0 ? 'Your posts this week' : isPast ? 'What you posted' : 'Your posts'}
+            action={allMyPosts.length ? 'See all' : undefined}
+            onAction={() => router.push('/feed')}
+          />
+          {weekPosts.length ? (
+            weekPosts.map((p) => <PostCard key={p.id} post={p} />)
+          ) : (
+            <Text variant="small" color="textSecondary" style={{ marginBottom: Spacing.xl }}>
+              {isPast
+                ? 'Nothing posted that week.'
+                : week === 0
+                  ? 'Nothing yet this week. Tap Post to share something with your people.'
+                  : 'Posts you make that week show up here.'}
+            </Text>
+          )}
         </View>
       ) : null}
     </Screen>
@@ -479,6 +549,17 @@ function InstructorWeek() {
 }
 
 const styles = StyleSheet.create({
+  weekNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  weekArrow: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primarySoft },
   update: {
     flexDirection: 'row',
     gap: 6,
