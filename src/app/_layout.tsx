@@ -61,7 +61,8 @@ function Navigator() {
   // once they're in as a client, follow that instructor and show their week.
   useEffect(() => {
     const pending = store.pendingFollow;
-    if (!pending || !inApp) return;
+    // Real accounts: wait until their data has loaded, so the instructor is there to follow.
+    if (!pending || !inApp || (store.live && store.loading)) return;
     store.setPendingFollow(null);
     const instructor = store.instructor(pending);
     if (!instructor || store.role !== 'client') return;
@@ -71,6 +72,13 @@ function Navigator() {
       toast(`You're following ${instructor.name.split(' ')[0]}. Welcome in.`);
     }, 0);
   }, [inApp, store, toast]);
+
+  // A save to the database failed: say so (the store has already reloaded the real data).
+  useEffect(() => {
+    if (!store.syncError) return;
+    toast(store.syncError);
+    store.clearSyncError();
+  }, [store, toast]);
 
   if (loading) return null;
 

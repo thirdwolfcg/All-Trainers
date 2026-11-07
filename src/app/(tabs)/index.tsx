@@ -85,7 +85,7 @@ function ClientHome() {
   const toast = useToast();
   const latestUpdate = (classId: string) => store.classUpdates.find((u) => u.classId === classId);
   const openSpots = store.spotOffers
-    .filter((o) => o.status === 'open' && o.fromClientId !== 'me' && !store.booked.has(o.classId))
+    .filter((o) => o.status === 'open' && o.fromClientId !== store.meId && !store.booked.has(o.classId))
     .map((o) => ({ offer: o, cls: store.classes.find((c) => c.id === o.classId) }))
     .filter(
       (x): x is { offer: (typeof store.spotOffers)[number]; cls: NonNullable<typeof x.cls> } =>

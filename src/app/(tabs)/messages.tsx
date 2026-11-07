@@ -23,7 +23,7 @@ export default function MessagesScreen() {
 
   const nameFor = (otherId: string) =>
     isInstructor
-      ? clientName(store.clients.find((c) => c.id === otherId)?.name ?? 'Client')
+      ? clientName(store.clients.find((c) => c.id === otherId)?.name ?? store.nameOf(otherId) ?? 'Client')
       : (store.instructor(otherId)?.name ?? 'Instructor');
 
   return (

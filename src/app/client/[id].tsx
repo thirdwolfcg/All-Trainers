@@ -102,6 +102,9 @@ export default function ClientDetail() {
         <TextInput
           value={notes}
           onChangeText={setNotes}
+          onBlur={() => {
+            if (notes.trim() !== (client.preferences ?? '').trim()) store.updateClient(client.id, { preferences: notes.trim() });
+          }}
           placeholder="Goals, injury, music taste, anything to remember"
           placeholderTextColor={Colors.textMuted}
           multiline
@@ -110,7 +113,7 @@ export default function ClientDetail() {
         <View style={styles.row}>
           <Icon name="lock-closed-outline" size={14} color="textMuted" />
           <Text variant="small" color="textSecondary" style={{ flex: 1 }}>
-            Only you can see these notes. {client.name.split(' ')[0]} can&apos;t.
+            Only you can see these notes. {client.name.split(' ')[0]} can&apos;t. They save when you tap away.
           </Text>
         </View>
       </Screen>

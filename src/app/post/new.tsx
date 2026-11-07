@@ -6,6 +6,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Screen } from '@/components/screen';
 import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
+import { photoUrl, uploadPostPhoto } from '@/lib/live';
 import { findIdea } from '@/lib/post-ideas';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
@@ -64,15 +65,36 @@ export default function NewPost() {
     if (!res.canceled && res.assets[0]) setPhoto(res.assets[0].uri);
   };
 
-  const post = () => {
-    store.addPost({
-      kind,
-      title: title.trim(),
-      body: body.trim(),
-      linkUrl: trimmedLink || undefined,
-      imageUrl: photo,
-      isPremium: false,
-    });
+  const [busy, setBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string>();
+
+  const post = async () => {
+    let imageUrl = photo;
+    let mediaPath: string | undefined;
+    // Real accounts: put the photo in storage first so followers can see it too.
+    if (photo && store.live) {
+      setBusy(true);
+      setUploadError(undefined);
+      const up = await uploadPostPhoto(store.meId, photo);
+      setBusy(false);
+      if (up.error || !up.path) {
+        setUploadError(`The photo didn't upload. ${up.error ?? ''} Try again, or remove it and post without it.`.trim());
+        return;
+      }
+      mediaPath = up.path;
+      imageUrl = photoUrl(up.path);
+    }
+    store.addPost(
+      {
+        kind,
+        title: title.trim(),
+        body: body.trim(),
+        linkUrl: trimmedLink || undefined,
+        imageUrl,
+        isPremium: false,
+      },
+      mediaPath,
+    );
     toast('Posted. Your followers see it in their feed and on your profile.');
     router.back();
   };
@@ -151,7 +173,12 @@ export default function NewPost() {
         />
       </View>
 
-      <Button label="Post it" icon="send" disabled={!canPost} onPress={post} style={{ marginTop: Spacing.xxl }} />
+      {uploadError ? (
+        <Text variant="small" color="blushDeep" style={{ marginTop: Spacing.lg }}>
+          {uploadError}
+        </Text>
+      ) : null}
+      <Button label={busy ? 'Uploading photo…' : 'Post it'} icon="send" disabled={!canPost || busy} onPress={post} style={{ marginTop: Spacing.xxl }} />
       {!canPost ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
           {needsLink ? 'Add a title, a few words and your video link to post.' : 'Add a title and a few words to post.'}

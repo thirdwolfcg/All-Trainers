@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -18,6 +19,7 @@ export function InstructorClassActions({ session, align = 'end' }: { session: Cl
   const toast = useToast();
   const [findingSub, setFindingSub] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [messaging, setMessaging] = useState(false);
   const bookedCount = store.bookersOf(session.id).length;
@@ -39,6 +41,26 @@ export function InstructorClassActions({ session, align = 'end' }: { session: Cl
             store.setClassStatus(session.id, 'scheduled');
             toast(`${session.title} is back on the schedule.`);
           }}
+        />
+        <Button
+          size="sm"
+          kind="ghost"
+          icon="trash-outline"
+          label="Delete"
+          accessibilityLabel={`Delete ${session.title}`}
+          onPress={() => setConfirmDelete(true)}
+        />
+        <ConfirmSheet
+          open={confirmDelete}
+          title={`Delete ${session.title}?`}
+          body="It comes off your schedule for good. Keeping it cancelled shows your followers it isn't happening."
+          confirmLabel="Delete"
+          destructive
+          onConfirm={() => {
+            store.deleteClass(session.id);
+            toast('Class deleted.');
+          }}
+          onClose={() => setConfirmDelete(false)}
         />
       </View>
     );
@@ -62,6 +84,16 @@ export function InstructorClassActions({ session, align = 'end' }: { session: Cl
           label={bookedCount ? `Message booked (${bookedCount})` : 'Post an update'}
           accessibilityLabel={`Message everyone booked into ${session.title}`}
           onPress={() => setMessaging(true)}
+        />
+      ) : null}
+      {upcoming ? (
+        <Button
+          size="sm"
+          kind="ghost"
+          icon="create-outline"
+          label="Edit"
+          accessibilityLabel={`Edit or delete ${session.title}`}
+          onPress={() => router.push({ pathname: '/schedule/new', params: { edit: session.id } })}
         />
       ) : null}
       <Button size="sm" kind="ghost" icon="close" label="Cancel my class" onPress={() => setConfirmCancel(true)} />

@@ -34,7 +34,7 @@ function Bar({ label, sub, value, max, onPress }: { label: string; sub?: string;
 /** The client's class stats: totals, by instructor, by studio. Shown on Home under "My classes". */
 export function MyClassesPanel() {
   const store = useStore();
-  const mine = store.attendance.filter((a) => a.clientId === 'me');
+  const mine = store.attendance.filter((a) => a.clientId === store.meId);
 
   // Rolling 30 days reads better than a calendar month on the 2nd of the month.
   const last30 = mine.filter((a) => Date.now() - new Date(a.date).getTime() <= 30 * 24 * 60 * 60 * 1000).length;

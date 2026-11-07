@@ -23,7 +23,7 @@ export default function ChatScreen() {
 
   const isInstructor = store.role === 'instructor';
   const otherName = isInstructor
-    ? clientName(store.clients.find((c) => c.id === conv.clientId)?.name ?? 'Client')
+    ? clientName(store.clients.find((c) => c.id === conv.clientId)?.name ?? store.nameOf(conv.clientId) ?? 'Client')
     : (store.instructor(conv.instructorId)?.name ?? 'Instructor');
 
   const send = () => {

@@ -1,7 +1,8 @@
-import { router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { ConfirmSheet } from '@/components/confirm-sheet';
 import { DatePicker } from '@/components/date-picker';
 import { Screen } from '@/components/screen';
 import { TimeRange } from '@/components/time-range';
@@ -30,30 +31,37 @@ function Label({ children }: { children: string }) {
   );
 }
 
+const hhmm = (d: Date) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+/** Add a class, or with ?edit=<class id>, change or delete one. */
 export default function NewClass() {
   const store = useStore();
   const toast = useToast();
   const me = store.instructor(store.meId);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [style, setStyle] = useState<Style>(me?.styles[0] ?? 'pilates');
-  const [studioId, setStudioId] = useState(store.studios[0].id);
-  const [date, setDate] = useState(() => addDays(startOfDay(new Date()), 1));
+  const { edit } = useLocalSearchParams<{ edit?: string }>();
+  const editing = edit ? store.classes.find((c) => c.id === edit && c.instructorId === store.meId) : undefined;
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [description, setDescription] = useState(editing?.description ?? '');
+  const [style, setStyle] = useState<Style>(editing?.style ?? me?.styles[0] ?? 'pilates');
+  const [studioId, setStudioId] = useState(editing?.studioId ?? store.studios[0]?.id ?? '');
+  const [date, setDate] = useState(() => (editing ? startOfDay(new Date(editing.startsAt)) : addDays(startOfDay(new Date()), 1)));
   const [picking, setPicking] = useState(false);
   const [addingStyle, setAddingStyle] = useState(false);
   const [newStyle, setNewStyle] = useState('');
-  const [addingStudio, setAddingStudio] = useState(false);
+  // New instructors have no studios yet, so start with the add-a-studio form open.
+  const [addingStudio, setAddingStudio] = useState(store.studios.length === 0);
   const [newStudio, setNewStudio] = useState('');
   const [newStudioHood, setNewStudioHood] = useState('');
-  const [time, setTime] = useState('18:00');
-  const [duration, setDuration] = useState(50);
+  const [time, setTime] = useState(editing ? hhmm(new Date(editing.startsAt)) : '18:00');
+  const [duration, setDuration] = useState(editing?.durationMin ?? 50);
+  const [confirmDelete, setConfirmDelete] = useState<'one' | 'series' | null>(null);
   const [repeat, setRepeat] = useState<Repeat>('once');
   const [days, setDays] = useState<number[]>(() => [addDays(new Date(), 1).getDay()]);
   const [sameTime, setSameTime] = useState(true);
   const [dayTimes, setDayTimes] = useState<Record<number, string>>({});
   const [weeks, setWeeks] = useState(13);
-  const [playlistUrl, setPlaylistUrl] = useState('');
-  const [recipePostId, setRecipePostId] = useState<string>();
+  const [playlistUrl, setPlaylistUrl] = useState(editing?.playlistUrl ?? '');
+  const [recipePostId, setRecipePostId] = useState<string | undefined>(editing?.recipePostId);
   const { demo } = useAuth();
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string>();
@@ -132,10 +140,29 @@ export default function NewClass() {
   };
 
   const count = canSave ? occurrences().length : 0;
-  const canPost = canSave && playlistOk && (repeat === 'once' || days.length > 0);
+  const canPost = canSave && !!studioId && playlistOk && (repeat === 'once' || days.length > 0);
+  const laterInSeries = editing?.seriesId ? store.classes.filter((c) => c.seriesId === editing.seriesId && c.startsAt >= editing.startsAt).length : 0;
+
+  const saveEdit = () => {
+    if (!editing) return;
+    const [h, m] = time.split(':').map(Number);
+    const startsAt = new Date(date);
+    startsAt.setHours(h, m, 0, 0);
+    store.updateClass(editing.id, {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      style,
+      studioId,
+      startsAt: startsAt.toISOString(),
+      durationMin: duration,
+      playlistUrl: playlistUrl.trim() || undefined,
+      recipePostId,
+    });
+    toast(`${title.trim()} is updated. Your followers see the change right away.`);
+    router.back();
+  };
 
   const save = () => {
-    const seriesId = repeat === 'once' ? undefined : `s${Date.now()}`;
     const base = {
       instructorId: store.meId,
       studioId,
@@ -143,12 +170,23 @@ export default function NewClass() {
       description: description.trim() || undefined,
       style,
       durationMin: duration,
-      seriesId,
       playlistUrl: playlistUrl.trim() || undefined,
       recipePostId,
     };
     const dates = occurrences();
-    store.addClasses(dates.map((d) => ({ ...base, startsAt: d.toISOString() })));
+    const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    store.addClasses(
+      dates.map((d) => ({ ...base, startsAt: d.toISOString() })),
+      repeat === 'once' || !dates.length
+        ? undefined
+        : {
+            repeat,
+            schedule: Object.fromEntries(days.map((n) => [n, timeFor(n)])),
+            durationMin: duration,
+            startsOn: ymd(dates[0]),
+            endsOn: ymd(dates[dates.length - 1]),
+          },
+    );
     toast(
       dates.length === 1
         ? `${title.trim()} is on your schedule. Your followers can see it now.`
@@ -159,8 +197,14 @@ export default function NewClass() {
 
   return (
     <Screen padTop={false}>
+      {editing ? <Stack.Screen options={{ title: 'Edit class' }} /> : null}
+      {edit && !editing ? (
+        <Text variant="body" color="textSecondary">
+          This class isn&apos;t on your schedule anymore.
+        </Text>
+      ) : null}
       <Text variant="body" color="textSecondary">
-        Your followers see it the second you post it.
+        {editing ? 'Changes show up for your followers right away.' : 'Your followers see it the second you post it.'}
       </Text>
 
       <View style={{ marginTop: Spacing.xl, gap: Spacing.xl }}>
@@ -270,12 +314,14 @@ export default function NewClass() {
         </View>
       ) : null}
 
-      <Label>How often?</Label>
-      <View style={styles.wrap}>
-        <Chip label="Just once" selected={repeat === 'once'} onPress={() => setRepeat('once')} />
-        <Chip label="Every week" icon="repeat" selected={repeat === 'weekly'} onPress={() => setRepeat('weekly')} />
-        <Chip label="Every other week" icon="repeat" selected={repeat === 'biweekly'} onPress={() => setRepeat('biweekly')} />
-      </View>
+      {editing ? null : <Label>How often?</Label>}
+      {editing ? null : (
+        <View style={styles.wrap}>
+          <Chip label="Just once" selected={repeat === 'once'} onPress={() => setRepeat('once')} />
+          <Chip label="Every week" icon="repeat" selected={repeat === 'weekly'} onPress={() => setRepeat('weekly')} />
+          <Chip label="Every other week" icon="repeat" selected={repeat === 'biweekly'} onPress={() => setRepeat('biweekly')} />
+        </View>
+      )}
 
       {repeat === 'once' ? (
         <>
@@ -389,10 +435,56 @@ export default function NewClass() {
         </View>
       </View>
 
-      <Button label={count > 1 ? `Post ${count} classes` : 'Post it'} icon="checkmark" disabled={!canPost} onPress={save} style={{ marginTop: Spacing.xxl }} />
+      {editing ? (
+        <>
+          <Button label="Save changes" icon="checkmark" disabled={!canPost} onPress={saveEdit} style={{ marginTop: Spacing.xxl }} />
+          <View style={{ marginTop: Spacing.xl, gap: Spacing.sm }}>
+            <Button kind="ghost" icon="trash-outline" label="Delete this class" onPress={() => setConfirmDelete('one')} />
+            {laterInSeries > 1 ? (
+              <Button
+                kind="ghost"
+                icon="trash-outline"
+                label={`Delete this and the ${laterInSeries - 1} after it`}
+                onPress={() => setConfirmDelete('series')}
+              />
+            ) : null}
+          </View>
+          <ConfirmSheet
+            open={!!confirmDelete}
+            title={confirmDelete === 'series' ? `Delete ${laterInSeries} classes?` : `Delete ${editing.title}?`}
+            body={
+              (confirmDelete === 'series' ? 'They come off your schedule for good. ' : 'It comes off your schedule for good. ') +
+              (store.bookersOf(editing.id).length
+                ? 'People said they booked it, so they lose it from their week. Cancelling instead shows them it isn\u2019t happening.'
+                : 'To show followers it isn\u2019t happening instead, cancel it from My Week.')
+            }
+            confirmLabel="Delete"
+            cancelLabel="Keep it"
+            destructive
+            onConfirm={() => {
+              const n = store.deleteClass(editing.id, confirmDelete === 'series');
+              toast(n > 1 ? `${n} classes deleted.` : 'Class deleted.');
+              router.back();
+            }}
+            onClose={() => setConfirmDelete(null)}
+          />
+        </>
+      ) : (
+        <Button
+          label={count > 1 ? `Post ${count} classes` : 'Post it'}
+          icon="checkmark"
+          disabled={!canPost}
+          onPress={save}
+          style={{ marginTop: Spacing.xxl }}
+        />
+      )}
       {!canSave ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
           Add a class name to post it.
+        </Text>
+      ) : !studioId ? (
+        <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
+          Add the studio where you teach it.
         </Text>
       ) : repeat !== 'once' && days.length === 0 ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>

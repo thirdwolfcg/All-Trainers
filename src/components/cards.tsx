@@ -49,8 +49,8 @@ function SpotRow({ session }: { session: ClassSession }) {
 
   const booked = store.booked.has(session.id);
   const offers = store.spotOffers.filter((o) => o.classId === session.id && o.status === 'open');
-  const mine = offers.find((o) => o.fromClientId === 'me');
-  const theirs = offers.find((o) => o.fromClientId !== 'me');
+  const mine = offers.find((o) => o.fromClientId === store.meId);
+  const theirs = offers.find((o) => o.fromClientId !== store.meId);
   const waiting = store.waitlist.has(session.id);
   const first = instructor.name.split(' ')[0];
 
@@ -143,7 +143,7 @@ export function ClassActions({ session, size = 'sm' }: { session: ClassSession; 
           onPress={() => {
             store.toggleAttended(session);
             if (!went) {
-              const total = store.attendance.filter((a) => a.clientId === 'me' && a.instructorId === instructor.id).length + 1;
+              const total = store.attendance.filter((a) => a.clientId === store.meId && a.instructorId === instructor.id).length + 1;
               toast(`Logged. That's ${total} with ${first}.`, { label: 'Undo', onPress: () => store.toggleAttended(session) });
             }
           }}
