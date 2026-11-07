@@ -17,6 +17,7 @@ import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { greetName } from '@/lib/names';
+import { weekLine } from '@/lib/week-lines';
 import { Tip } from '@/components/tip';
 
 export default function HomeScreen() {
@@ -364,13 +365,13 @@ function InstructorWeek() {
   // Cancelled classes stay on the list (so they can be brought back) but don't count.
   const active = mine.filter((c) => c.status !== 'cancelled');
   const studiosThisWeek = new Set(active.map((c) => c.studioId)).size;
+  // A new greeting line each time My Week opens.
+  const [lineSeed] = useState(() => Math.random());
   // Before the first class, the page is just a stage with one button.
   const hasAnyClass = allMine.length > 0;
   const allMyPosts = store.posts.filter((p) => p.instructorId === me.id);
   // Posts land in the week they were made in.
-  const weekPosts = allMyPosts
-    .filter((p) => inWindow(p.createdAt, weekStart, weekEnd))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const weekPosts = allMyPosts.filter((p) => inWindow(p.createdAt, weekStart, weekEnd)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const showWeeks = hasAnyClass || allMyPosts.length > 0;
   const isPast = week < 0;
 
@@ -383,11 +384,7 @@ function InstructorWeek() {
     <Screen
       eyebrow={todayEyebrow()}
       title={`Hiii ${greetName(me.name)}`}
-      subtitle={
-        active.length === 0
-          ? 'Empty week, full potential.'
-          : `${active.length} ${active.length === 1 ? 'class' : 'classes'}, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`
-      }
+      subtitle={weekLine({ classes: active.length, studios: studiosThisWeek, studioName: store.studio(active[0]?.studioId ?? '')?.name }, lineSeed)}
       right={
         <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">
           <Icon name="qr-code-outline" size={22} color="primary" />
