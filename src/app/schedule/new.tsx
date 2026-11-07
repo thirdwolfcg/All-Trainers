@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { DatePicker } from '@/components/date-picker';
 import { Screen } from '@/components/screen';
+import { TimeRange } from '@/components/time-range';
 import { Button, Card, Chip, Field, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { describeClass } from '@/lib/ai';
@@ -13,7 +14,6 @@ import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { KNOWN_STYLES, styleLabel, type Style } from '@/lib/types';
 
-const durations = [30, 45, 50, 55, 60, 75, 90];
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 type Repeat = 'once' | 'weekly' | 'biweekly';
 const LENGTHS = [
@@ -21,93 +21,6 @@ const LENGTHS = [
   { weeks: 13, label: '3 months' },
   { weeks: 26, label: '6 months' },
 ];
-
-// Every 15 minutes from 5:00 AM to 9:00 PM
-const times = Array.from({ length: (21 - 5) * 4 + 1 }, (_, i) => {
-  const mins = 5 * 60 + i * 15;
-  return `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`;
-});
-
-function timeText(t: string) {
-  const [h, m] = t.split(':').map(Number);
-  return new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
-/** "6:10 pm", "6:10p", "610pm", "18:10" → "18:10". Needs am/pm unless it's clearly 24-hour. */
-function parseTime(input: string): string | null {
-  const m = input
-    .trim()
-    .toLowerCase()
-    .replace(/\./g, '')
-    .match(/^(\d{1,2})(?::?(\d{2}))?\s*(a|am|p|pm)?$/);
-  if (!m) return null;
-  let h = Number(m[1]);
-  const min = m[2] ? Number(m[2]) : 0;
-  if (min > 59) return null;
-  if (m[3]) {
-    if (h < 1 || h > 12) return null;
-    if (m[3].startsWith('p') && h !== 12) h += 12;
-    if (m[3].startsWith('a') && h === 12) h = 0;
-  } else if (h !== 0 && h < 13) {
-    return null;
-  }
-  if (h > 23) return null;
-  return `${h}:${String(min).padStart(2, '0')}`;
-}
-
-/** A sideways row of time chips that opens scrolled to the selected time, with "Other time" for anything off the 15-minute grid. */
-function TimeRow({ value, onChange }: { value: string; onChange: (t: string) => void }) {
-  const ref = useRef<ScrollViewInstance>(null);
-  const offsets = useRef<Record<string, number>>({});
-  const scrolled = useRef(false);
-  const custom = !times.includes(value);
-  const [typing, setTyping] = useState(false);
-  const [text, setText] = useState('');
-  const parsed = parseTime(text);
-  const set = () => {
-    if (!parsed) return;
-    onChange(parsed);
-    setTyping(false);
-    setText('');
-  };
-  return (
-    <>
-      <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
-        <Chip label={custom ? timeText(value) : 'Other time'} icon="create-outline" selected={custom || typing} onPress={() => setTyping(!typing)} />
-        {times.map((t) => (
-          <View
-            key={t}
-            onLayout={(e) => {
-              offsets.current[t] = e.nativeEvent.layout.x;
-              if (t === value && !scrolled.current) {
-                scrolled.current = true;
-                ref.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - 24), animated: false });
-              }
-            }}>
-            <Chip label={timeText(t)} selected={value === t} onPress={() => onChange(t)} />
-          </View>
-        ))}
-      </ScrollView>
-      {typing ? (
-        <View style={[styles.addRow, { marginTop: Spacing.md }]}>
-          <View style={{ flex: 1 }}>
-            <Field
-              label="Type a time"
-              value={text}
-              onChangeText={setText}
-              onSubmitEditing={set}
-              placeholder="6:10 PM"
-              autoCapitalize="none"
-              autoFocus
-              error={text.trim() && !parsed ? 'Try something like 6:10 PM or 5:45am' : undefined}
-            />
-          </View>
-          <Button size="sm" label="Set" disabled={!parsed} onPress={set} style={{ marginTop: 22 }} />
-        </View>
-      ) : null}
-    </>
-  );
-}
 
 function Label({ children }: { children: string }) {
   return (
@@ -367,22 +280,16 @@ export default function NewClass() {
       {repeat === 'once' ? (
         <>
           <Label>Day</Label>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+          <View style={styles.wrap}>
             <Chip
-              label={date >= addDays(today, 14) ? dayLabel(date) : 'Pick a date'}
+              label={!isSameDay(date, today) && !isSameDay(date, tomorrow) ? dayLabel(date) : 'Pick a day'}
               icon="calendar-outline"
-              selected={picking || date >= addDays(today, 14)}
+              selected={picking || (!isSameDay(date, today) && !isSameDay(date, tomorrow))}
               onPress={() => setPicking(!picking)}
             />
-            {Array.from({ length: 14 }, (_, i) => (
-              <Chip
-                key={i}
-                label={dayLabel(addDays(today, i))}
-                selected={!picking && isSameDay(date, addDays(today, i))}
-                onPress={() => pickDate(addDays(today, i))}
-              />
-            ))}
-          </ScrollView>
+            <Chip label="Today" selected={!picking && isSameDay(date, today)} onPress={() => pickDate(today)} />
+            <Chip label="Tomorrow" selected={!picking && isSameDay(date, tomorrow)} onPress={() => pickDate(tomorrow)} />
+          </View>
           {picking ? <DatePicker value={date} maxDate={maxDate} onChange={pickDate} /> : null}
         </>
       ) : (
@@ -402,7 +309,7 @@ export default function NewClass() {
           <View style={styles.wrap}>
             <Chip label="Tomorrow" selected={!picking && isSameDay(date, tomorrow)} onPress={() => pickDate(tomorrow)} />
             <Chip
-              label={isSameDay(date, tomorrow) ? 'Pick a date' : dayLabel(date)}
+              label={isSameDay(date, tomorrow) ? 'Pick a day' : dayLabel(date)}
               icon="calendar-outline"
               selected={picking || !isSameDay(date, tomorrow)}
               onPress={() => setPicking(!picking)}
@@ -418,36 +325,38 @@ export default function NewClass() {
         </>
       )}
 
-      <Label>{repeat !== 'once' && !sameTime ? 'Start times' : 'Start time'}</Label>
+      <Label>{repeat !== 'once' && !sameTime ? 'Times' : 'Time'}</Label>
       {repeat !== 'once' && !sameTime ? (
         days.map((n) => (
-          <View key={n} style={{ marginBottom: Spacing.md }}>
+          <View key={n} style={{ marginBottom: Spacing.lg }}>
             <Text variant="smallStrong" style={{ marginBottom: 6 }}>
-              {WEEKDAYS[n]} · {timeText(timeFor(n))}
+              {WEEKDAYS[n]}
             </Text>
-            <TimeRow value={timeFor(n)} onChange={(t) => setDayTimes({ ...dayTimes, [n]: t })} />
+            <TimeRange
+              start={timeFor(n)}
+              minutes={duration}
+              onChange={(t, m) => {
+                setDayTimes({ ...dayTimes, [n]: t });
+                setDuration(m);
+              }}
+            />
           </View>
         ))
       ) : (
-        <>
-          <TimeRow value={time} onChange={setTime} />
-          <Text variant="small" color="textSecondary" style={{ marginTop: Spacing.sm }}>
-            Swipe for more times. Selected: {timeText(time)}
-          </Text>
-        </>
+        <TimeRange
+          start={time}
+          minutes={duration}
+          onChange={(t, m) => {
+            setTime(t);
+            setDuration(m);
+          }}
+        />
       )}
       {repeat !== 'once' && days.length > 1 ? (
         <Text variant="smallStrong" color="primary" accessibilityRole="button" onPress={() => setSameTime(!sameTime)} style={{ marginTop: Spacing.sm }}>
           {sameTime ? 'Different times on different days? ›' : 'Same time every day ›'}
         </Text>
       ) : null}
-
-      <Label>Length</Label>
-      <View style={styles.wrap}>
-        {durations.map((d) => (
-          <Chip key={d} label={`${d} min`} selected={duration === d} onPress={() => setDuration(d)} />
-        ))}
-      </View>
 
       <Label>Extras (optional)</Label>
       <View style={{ gap: Spacing.lg }}>
