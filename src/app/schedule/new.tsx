@@ -2,17 +2,17 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 
+import { DatePicker } from '@/components/date-picker';
 import { Screen } from '@/components/screen';
 import { Button, Card, Chip, Field, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { describeClass } from '@/lib/ai';
 import { useAuth } from '@/lib/auth';
-import { addDays, dayLabel, startOfDay } from '@/lib/dates';
+import { addDays, dayLabel, isSameDay, startOfDay } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
-import { StyleLabels, type Style } from '@/lib/types';
+import { KNOWN_STYLES, styleLabel, type Style } from '@/lib/types';
 
-const styleOptions: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 const durations = [30, 45, 50, 55, 60, 75, 90];
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 type Repeat = 'once' | 'weekly' | 'biweekly';
@@ -33,27 +33,79 @@ function timeText(t: string) {
   return new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-/** A sideways row of time chips that opens scrolled to the selected time. */
+/** "6:10 pm", "6:10p", "610pm", "18:10" → "18:10". Needs am/pm unless it's clearly 24-hour. */
+function parseTime(input: string): string | null {
+  const m = input
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, '')
+    .match(/^(\d{1,2})(?::?(\d{2}))?\s*(a|am|p|pm)?$/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = m[2] ? Number(m[2]) : 0;
+  if (min > 59) return null;
+  if (m[3]) {
+    if (h < 1 || h > 12) return null;
+    if (m[3].startsWith('p') && h !== 12) h += 12;
+    if (m[3].startsWith('a') && h === 12) h = 0;
+  } else if (h !== 0 && h < 13) {
+    return null;
+  }
+  if (h > 23) return null;
+  return `${h}:${String(min).padStart(2, '0')}`;
+}
+
+/** A sideways row of time chips that opens scrolled to the selected time, with "Other time" for anything off the 15-minute grid. */
 function TimeRow({ value, onChange }: { value: string; onChange: (t: string) => void }) {
   const ref = useRef<ScrollViewInstance>(null);
   const offsets = useRef<Record<string, number>>({});
   const scrolled = useRef(false);
+  const custom = !times.includes(value);
+  const [typing, setTyping] = useState(false);
+  const [text, setText] = useState('');
+  const parsed = parseTime(text);
+  const set = () => {
+    if (!parsed) return;
+    onChange(parsed);
+    setTyping(false);
+    setText('');
+  };
   return (
-    <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
-      {times.map((t) => (
-        <View
-          key={t}
-          onLayout={(e) => {
-            offsets.current[t] = e.nativeEvent.layout.x;
-            if (t === value && !scrolled.current) {
-              scrolled.current = true;
-              ref.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - 24), animated: false });
-            }
-          }}>
-          <Chip label={timeText(t)} selected={value === t} onPress={() => onChange(t)} />
+    <>
+      <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+        <Chip label={custom ? timeText(value) : 'Other time'} icon="create-outline" selected={custom || typing} onPress={() => setTyping(!typing)} />
+        {times.map((t) => (
+          <View
+            key={t}
+            onLayout={(e) => {
+              offsets.current[t] = e.nativeEvent.layout.x;
+              if (t === value && !scrolled.current) {
+                scrolled.current = true;
+                ref.current?.scrollTo({ x: Math.max(0, e.nativeEvent.layout.x - 24), animated: false });
+              }
+            }}>
+            <Chip label={timeText(t)} selected={value === t} onPress={() => onChange(t)} />
+          </View>
+        ))}
+      </ScrollView>
+      {typing ? (
+        <View style={[styles.addRow, { marginTop: Spacing.md }]}>
+          <View style={{ flex: 1 }}>
+            <Field
+              label="Type a time"
+              value={text}
+              onChangeText={setText}
+              onSubmitEditing={set}
+              placeholder="6:10 PM"
+              autoCapitalize="none"
+              autoFocus
+              error={text.trim() && !parsed ? 'Try something like 6:10 PM or 5:45am' : undefined}
+            />
+          </View>
+          <Button size="sm" label="Set" disabled={!parsed} onPress={set} style={{ marginTop: 22 }} />
         </View>
-      ))}
-    </ScrollView>
+      ) : null}
+    </>
   );
 }
 
@@ -73,7 +125,13 @@ export default function NewClass() {
   const [description, setDescription] = useState('');
   const [style, setStyle] = useState<Style>(me?.styles[0] ?? 'pilates');
   const [studioId, setStudioId] = useState(store.studios[0].id);
-  const [dayOffset, setDayOffset] = useState(1);
+  const [date, setDate] = useState(() => addDays(startOfDay(new Date()), 1));
+  const [picking, setPicking] = useState(false);
+  const [addingStyle, setAddingStyle] = useState(false);
+  const [newStyle, setNewStyle] = useState('');
+  const [addingStudio, setAddingStudio] = useState(false);
+  const [newStudio, setNewStudio] = useState('');
+  const [newStudioHood, setNewStudioHood] = useState('');
   const [time, setTime] = useState('18:00');
   const [duration, setDuration] = useState(50);
   const [repeat, setRepeat] = useState<Repeat>('once');
@@ -107,6 +165,34 @@ export default function NewClass() {
   };
 
   const today = startOfDay(new Date());
+  const tomorrow = addDays(today, 1);
+  const maxDate = addDays(today, 365);
+  const styleOptions: Style[] = [...KNOWN_STYLES, ...(me?.styles ?? []).filter((x) => !(KNOWN_STYLES as readonly string[]).includes(x))];
+  if (!styleOptions.includes(style)) styleOptions.push(style);
+
+  const addStyle = () => {
+    const label = newStyle.trim().replace(/\s+/g, ' ');
+    if (label.length < 2) return;
+    const match = styleOptions.find((x) => styleLabel(x).toLowerCase() === label.toLowerCase());
+    const value = match ?? label;
+    if (!match && me) store.updateInstructor(me.id, { styles: [...me.styles, value] });
+    setStyle(value);
+    setNewStyle('');
+    setAddingStyle(false);
+  };
+
+  const addStudio = () => {
+    if (newStudio.trim().length < 2) return;
+    setStudioId(store.addStudio({ name: newStudio, neighborhood: newStudioHood }));
+    setNewStudio('');
+    setNewStudioHood('');
+    setAddingStudio(false);
+  };
+
+  const pickDate = (d: Date) => {
+    setDate(d);
+    setPicking(false);
+  };
   const canSave = title.trim().length > 1;
 
   const myRecipes = store.posts.filter((p) => p.instructorId === store.meId && p.kind === 'recipe');
@@ -121,12 +207,12 @@ export default function NewClass() {
       out.setHours(h, m, 0, 0);
       return out;
     };
-    if (repeat === 'once') return [at(addDays(today, dayOffset), time)];
+    if (repeat === 'once') return [at(date, time)];
     const out: Date[] = [];
     const step = repeat === 'weekly' ? 1 : 2;
-    for (let i = 1; i <= weeks * 7; i++) {
-      const d = addDays(today, i);
-      const weekIndex = Math.floor((i - 1) / 7);
+    for (let i = 0; i < weeks * 7; i++) {
+      const d = addDays(date, i);
+      const weekIndex = Math.floor(i / 7);
       if (days.includes(d.getDay()) && weekIndex % step === 0) out.push(at(d, timeFor(d.getDay())));
     }
     return out;
@@ -229,16 +315,47 @@ export default function NewClass() {
       <Label>Style</Label>
       <View style={styles.wrap}>
         {styleOptions.map((s) => (
-          <Chip key={s} label={StyleLabels[s]} selected={style === s} onPress={() => setStyle(s)} />
+          <Chip key={s} label={styleLabel(s)} selected={style === s} onPress={() => setStyle(s)} />
         ))}
+        <Chip label="Add a style" icon="add" selected={addingStyle} onPress={() => setAddingStyle(!addingStyle)} />
       </View>
+      {addingStyle ? (
+        <View style={[styles.addRow, { marginTop: Spacing.md }]}>
+          <View style={{ flex: 1 }}>
+            <Field
+              label="New style"
+              value={newStyle}
+              onChangeText={setNewStyle}
+              placeholder="Aerial yoga, Boxing, Mat Pilates…"
+              autoFocus
+              maxLength={30}
+              onSubmitEditing={addStyle}
+            />
+          </View>
+          <Button size="sm" label="Add" disabled={newStyle.trim().length < 2} onPress={addStyle} style={{ marginTop: 22 }} />
+        </View>
+      ) : null}
 
       <Label>Studio</Label>
       <View style={styles.wrap}>
         {store.studios.map((s) => (
           <Chip key={s.id} label={s.name} selected={studioId === s.id} onPress={() => setStudioId(s.id)} />
         ))}
+        <Chip label="Add a studio" icon="add" selected={addingStudio} onPress={() => setAddingStudio(!addingStudio)} />
       </View>
+      {addingStudio ? (
+        <View style={{ gap: Spacing.md, marginTop: Spacing.md }}>
+          <Field label="Studio name" value={newStudio} onChangeText={setNewStudio} placeholder="Your studio's name" autoFocus maxLength={60} />
+          <Field
+            label="Neighborhood"
+            value={newStudioHood}
+            onChangeText={setNewStudioHood}
+            placeholder="LoHi, RiNo, Wash Park…"
+            hint="Optional. Helps clients find it."
+          />
+          <Button size="sm" label="Add studio" disabled={newStudio.trim().length < 2} onPress={addStudio} style={{ alignSelf: 'flex-start' }} />
+        </View>
+      ) : null}
 
       <Label>How often?</Label>
       <View style={styles.wrap}>
@@ -251,10 +368,22 @@ export default function NewClass() {
         <>
           <Label>Day</Label>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+            <Chip
+              label={date >= addDays(today, 14) ? dayLabel(date) : 'Pick a date'}
+              icon="calendar-outline"
+              selected={picking || date >= addDays(today, 14)}
+              onPress={() => setPicking(!picking)}
+            />
             {Array.from({ length: 14 }, (_, i) => (
-              <Chip key={i} label={dayLabel(addDays(today, i))} selected={dayOffset === i} onPress={() => setDayOffset(i)} />
+              <Chip
+                key={i}
+                label={dayLabel(addDays(today, i))}
+                selected={!picking && isSameDay(date, addDays(today, i))}
+                onPress={() => pickDate(addDays(today, i))}
+              />
             ))}
           </ScrollView>
+          {picking ? <DatePicker value={date} maxDate={maxDate} onChange={pickDate} /> : null}
         </>
       ) : (
         <>
@@ -269,6 +398,17 @@ export default function NewClass() {
               />
             ))}
           </View>
+          <Label>Starting</Label>
+          <View style={styles.wrap}>
+            <Chip label="Tomorrow" selected={!picking && isSameDay(date, tomorrow)} onPress={() => pickDate(tomorrow)} />
+            <Chip
+              label={isSameDay(date, tomorrow) ? 'Pick a date' : dayLabel(date)}
+              icon="calendar-outline"
+              selected={picking || !isSameDay(date, tomorrow)}
+              onPress={() => setPicking(!picking)}
+            />
+          </View>
+          {picking ? <DatePicker value={date} maxDate={maxDate} onChange={pickDate} /> : null}
           <Label>For how long?</Label>
           <View style={styles.wrap}>
             {LENGTHS.map((l) => (
@@ -297,12 +437,7 @@ export default function NewClass() {
         </>
       )}
       {repeat !== 'once' && days.length > 1 ? (
-        <Text
-          variant="smallStrong"
-          color="primary"
-          accessibilityRole="button"
-          onPress={() => setSameTime(!sameTime)}
-          style={{ marginTop: Spacing.sm }}>
+        <Text variant="smallStrong" color="primary" accessibilityRole="button" onPress={() => setSameTime(!sameTime)} style={{ marginTop: Spacing.sm }}>
           {sameTime ? 'Different times on different days? ›' : 'Same time every day ›'}
         </Text>
       ) : null}
@@ -345,13 +480,7 @@ export default function NewClass() {
         </View>
       </View>
 
-      <Button
-        label={count > 1 ? `Post ${count} classes` : 'Post it'}
-        icon="checkmark"
-        disabled={!canPost}
-        onPress={save}
-        style={{ marginTop: Spacing.xxl }}
-      />
+      <Button label={count > 1 ? `Post ${count} classes` : 'Post it'} icon="checkmark" disabled={!canPost} onPress={save} style={{ marginTop: Spacing.xxl }} />
       {!canSave ? (
         <Text variant="small" color="textSecondary" align="center" style={{ marginTop: Spacing.sm }}>
           Add a class name to post it.
@@ -366,5 +495,6 @@ export default function NewClass() {
 }
 
 const styles = StyleSheet.create({
+  addRow: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start' },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
 });

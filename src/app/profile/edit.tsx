@@ -8,7 +8,7 @@ import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
-import { StyleLabels, type Style } from '@/lib/types';
+import { styleLabel, type Style } from '@/lib/types';
 
 const STYLE_OPTIONS: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 const cleanHandle = (t: string) => t.replace(/[^A-Za-z0-9_.@]/g, '').replace(/^@+/, '');
@@ -165,7 +165,7 @@ function EditInstructorProfile() {
             {STYLE_OPTIONS.map((s) => (
               <Chip
                 key={s}
-                label={StyleLabels[s]}
+                label={styleLabel(s)}
                 selected={teach.includes(s)}
                 onPress={() => setTeach(teach.includes(s) ? teach.filter((x) => x !== s) : [...teach, s])}
               />

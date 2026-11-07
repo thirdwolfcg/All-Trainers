@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { friendInviteMessage, instructorInviteMessage } from '@/lib/invite';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
-import { StyleLabels } from '@/lib/types';
+import { styleLabel } from '@/lib/types';
 
 /** A settings line. Ones that don't work yet say so instead of pretending to be tappable. */
 function SettingRow({ icon, label, value, onPress }: { icon: IconName; label: string; value?: string; onPress?: () => void }) {
@@ -85,7 +85,7 @@ export default function MeScreen() {
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="title">{me.name}</Text>
             <Text variant="small" color="textSecondary">
-              @{me.handle} · {me.styles.map((s) => StyleLabels[s]).join(', ')}
+              @{me.handle} · {me.styles.map(styleLabel).join(', ')}
             </Text>
             {me.isFounding ? <Chip label="Founding instructor" icon="sparkles" /> : null}
           </View>

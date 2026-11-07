@@ -7,7 +7,7 @@ import { Spacing } from '@/constants/theme';
 import { timeLabel } from '@/lib/dates';
 import { ideaMoment, ideasFor } from '@/lib/post-ideas';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type ClassSession } from '@/lib/types';
+import { styleLabel, type ClassSession } from '@/lib/types';
 
 /** A nudge on My Week with something to post, timed around the instructor's classes. "Not today" hides it until tomorrow. */
 export function PostIdeaCard({ myClasses }: { myClasses: ClassSession[] }) {
@@ -21,8 +21,8 @@ export function PostIdeaCard({ myClasses }: { myClasses: ClassSession[] }) {
 
   const context = cls
     ? moment === 'before'
-      ? `Your ${StyleLabels[cls.style]} class is at ${timeLabel(new Date(cls.startsAt))}`
-      : `Nice ${StyleLabels[cls.style]} class`
+      ? `Your ${styleLabel(cls.style)} class is at ${timeLabel(new Date(cls.startsAt))}`
+      : `Nice ${styleLabel(cls.style)} class`
     : 'For today';
 
   return (

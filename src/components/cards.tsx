@@ -8,7 +8,7 @@ import { relativeTime } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { useMe } from '@/lib/me';
 import { useToast } from '@/lib/toast';
-import { StyleLabels, type ClassSession, type Instructor, type Post } from '@/lib/types';
+import { styleLabel, type ClassSession, type Instructor, type Post } from '@/lib/types';
 
 import { BookingSheet } from './booking-sheet';
 import { ConfirmSheet } from './confirm-sheet';
@@ -271,7 +271,7 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
               at{' '}
             </>
           ) : null}
-          {studio.name} · {StyleLabels[session.style]}
+          {studio.name} · {styleLabel(session.style)}
         </Text>
         {session.description && !cancelled ? (
           <Text variant="small" color="textSecondary" numberOfLines={2}>
@@ -326,7 +326,7 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
           {instructor.isFounding ? <Icon name="sparkles" size={13} color="primary" /> : null}
         </View>
         <Text variant="small" color="textSecondary">
-          {instructor.styles.map((s) => StyleLabels[s]).join(' · ')} · {instructor.neighborhood}
+          {instructor.styles.map(styleLabel).join(' · ')} · {instructor.neighborhood}
         </Text>
         <Text variant="small" color="textSecondary">
           {upcoming} {upcoming === 1 ? 'class' : 'classes'} this week

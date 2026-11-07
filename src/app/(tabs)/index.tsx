@@ -312,7 +312,9 @@ function InstructorWeek() {
   const [confirmAsk, setConfirmAsk] = useState<string | null>(null);
   const askToConfirm = confirmAsk ? store.subRequests.find((r) => r.id === confirmAsk) : undefined;
   const classToConfirm = askToConfirm ? store.classes.find((c) => c.id === askToConfirm.classId) : undefined;
-  const studiosThisWeek = new Set(mine.map((c) => c.studioId)).size;
+  // Cancelled classes stay on the list (so they can be brought back) but don't count.
+  const active = mine.filter((c) => c.status !== 'cancelled');
+  const studiosThisWeek = new Set(active.map((c) => c.studioId)).size;
   // Before the first class, the page is just a stage with one button.
   const hasAnyClass = store.classes.some((c) => c.instructorId === me.id || c.subInstructorId === me.id);
   const myPosts = store.posts
@@ -330,9 +332,9 @@ function InstructorWeek() {
       eyebrow={todayEyebrow()}
       title={`Hiii ${greetName(me.name)}`}
       subtitle={
-        mine.length === 0
+        active.length === 0
           ? 'Empty week, full potential.'
-          : `${mine.length} ${mine.length === 1 ? 'class' : 'classes'}, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`
+          : `${active.length} ${active.length === 1 ? 'class' : 'classes'}, ${studiosThisWeek} ${studiosThisWeek === 1 ? 'studio' : 'studios'}, one schedule. You're booked and busy.`
       }
       right={
         <Pressable onPress={() => router.push('/qr')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My QR code">

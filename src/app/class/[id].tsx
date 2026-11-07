@@ -9,7 +9,7 @@ import { Colors, Spacing } from '@/constants/theme';
 import { dayLabel, relativeTime, timeRange } from '@/lib/dates';
 import { linkButton } from '@/lib/links';
 import { useStore } from '@/lib/store';
-import { StyleLabels } from '@/lib/types';
+import { styleLabel } from '@/lib/types';
 
 export default function ClassDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,7 +41,7 @@ export default function ClassDetail() {
       <Screen nav padTop={false}>
         <View style={{ gap: Spacing.sm, marginBottom: Spacing.xl }}>
           <Text variant="eyebrow" color="textSecondary">
-            {dayLabel(start)} · {StyleLabels[session.style]}
+            {dayLabel(start)} · {styleLabel(session.style)}
           </Text>
           <Text variant="display">{session.title}</Text>
           {session.status === 'cancelled' ? (

@@ -6,7 +6,7 @@ import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { dayLabel, timeLabel } from '@/lib/dates';
 import { coworkerInviteMessage } from '@/lib/invite';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type ClassSession } from '@/lib/types';
+import { styleLabel, type ClassSession } from '@/lib/types';
 
 import { InviteCard } from './invite-card';
 import { Avatar, Button, Chip, Text } from './ui';
@@ -47,7 +47,7 @@ export function SubSheet({ session, open, onClose }: { session: ClassSession; op
             {session.title}
           </Text>
           <Text variant="small" color="textSecondary" style={{ marginBottom: Spacing.lg }}>
-            {dayLabel(start)} at {timeLabel(start)} · {studio.name} · {StyleLabels[session.style]}
+            {dayLabel(start)} at {timeLabel(start)} · {studio.name} · {styleLabel(session.style)}
           </Text>
 
           <Text variant="eyebrow" color="textSecondary">
@@ -70,7 +70,7 @@ export function SubSheet({ session, open, onClose }: { session: ClassSession; op
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text variant="bodyStrong">{c.name}</Text>
                     <Text variant="small" color="textSecondary">
-                      {c.styles.map((s) => StyleLabels[s]).join(' · ')}
+                      {c.styles.map(styleLabel).join(' · ')}
                     </Text>
                   </View>
                   {status === 'pending' ? (

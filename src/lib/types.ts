@@ -1,8 +1,10 @@
 export type Role = 'client' | 'instructor';
 
-export type Style = 'pilates' | 'yoga' | 'cycle' | 'barre' | 'strength' | 'hiit' | 'dance';
+export const KNOWN_STYLES = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'] as const;
+/** One of the built-in styles, or a style an instructor typed in themselves (stored as its display name, e.g. "Aerial Yoga"). */
+export type Style = (typeof KNOWN_STYLES)[number] | (string & {});
 
-export const StyleLabels: Record<Style, string> = {
+export const StyleLabels: Record<string, string> = {
   pilates: 'Pilates',
   yoga: 'Yoga',
   cycle: 'Cycle',
@@ -11,6 +13,8 @@ export const StyleLabels: Record<Style, string> = {
   hiit: 'HIIT',
   dance: 'Dance',
 };
+
+export const styleLabel = (s: Style) => StyleLabels[s] ?? s;
 
 export type Instructor = {
   id: string;

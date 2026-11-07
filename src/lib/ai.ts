@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { supabase } from './supabase';
-import { StyleLabels, type Style } from './types';
+import { styleLabel, type Style } from './types';
 
 export type DescribeInput = {
   title: string;
@@ -23,7 +23,7 @@ export async function describeClass(input: DescribeInput, opts: { demo: boolean 
   if (opts.demo) return { description: demoDescription(input) };
 
   const { data, error } = await supabase.functions.invoke('describe-class', {
-    body: { ...input, style: StyleLabels[input.style] },
+    body: { ...input, style: styleLabel(input.style) },
   });
   if (error) {
     if (error instanceof FunctionsHttpError) {
@@ -58,5 +58,5 @@ function demoDescription({ title, style, durationMin, notes }: DescribeInput) {
   const opener = options[demoTurn++ % options.length];
   const cleaned = notes?.trim().replace(/\s+/g, ' ').replace(/([^.!?])$/, '$1.');
   const extra = cleaned ? ` ${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}` : ' All levels welcome.';
-  return `${opener} ${title} is ${durationMin} minutes of ${StyleLabels[style].toLowerCase()} that you'll feel tomorrow.${extra}`;
+  return `${opener} ${title} is ${durationMin} minutes of ${styleLabel(style).toLowerCase()} that you'll feel tomorrow.${extra}`;
 }

@@ -6,7 +6,7 @@ import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui'
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type Role, type Style } from '@/lib/types';
+import { styleLabel, type Role, type Style } from '@/lib/types';
 
 const STYLE_OPTIONS: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 
@@ -120,7 +120,7 @@ export default function Onboarding() {
                   {STYLE_OPTIONS.map((s) => (
                     <Chip
                       key={s}
-                      label={StyleLabels[s]}
+                      label={styleLabel(s)}
                       selected={teach.includes(s)}
                       onPress={() => setTeach(teach.includes(s) ? teach.filter((x) => x !== s) : [...teach, s])}
                     />

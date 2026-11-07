@@ -13,7 +13,7 @@ import { followUrl } from '@/lib/links';
 import { useToast } from '@/lib/toast';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
-import { StyleLabels } from '@/lib/types';
+import { styleLabel } from '@/lib/types';
 import { Tip } from '@/components/tip';
 
 export default function InstructorProfile() {
@@ -65,7 +65,7 @@ export default function InstructorProfile() {
             <View style={{ flex: 1, gap: 4 }}>
               <Text variant="display">{instructor.name}</Text>
               <Text variant="small" color="textSecondary">
-                {instructor.styles.map((s) => StyleLabels[s]).join(' and ')} · {instructor.neighborhood}
+                {instructor.styles.map(styleLabel).join(' and ')} · {instructor.neighborhood}
               </Text>
             </View>
           </View>

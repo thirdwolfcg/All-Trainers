@@ -10,7 +10,7 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
 import { instructorInviteMessage } from '@/lib/invite';
 import { useMe } from '@/lib/me';
 import { useStore } from '@/lib/store';
-import { StyleLabels, type Style } from '@/lib/types';
+import { styleLabel, type Style } from '@/lib/types';
 
 const allStyles: Style[] = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'];
 
@@ -96,7 +96,7 @@ export default function Discover() {
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
             {allStyles.map((s) => (
-              <Chip key={s} label={StyleLabels[s]} selected={style === s} onPress={() => setStyle(style === s ? null : s)} />
+              <Chip key={s} label={styleLabel(s)} selected={style === s} onPress={() => setStyle(style === s ? null : s)} />
             ))}
           </ScrollView>
 

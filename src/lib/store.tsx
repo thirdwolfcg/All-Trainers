@@ -15,7 +15,7 @@ import {
   buildPosts,
   buildSubRequests,
   instructors as sampleInstructors,
-  studios,
+  studios as sampleStudios,
 } from '@/data/sample';
 
 import { useAuth } from './auth';
@@ -28,6 +28,8 @@ type Store = {
 
   instructors: Instructor[];
   studios: Studio[];
+  /** Adds a studio the instructor teaches at and returns its id. */
+  addStudio: (s: { name: string; neighborhood: string }) => string;
   classes: ClassSession[];
   posts: Post[];
   clients: Client[]; // the signed-in instructor's client list
@@ -104,6 +106,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [now] = useState(() => new Date());
   const [role, setRole] = useState<Role>('client');
   const [instructors, setInstructors] = useState(sampleInstructors);
+  const [studios, setStudios] = useState<Studio[]>(sampleStudios);
   const [classes, setClasses] = useState(() => buildClasses(now));
   const [posts, setPosts] = useState(() => buildPosts(now));
   const [clients, setClients] = useState(() => buildMayaClients(now));
@@ -150,7 +153,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .filter((c) => c.instructorId === 'jordan' && c.status !== 'cancelled' && new Date(c.startsAt) > now)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
     return jordan
-      ? [{ id: 'o1', classId: jordan.id, fromClientId: 'k1', fromName: 'Kendall B.', status: 'open', createdAt: new Date(now.getTime() - 25 * 60000).toISOString() }]
+      ? [
+          {
+            id: 'o1',
+            classId: jordan.id,
+            fromClientId: 'k1',
+            fromName: 'Kendall B.',
+            status: 'open',
+            createdAt: new Date(now.getTime() - 25 * 60000).toISOString(),
+          },
+        ]
       : [];
   });
   const [subRequests, setSubRequests] = useState(() => buildSubRequests(now));
@@ -215,6 +227,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       meId,
       instructors,
       studios,
+      addStudio({ name, neighborhood }) {
+        const existing = studios.find((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase());
+        if (existing) return existing.id;
+        const id = `st${Date.now()}`;
+        setStudios((prev) => [...prev, { id, name: name.trim(), neighborhood: neighborhood.trim(), address: '', bookingLinks: [] }]);
+        return id;
+      },
       classes,
       updateClient(id, patch) {
         setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
@@ -454,9 +473,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }),
         );
         if (accept) {
-          setClasses((prev) =>
-            prev.map((c) => (c.id === req.classId ? { ...c, status: 'subbed', subInstructorId: req.toInstructorId, note: undefined } : c)),
-          );
+          setClasses((prev) => prev.map((c) => (c.id === req.classId ? { ...c, status: 'subbed', subInstructorId: req.toInstructorId, note: undefined } : c)));
         }
       },
 
@@ -498,7 +515,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       instructor: (id) => instructorById.get(id),
       studio: (id) => studioById.get(id),
     };
-  }, [role, meId, instructors, booked, sampleBookers, classUpdates, waitlist, spotOffers, classes, posts, clients, attendance, conversations, following, premium, subRequests, pendingFollow, pendingRole, tipsOn, dismissedTips]);
+  }, [
+    role,
+    meId,
+    instructors,
+    studios,
+    booked,
+    sampleBookers,
+    classUpdates,
+    waitlist,
+    spotOffers,
+    classes,
+    posts,
+    clients,
+    attendance,
+    conversations,
+    following,
+    premium,
+    subRequests,
+    pendingFollow,
+    pendingRole,
+    tipsOn,
+    dismissedTips,
+  ]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

@@ -9,7 +9,7 @@ import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { addDays, startOfDay } from '@/lib/dates';
 import { useStore } from '@/lib/store';
-import { StyleLabels } from '@/lib/types';
+import { styleLabel } from '@/lib/types';
 
 /**
  * Where an instructor's QR code or shared link lands. Open to everyone,
@@ -54,7 +54,7 @@ export default function FollowLanding() {
             {instructor.name}
           </Text>
           <Text variant="small" color="textSecondary" align="center">
-            {instructor.styles.map((s) => StyleLabels[s]).join(' and ')} · {instructor.neighborhood}, Denver
+            {instructor.styles.map(styleLabel).join(' and ')} · {instructor.neighborhood}, Denver
           </Text>
           <SocialLinks instructor={instructor} />
           <Text variant="quote" align="center" style={{ marginTop: Spacing.sm }}>
