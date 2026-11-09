@@ -6,6 +6,7 @@ import { Screen } from '@/components/screen';
 import { Button, Chip, Field, Icon, Text, type IconName } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { markSetup } from '@/lib/setup';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 
@@ -42,6 +43,8 @@ export default function BirthdaySettings() {
     } else {
       store.updateClient('me', { birthday: value ?? undefined });
     }
+    // Either answer counts as done on the Get set up checklist.
+    markSetup(store.meId, 'birthdayDecided');
     setBusy(false);
     toast(value ? 'Birthday shared. Your instructors will know when to celebrate.' : current ? 'Got it. Your birthday is no longer shared.' : 'Got it. Your birthday stays private.');
     router.back();

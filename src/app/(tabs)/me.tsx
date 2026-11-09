@@ -170,6 +170,8 @@ export default function MeScreen() {
         <Divider />
         <SettingRow icon="shield-checkmark-outline" label="Privacy" onPress={() => router.push('/settings/privacy')} />
         <Divider />
+        <SettingRow icon="sparkles-outline" label="Watch the welcome tour" onPress={() => router.push('/tour')} />
+        <Divider />
         <SettingRow
           icon="bulb-outline"
           label="Show tips again"

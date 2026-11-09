@@ -64,6 +64,9 @@ type Store = {
   dismissedTips: Set<string>;
   dismissTip: (id: string) => void;
   /** Tips show on the real screens after onboarding or entering preview, until each is dismissed. */
+  /** Set when someone finishes sign up, so Home opens the welcome tour once. */
+  tourPending: boolean;
+  setTourPending: (v: boolean) => void;
   tipsOn: boolean;
   showTips: () => void;
 
@@ -189,6 +192,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
   const [tipsOn, setTipsOn] = useState(false);
+  const [tourPending, setTourPending] = useState(false);
   const [dismissedTips, setDismissedTips] = useState<Set<string>>(() => new Set());
 
   const [names, setNames] = useState<Record<string, string>>({});
@@ -319,6 +323,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pendingFollow,
       pendingRole,
       setPendingRole,
+      tourPending,
+      setTourPending,
       tipsOn,
       showTips() {
         setDismissedTips((prev) => new Set([...prev].filter((t) => !t.startsWith('tip-'))));
@@ -675,6 +681,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     pendingFollow,
     pendingRole,
     tipsOn,
+    tourPending,
     dismissedTips,
   ]);
 

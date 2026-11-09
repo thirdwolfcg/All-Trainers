@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ClassCard, InstructorRow, PostCard } from '@/components/cards';
@@ -8,6 +8,7 @@ import { InstructorClassActions } from '@/components/instructor-class-actions';
 import { MyClassesPanel } from '@/components/my-classes';
 import { PostIdeaCard } from '@/components/post-idea-card';
 import { PreviewSwitch } from '@/components/preview-switch';
+import { SetupGuide } from '@/components/setup-guide';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -21,7 +22,13 @@ import { weekLine } from '@/lib/week-lines';
 import { Tip } from '@/components/tip';
 
 export default function HomeScreen() {
-  const { role } = useStore();
+  const { role, tourPending, setTourPending } = useStore();
+  // Just signed up: show the welcome tour once.
+  useEffect(() => {
+    if (!tourPending) return;
+    setTourPending(false);
+    router.push('/tour');
+  }, [tourPending, setTourPending]);
   return role === 'instructor' ? <InstructorWeek /> : <ClientHome />;
 }
 
@@ -114,6 +121,7 @@ function ClientHome() {
             : `Hiii ${firstName}! Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
+      <SetupGuide />
       <View style={styles.segment}>
         {(['week', 'mine'] as const).map((v) => (
           <Pressable
@@ -390,7 +398,11 @@ function InstructorWeek() {
       subtitle={weekLine({ classes: active.length, studios: studiosThisWeek, studioName: store.studio(active[0]?.studioId ?? '')?.name }, lineSeed)}
       right={
         <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-          <Pressable onPress={() => router.push('/feed')} style={styles.qrButton} accessibilityRole="button" accessibilityLabel="My feed, everything I've posted">
+          <Pressable
+            onPress={() => router.push('/feed')}
+            style={styles.qrButton}
+            accessibilityRole="button"
+            accessibilityLabel="My feed, everything I've posted">
             <Icon name="newspaper-outline" size={22} color="primary" />
             <Text variant="eyebrow" color="primary" style={{ fontSize: 9 }}>
               My feed
@@ -405,6 +417,7 @@ function InstructorWeek() {
         </View>
       }>
       <PreviewSwitch />
+      <SetupGuide />
       <Tip id="tip-qr" text="Tap My QR (top right) and flash it after class. One scan and they’re following you." pointer="none" />
       {asksForMe.length ? (
         <Card tone="purple" style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>

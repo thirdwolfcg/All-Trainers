@@ -32,7 +32,7 @@ function RoleCard({ icon, title, body, selected, onPress }: { icon: IconName; ti
 export default function Onboarding() {
   const { createProfile, signOut, session } = useAuth();
   const [step, setStep] = useState(0);
-  const { pendingRole, showTips } = useStore();
+  const { pendingRole, setTourPending } = useStore();
   const [role, setRole] = useState<Role | null>(pendingRole);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -50,7 +50,8 @@ export default function Onboarding() {
   const finish = async () => {
     if (!role) return;
     setBusy(true);
-    showTips();
+    // Home opens the welcome tour once the account exists.
+    setTourPending(true);
     setError(undefined);
     const res = await createProfile({
       role,

@@ -127,6 +127,7 @@ function Navigator() {
         <Stack.Screen name="profile/edit" options={{ title: 'Edit profile', presentation: 'modal' }} />
         <Stack.Screen name="settings/birthday" options={{ title: 'Birthday' }} />
         <Stack.Screen name="settings/privacy" options={{ title: 'Privacy' }} />
+        <Stack.Screen name="tour" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
       </Stack.Protected>
     </Stack>
   );

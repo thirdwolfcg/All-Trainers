@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { PostCard } from '@/components/cards';
 import { Screen } from '@/components/screen';
 import { Button, EmptyState } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { markSetup } from '@/lib/setup';
 import { useStore } from '@/lib/store';
 
 /** Instructors: their own posts. Clients: the latest from everyone they follow. */
@@ -36,9 +38,10 @@ function MyFeed() {
 
 function PeopleFeed() {
   const store = useStore();
-  const posts = store.posts
-    .filter((p) => store.following.has(p.instructorId))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  useEffect(() => {
+    markSetup(store.meId, 'openedFeed');
+  }, [store.meId]);
+  const posts = store.posts.filter((p) => store.following.has(p.instructorId)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <Screen eyebrow="Latest from your people" title="Feed" subtitle="Playlists, recipes, videos and updates from the instructors you follow.">

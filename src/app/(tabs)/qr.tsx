@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { QrCode } from '@/components/qr-code';
@@ -6,11 +7,15 @@ import { Avatar, Button, EmptyState, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { shareInvite } from '@/lib/invite';
 import { followUrl } from '@/lib/links';
+import { markSetup } from '@/lib/setup';
 import { useStore } from '@/lib/store';
 
 /** The instructor's QR code. Clients point their phone camera at it to follow. */
 export default function MyQr() {
   const store = useStore();
+  useEffect(() => {
+    markSetup(store.meId, 'openedQr');
+  }, [store.meId]);
   const me = store.instructor(store.meId);
 
   if (!me || store.role !== 'instructor') {
