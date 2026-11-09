@@ -1,5 +1,8 @@
 export type Role = 'client' | 'instructor';
 
+export type ReportTarget = 'post' | 'profile' | 'message' | 'class';
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'impersonation' | 'safety' | 'other';
+
 export const KNOWN_STYLES = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'] as const;
 /** One of the built-in styles, or a style an instructor typed in themselves (stored as its display name, e.g. "Aerial Yoga"). */
 export type Style = (typeof KNOWN_STYLES)[number] | (string & {});

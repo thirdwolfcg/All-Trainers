@@ -84,9 +84,8 @@ No analytics, advertising or third-party tracking SDKs are in the app. If analyt
 - Password: the shared test password in `supabase/seed.sql` (paste it into App Store Connect, never into the listing)
 
 Notes for the reviewer:
-> Zomi lets fitness clients follow their favorite instructors across studios. Sign in as the client account to see Home (classes from followed instructors and their posts), Discover and Messages. Sign in as the instructor account to see My Week, Add class, posting, Followers and the QR code. "Book it" links open each studio's own booking website; Zomi does not sell classes or take payments. Accounts can be deleted in Me → Privacy → Delete my account. Users can report posts and messages and block other users from the ⋯ menu on a post, profile or chat.
+> Zomi lets fitness clients follow their favorite instructors across studios. Sign in as the client account to see Home (classes from followed instructors and their posts), Discover and Messages. Sign in as the instructor account to see My Week, Add class, posting, Followers and the QR code. "Book it" links open each studio's own booking website; Zomi does not sell classes or take payments. Accounts can be deleted in Me → Privacy → Delete my account. Users can report posts and profiles and block other users from the ⋯ menu on any post, profile or chat; blocked users are listed in Me → Privacy. Reports are reviewed within 24 hours.
 
-(The last sentence is true only once reporting and blocking are built. See "Before you submit".)
 
 **Screenshots**: `docs/store-screenshots/ios-6.9/` (1320 × 2868). Apple scales these down for smaller iPhones. iPad is turned off, so no iPad screenshots are needed.
 
@@ -131,7 +130,7 @@ Also answer: data is encrypted in transit, Yes. People can ask for their data to
 
 ## Before you submit
 
-1. **Reporting and blocking (Apple guideline 1.2, Google's UGC policy).** Zomi has posts, photos and messages from users, so both stores require a way to report objectionable content, to block another user, and a promise in the Terms that you remove it within 24 hours. This isn't built yet. It is the one feature most likely to get the first submission rejected.
+1. **Reporting and blocking (Apple guideline 1.2, Google's UGC policy).** Built (⋯ menu, migration 0015). Before submitting: add the Terms line that objectionable content isn't allowed and reports are reviewed within 24 hours, and make sure someone checks `open_reports` daily.
 2. **Public privacy policy, support and account deletion pages** on zomifit.com, with the placeholders in the Privacy Policy and Terms filled in (entity name, support and privacy emails).
 3. **Developer accounts in the company's name.** Apple needs a D-U-N-S number for an organization account, which can take a week or two. Google Play organization accounts skip the 12-tester, 14-day closed test that new personal accounts must run before going public.
 4. **Test on real phones** with a preview build (`eas build --profile preview`): photo picker, sharing your QR link, links opening Instagram and Spotify, sign in and sign out, delete account.

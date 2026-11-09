@@ -4,6 +4,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ClassCard, PostCard, useFollowToggle } from '@/components/cards';
 import { SocialLinks } from '@/components/social-links';
+import { SafetyMenu } from '@/components/safety-menu';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
@@ -33,16 +34,28 @@ export default function InstructorProfile() {
     );
   }
 
+  if (store.isBlocked(instructor.id)) {
+    return (
+      <>
+        <Stack.Screen options={{ title: `@${instructor.handle}` }} />
+        <Screen nav padTop={false}>
+          <EmptyState
+            icon="ban-outline"
+            title={`You blocked ${instructor.name.split(' ')[0]}`}
+            body="You won't see their classes or posts, and they can't message you or follow you."
+          />
+          <Button kind="outline" label={`Unblock ${instructor.name.split(' ')[0]}`} onPress={() => store.setBlocked(instructor.id, false)} />
+        </Screen>
+      </>
+    );
+  }
+
   const isClient = store.role === 'client';
   const isFollowing = store.following.has(instructor.id);
   const today = startOfDay(new Date());
-  const upcoming = store.classes.filter(
-    (c) => c.instructorId === instructor.id && new Date(c.startsAt) >= today && new Date(c.startsAt) < addDays(today, 7),
-  );
+  const upcoming = store.classes.filter((c) => c.instructorId === instructor.id && new Date(c.startsAt) >= today && new Date(c.startsAt) < addDays(today, 7));
   const studioCount = new Set(upcoming.map((c) => c.studioId)).size;
-  const posts = store.posts
-    .filter((p) => p.instructorId === instructor.id)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const posts = store.posts.filter((p) => p.instructorId === instructor.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i))
     .map((d) => ({ d, classes: upcoming.filter((c) => isSameDay(new Date(c.startsAt), d)) }))
     .filter((g) => g.classes.length);
@@ -52,7 +65,22 @@ export default function InstructorProfile() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `@${instructor.handle}` }} />
+      <Stack.Screen
+        options={{
+          title: `@${instructor.handle}`,
+          headerRight: isOwnProfile
+            ? undefined
+            : () => (
+                <SafetyMenu
+                  targetType="profile"
+                  targetId={instructor.id}
+                  personId={instructor.id}
+                  personName={instructor.name}
+                  style={{ marginRight: Spacing.sm }}
+                />
+              ),
+        }}
+      />
       <Screen nav padTop={false}>
         <View style={styles.header}>
           {instructor.isFounding ? (
@@ -109,7 +137,13 @@ export default function InstructorProfile() {
           ) : null}
 
           {isOwnProfile ? (
-            <Button kind="outline" icon="create-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} style={{ marginBottom: Spacing.sm }} />
+            <Button
+              kind="outline"
+              icon="create-outline"
+              label="Edit profile"
+              onPress={() => router.push('/profile/edit')}
+              style={{ marginBottom: Spacing.sm }}
+            />
           ) : null}
           {isOwnProfile ? (
             <View style={styles.buttons}>
@@ -164,9 +198,7 @@ export default function InstructorProfile() {
           </Card>
         ) : null}
 
-        {store.role === 'client' ? (
-          <Tip id="tip-feed" text="Their playlists, recipes, videos and tips live in Feed." />
-        ) : null}
+        {store.role === 'client' ? <Tip id="tip-feed" text="Their playlists, recipes, videos and tips live in Feed." /> : null}
         <View style={styles.tabs}>
           {(['schedule', 'feed'] as const).map((t) => (
             <Pressable

@@ -23,7 +23,21 @@ import {
 import { useAuth } from './auth';
 import { db, loadLive, uuid, type SeriesInfo } from './live';
 import { friendlyError as friendly } from './supabase';
-import type { AttendanceEntry, ClassSession, ClassUpdate, Client, Conversation, Instructor, Post, Role, SpotOffer, Studio, SubRequest } from './types';
+import type {
+  AttendanceEntry,
+  ClassSession,
+  ClassUpdate,
+  Client,
+  Conversation,
+  Instructor,
+  Post,
+  ReportReason,
+  ReportTarget,
+  Role,
+  SpotOffer,
+  Studio,
+  SubRequest,
+} from './types';
 
 type Store = {
   role: Role;
@@ -43,6 +57,13 @@ type Store = {
   refresh: () => Promise<void>;
   /** Anyone's display name by id (clients included), when we have it. */
   nameOf: (id: string) => string | undefined;
+  /** People I've blocked. Their posts, classes, profile and messages are hidden from me. */
+  blocked: Set<string>;
+  isBlocked: (id: string) => boolean;
+  /** Block or unblock someone. Blocking also removes any follow between us. */
+  setBlocked: (id: string, on: boolean) => void;
+  /** Send a report to Zomi. Resolves with an error message if it couldn't be sent. */
+  report: (r: { targetType: ReportTarget; targetId: string; targetUserId?: string; reason: ReportReason; details?: string }) => Promise<string | undefined>;
   /** Adds a studio the instructor teaches at and returns its id. */
   addStudio: (s: { name: string; neighborhood: string }) => string;
   classes: ClassSession[];
@@ -196,6 +217,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [dismissedTips, setDismissedTips] = useState<Set<string>>(() => new Set());
 
   const [names, setNames] = useState<Record<string, string>>({});
+  const [blocked, setBlockedSet] = useState<Set<string>>(() => new Set());
   const [loading, setLoading] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   // Conversations that exist in the database (new ones are saved with their first message).
@@ -226,6 +248,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSubRequests(d.subRequests);
       setConversations(d.conversations);
       setNames(d.names);
+      setBlockedSet(d.blocked);
       savedConversations.current = new Set(d.conversations.map((c) => c.id));
     } catch (e) {
       console.warn('Loading live data failed', e);
@@ -250,6 +273,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setFollowing(new Set());
     setBooked(new Set());
     setBookers({});
+    setBlockedSet(new Set());
     refresh().finally(() => !gone && setLoading(false));
     const sub = AppState.addEventListener('change', (st) => st === 'active' && refresh());
     return () => {
@@ -258,9 +282,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [liveKey, refresh]);
 
-
   const store = useMemo<Store>(() => {
+    // Lookups by id still find a blocked person (so old messages and classes resolve), but lists hide them.
     const instructorById = new Map(instructors.map((i) => [i.id, i]));
+    const visibleInstructors = blocked.size ? instructors.filter((i) => !blocked.has(i.id)) : instructors;
+    const visibleClasses = blocked.size ? classes.filter((c) => !blocked.has(c.instructorId)) : classes;
+    const visiblePosts = blocked.size ? posts.filter((p) => !blocked.has(p.instructorId)) : posts;
+    const visibleClients = blocked.size ? clients.filter((c) => !blocked.has(c.id)) : clients;
+    const visibleConversations = blocked.size ? conversations.filter((c) => !blocked.has(c.instructorId) && !blocked.has(c.clientId)) : conversations;
     const studioById = new Map(studios.map((s) => [s.id, s]));
     const newId = (prefix: string) => (live ? uuid() : `${prefix}${Date.now()}-${Math.floor(Math.random() * 1000)}`);
     /** Saves a message, creating the conversation first if this is its first message. */
@@ -299,7 +328,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearSyncError: () => setSyncError(null),
       refresh,
       nameOf: (id) => names[id] ?? instructorById.get(id)?.name ?? clients.find((c) => c.id === id)?.name,
-      instructors,
+      blocked,
+      isBlocked: (id) => blocked.has(id),
+      setBlocked(id, on) {
+        if (id === meId || blocked.has(id) === on) return;
+        save(() => db.block(meId, id, on), on ? 'the block' : 'the unblock');
+        setBlockedSet((prev) => {
+          const next = new Set(prev);
+          if (on) next.add(id);
+          else next.delete(id);
+          return next;
+        });
+        if (on) {
+          // The database drops the follow either way; mirror it here.
+          setFollowing((prev) => {
+            if (!prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+          setClients((prev) => prev.filter((c) => c.id !== id));
+        }
+      },
+      async report(r) {
+        if (!live) return undefined;
+        try {
+          return await db.report(meId, r);
+        } catch {
+          return 'Check your connection and try again.';
+        }
+      },
+      instructors: visibleInstructors,
       studios,
       addStudio({ name, neighborhood }) {
         const existing = studios.find((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase());
@@ -309,7 +368,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         save(() => db.addStudio(id, meId, name.trim(), neighborhood.trim()), 'the studio');
         return id;
       },
-      classes,
+      classes: visibleClasses,
       updateClient(id, patch) {
         setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
         if (patch.preferences !== undefined) save(() => db.saveNotes(meId, id, patch.preferences ?? ''), 'your notes');
@@ -335,10 +394,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDismissedTips((prev) => new Set(prev).add(id));
       },
       setPendingFollow,
-      posts,
-      clients,
+      posts: visiblePosts,
+      clients: visibleClients,
       attendance,
-      conversations,
+      conversations: visibleConversations,
       following,
       premium,
 
@@ -382,7 +441,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       bookersOf(classId) {
         const list = bookers[classId] ?? [];
         if (live) return list;
-        return booked.has(classId) && role === 'client' && !list.includes(ME_CLIENT_ID) ? [...list, ME_CLIENT_ID] : list.filter((x) => x !== ME_CLIENT_ID || booked.has(classId));
+        return booked.has(classId) && role === 'client' && !list.includes(ME_CLIENT_ID)
+          ? [...list, ME_CLIENT_ID]
+          : list.filter((x) => x !== ME_CLIENT_ID || booked.has(classId));
       },
 
       classUpdates,
@@ -444,10 +505,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           next.delete(classId);
           return next;
         });
-        setSpotOffers((prev) => [
-          { id, classId, fromClientId: meId, fromName, status: 'open', createdAt: new Date().toISOString() },
-          ...prev,
-        ]);
+        setSpotOffers((prev) => [{ id, classId, fromClientId: meId, fromName, status: 'open', createdAt: new Date().toISOString() }, ...prev]);
       },
 
       cancelOffer(offerId) {
@@ -500,7 +558,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setClasses((prev) => [...prev, ...made].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()));
         save(
           () =>
-            db.addClasses(made, series && seriesId && made[0] ? { ...series, id: seriesId, me: meId, studioId: made[0].studioId, title: made[0].title } : undefined),
+            db.addClasses(
+              made,
+              series && seriesId && made[0] ? { ...series, id: seriesId, me: meId, studioId: made[0].studioId, title: made[0].title } : undefined,
+            ),
           made.length === 1 ? 'the class' : 'your classes',
         );
       },
@@ -522,8 +583,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       deleteClass(id, wholeSeries) {
         const cls = classes.find((c) => c.id === id);
         if (!cls) return 0;
-        const ids =
-          wholeSeries && cls.seriesId ? classes.filter((c) => c.seriesId === cls.seriesId && c.startsAt >= cls.startsAt).map((c) => c.id) : [id];
+        const ids = wholeSeries && cls.seriesId ? classes.filter((c) => c.seriesId === cls.seriesId && c.startsAt >= cls.startsAt).map((c) => c.id) : [id];
         const gone = new Set(ids);
         setClasses((prev) => prev.filter((c) => !gone.has(c.id)));
         save(() => db.deleteClasses(ids), ids.length === 1 ? 'that' : 'those classes');
@@ -663,6 +723,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     syncError,
     refresh,
     names,
+    blocked,
     instructors,
     studios,
     booked,

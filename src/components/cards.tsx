@@ -13,6 +13,7 @@ import { styleLabel, type ClassSession, type Instructor, type Post } from '@/lib
 import { BookingSheet } from './booking-sheet';
 import { ConfirmSheet } from './confirm-sheet';
 import { Avatar, Button, Chip, Icon, Row, Text, type IconName } from './ui';
+import { SafetyMenu } from './safety-menu';
 import { linkButton } from '@/lib/links';
 
 function clock(d: Date) {
@@ -148,46 +149,44 @@ export function ClassActions({ session, size = 'sm' }: { session: ClassSession; 
             }
           }}
         />
+      ) : store.booked.has(session.id) ? (
+        <>
+          <Button
+            size={size}
+            kind="primary"
+            icon="checkmark-circle"
+            label="I'm booked"
+            accessibilityLabel={`You're booked for ${session.title}. Tap to undo.`}
+            onPress={() => {
+              store.toggleBooked(session.id);
+              toast(`Took ${session.title} off your week.`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
+            }}
+          />
+          <Button
+            size={size}
+            kind="outline"
+            label="Add to cal"
+            onPress={async () => {
+              await addToCalendar(session, instructor, studio);
+              toast(Platform.OS === 'web' ? 'Calendar file downloaded. Open it to add the class.' : 'Opening your calendar…');
+            }}
+          />
+        </>
       ) : (
-        store.booked.has(session.id) ? (
-          <>
-            <Button
-              size={size}
-              kind="primary"
-              icon="checkmark-circle"
-              label="I'm booked"
-              accessibilityLabel={`You're booked for ${session.title}. Tap to undo.`}
-              onPress={() => {
-                store.toggleBooked(session.id);
-                toast(`Took ${session.title} off your week.`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
-              }}
-            />
-            <Button
-              size={size}
-              kind="outline"
-              label="Add to cal"
-              onPress={async () => {
-                await addToCalendar(session, instructor, studio);
-                toast(Platform.OS === 'web' ? 'Calendar file downloaded. Open it to add the class.' : 'Opening your calendar…');
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <Button size={size} kind="ink" label="Book it" onPress={() => setBooking(true)} />
-            <Button
-              size={size}
-              kind="outline"
-              icon="checkmark"
-              label="Booked it"
-              accessibilityLabel={`I already booked ${session.title}`}
-              onPress={() => {
-                store.toggleBooked(session.id);
-                toast(`${session.title} is on your week. See you there!`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
-              }}
-            />
-          </>
-        )
+        <>
+          <Button size={size} kind="ink" label="Book it" onPress={() => setBooking(true)} />
+          <Button
+            size={size}
+            kind="outline"
+            icon="checkmark"
+            label="Booked it"
+            accessibilityLabel={`I already booked ${session.title}`}
+            onPress={() => {
+              store.toggleBooked(session.id);
+              toast(`${session.title} is on your week. See you there!`, { label: 'Undo', onPress: () => store.toggleBooked(session.id) });
+            }}
+          />
+        </>
       )}
       <SpotRow session={session} />
       {booking ? (
@@ -262,10 +261,7 @@ export function ClassCard({ session, showInstructor = true }: { session: ClassSe
           {showInstructor ? (
             <>
               with{' '}
-              <Text
-                variant="smallStrong"
-                color="primary"
-                onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}>
+              <Text variant="smallStrong" color="primary" onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}>
                 {instructor.name}
               </Text>{' '}
               at{' '}
@@ -316,9 +312,7 @@ export function InstructorRow({ instructor }: { instructor: Instructor }) {
   ).length;
 
   return (
-    <Row
-      onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}
-      style={styles.instructorRow}>
+    <Row onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })} style={styles.instructorRow}>
       <Avatar name={instructor.name} size={52} />
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.inline}>
@@ -372,10 +366,7 @@ export function PostCard({ post, showAuthor = false }: { post: Post; showAuthor?
   return (
     <Row style={{ gap: Spacing.sm }}>
       {showAuthor ? (
-        <Pressable
-          style={styles.inline}
-          onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })}
-          accessibilityRole="link">
+        <Pressable style={styles.inline} onPress={() => router.push({ pathname: '/instructor/[id]', params: { id: instructor.id } })} accessibilityRole="link">
           <Avatar name={instructor.name} size={24} />
           <Text variant="smallStrong" color="primary">
             {instructor.name}
@@ -399,6 +390,8 @@ export function PostCard({ post, showAuthor = false }: { post: Post; showAuthor?
             }}>
             <Icon name="trash-outline" size={18} color="textSecondary" />
           </Pressable>
+        ) : post.instructorId !== store.meId ? (
+          <SafetyMenu targetType="post" targetId={post.id} personId={instructor.id} personName={instructor.name} size={18} />
         ) : null}
       </View>
 
@@ -429,7 +422,14 @@ const styles = StyleSheet.create({
   struck: { textDecorationLine: 'line-through' },
   spot: { marginTop: Spacing.sm },
   spotLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
-  spotBanner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: Colors.primarySoft, borderRadius: Radius.sm, padding: Spacing.sm },
+  spotBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.primarySoft,
+    borderRadius: Radius.sm,
+    padding: Spacing.sm,
+  },
   bookedRow: { borderLeftWidth: 3, borderLeftColor: Colors.primary, paddingLeft: Spacing.md, backgroundColor: Colors.primarySoft },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },

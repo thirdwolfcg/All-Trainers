@@ -18,6 +18,8 @@ import type {
   Post,
   Role,
   SpotOffer,
+  ReportReason,
+  ReportTarget,
   Studio,
   SubRequest,
 } from './types';
@@ -60,6 +62,8 @@ export type LiveData = {
   clients: Client[];
   subRequests: SubRequest[];
   conversations: Conversation[];
+  /** People I've blocked. */
+  blocked: Set<string>;
   /** Display names for everyone we've seen, for messages and spot offers. */
   names: Record<string, string>;
 };
@@ -74,28 +78,36 @@ export async function loadLive(me: string, role: Role): Promise<LiveData> {
   const since = new Date(Date.now() - 100 * 86400000).toISOString();
   const until = new Date(Date.now() + 400 * 86400000).toISOString();
 
-  const [profilesR, studiosR, linksR, classesR, postsR, followsR, premiumR, bookingsR, updatesR, waitR, offersR, attR, subsR, convR] = await Promise.all([
-    supabase.from('profiles').select('id, role, display_name, handle, bio, styles, neighborhood, instagram_handle, tiktok_handle'),
-    supabase.from('studios').select('id, name, neighborhood, address'),
-    supabase.from('studio_booking_links').select('studio_id, platform, url, label'),
-    supabase
-      .from('classes')
-      .select('id, instructor_id, studio_id, title, style, starts_at, ends_at, booking_url, status, note, description, sub_instructor_id, series_id, playlist_url, recipe_post_id')
-      .gte('starts_at', since)
-      .lte('starts_at', until)
-      .order('starts_at')
-      .limit(5000),
-    supabase.from('posts').select('id, instructor_id, kind, title, body, media_path, link_url, is_premium, created_at').order('created_at', { ascending: false }).limit(500),
-    supabase.from('follows').select('client_id, instructor_id'),
-    supabase.from('premium_subscriptions').select('client_id, instructor_id, status, current_period_end'),
-    supabase.from('class_bookings').select('client_id, class_id'),
-    supabase.from('class_updates').select('id, class_id, instructor_id, body, created_at').order('created_at', { ascending: false }),
-    supabase.from('class_waitlist').select('client_id, class_id'),
-    supabase.from('spot_offers').select('id, class_id, from_client_id, status, claimed_by, created_at').order('created_at', { ascending: false }),
-    supabase.from('attendance').select('id, client_id, instructor_id, class_id, studio_id, attended_on, source'),
-    supabase.from('sub_requests').select('id, class_id, from_instructor_id, to_instructor_id, status, created_at'),
-    supabase.from('conversations').select('id, instructor_id, client_id, last_message_at'),
-  ]);
+  const [profilesR, studiosR, linksR, classesR, postsR, followsR, premiumR, bookingsR, updatesR, waitR, offersR, attR, subsR, convR, blocksR] =
+    await Promise.all([
+      supabase.from('profiles').select('id, role, display_name, handle, bio, styles, neighborhood, instagram_handle, tiktok_handle'),
+      supabase.from('studios').select('id, name, neighborhood, address'),
+      supabase.from('studio_booking_links').select('studio_id, platform, url, label'),
+      supabase
+        .from('classes')
+        .select(
+          'id, instructor_id, studio_id, title, style, starts_at, ends_at, booking_url, status, note, description, sub_instructor_id, series_id, playlist_url, recipe_post_id',
+        )
+        .gte('starts_at', since)
+        .lte('starts_at', until)
+        .order('starts_at')
+        .limit(5000),
+      supabase
+        .from('posts')
+        .select('id, instructor_id, kind, title, body, media_path, link_url, is_premium, created_at')
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase.from('follows').select('client_id, instructor_id'),
+      supabase.from('premium_subscriptions').select('client_id, instructor_id, status, current_period_end'),
+      supabase.from('class_bookings').select('client_id, class_id'),
+      supabase.from('class_updates').select('id, class_id, instructor_id, body, created_at').order('created_at', { ascending: false }),
+      supabase.from('class_waitlist').select('client_id, class_id'),
+      supabase.from('spot_offers').select('id, class_id, from_client_id, status, claimed_by, created_at').order('created_at', { ascending: false }),
+      supabase.from('attendance').select('id, client_id, instructor_id, class_id, studio_id, attended_on, source'),
+      supabase.from('sub_requests').select('id, class_id, from_instructor_id, to_instructor_id, status, created_at'),
+      supabase.from('conversations').select('id, instructor_id, client_id, last_message_at'),
+      supabase.from('blocks').select('blocked_id'),
+    ]);
 
   const profiles = rows(profilesR, 'profiles');
   const names: Record<string, string> = {};
@@ -269,6 +281,7 @@ export async function loadLive(me: string, role: Role): Promise<LiveData> {
     subRequests,
     conversations,
     names,
+    blocked: new Set(rows(blocksR, 'blocks').map((b) => b.blocked_id)),
   };
 }
 
@@ -354,7 +367,12 @@ export const db = {
     return err(await supabase.from('classes').delete().in('id', ids));
   },
   async setClassStatus(id: string, status: ClassSession['status'], clearNote = false): Promise<Err> {
-    return err(await supabase.from('classes').update(clearNote ? { status, note: null } : { status }).eq('id', id));
+    return err(
+      await supabase
+        .from('classes')
+        .update(clearNote ? { status, note: null } : { status })
+        .eq('id', id),
+    );
   },
   async addPost(p: Post, mediaPath?: string): Promise<Err> {
     return err(
@@ -390,7 +408,9 @@ export const db = {
       : err(await supabase.from('class_waitlist').delete().eq('client_id', me).eq('class_id', classId));
   },
   async classUpdate(u: ClassUpdate): Promise<Err> {
-    return err(await supabase.from('class_updates').insert({ id: u.id, class_id: u.classId, instructor_id: u.instructorId, body: u.body, created_at: u.createdAt }));
+    return err(
+      await supabase.from('class_updates').insert({ id: u.id, class_id: u.classId, instructor_id: u.instructorId, body: u.body, created_at: u.createdAt }),
+    );
   },
   async offerSpot(id: string, me: string, classId: string): Promise<Err> {
     return err(await supabase.from('spot_offers').insert({ id, class_id: classId, from_client_id: me, status: 'open' }));
@@ -431,7 +451,10 @@ export const db = {
     return err(
       await supabase
         .from('client_notes')
-        .upsert({ instructor_id: me, client_id: clientId, notes: notes || null, updated_at: new Date().toISOString() }, { onConflict: 'instructor_id,client_id' }),
+        .upsert(
+          { instructor_id: me, client_id: clientId, notes: notes || null, updated_at: new Date().toISOString() },
+          { onConflict: 'instructor_id,client_id' },
+        ),
     );
   },
   async requestSub(r: SubRequest): Promise<Err> {
@@ -446,6 +469,24 @@ export const db = {
   },
   async startConversation(c: Conversation): Promise<Err> {
     return err(await supabase.from('conversations').insert({ id: c.id, instructor_id: c.instructorId, client_id: c.clientId }));
+  },
+  async block(me: string, other: string, on: boolean): Promise<Err> {
+    return on
+      ? err(await supabase.from('blocks').insert({ blocker_id: me, blocked_id: other }))
+      : err(await supabase.from('blocks').delete().eq('blocker_id', me).eq('blocked_id', other));
+  },
+  async report(me: string, r: { targetType: ReportTarget; targetId: string; targetUserId?: string; reason: ReportReason; details?: string }): Promise<Err> {
+    const res = await supabase.from('reports').insert({
+      reporter_id: me,
+      target_type: r.targetType,
+      target_id: r.targetId,
+      target_user_id: r.targetUserId ?? null,
+      reason: r.reason,
+      details: r.details || null,
+    });
+    // Reporting the same thing twice is fine: the first report already counts.
+    if (res.error?.message.includes('duplicate')) return undefined;
+    return err(res);
   },
   async sendMessage(id: string, conversationId: string, me: string, body: string): Promise<Err> {
     return err(await supabase.from('messages').insert({ id, conversation_id: conversationId, sender_id: me, body }));

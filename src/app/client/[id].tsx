@@ -2,6 +2,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { SafetyMenu } from '@/components/safety-menu';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -23,16 +24,27 @@ export default function ClientDetail() {
     );
   }
 
-  const visits = store.attendance
-    .filter((a) => a.clientId === client.id && a.instructorId === store.meId)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const visits = store.attendance.filter((a) => a.clientId === client.id && a.instructorId === store.meId).sort((a, b) => b.date.localeCompare(a.date));
   const byStudio = new Map<string, number>();
   visits.forEach((v) => byStudio.set(v.studioId, (byStudio.get(v.studioId) ?? 0) + 1));
   const bday = client.birthday ? daysUntilBirthday(client.birthday) : null;
 
   return (
     <>
-      <Stack.Screen options={{ title: clientName(client.name) }} />
+      <Stack.Screen
+        options={{
+          title: clientName(client.name),
+          headerRight: () => (
+            <SafetyMenu
+              targetType="profile"
+              targetId={client.id}
+              personId={client.id}
+              personName={clientName(client.name)}
+              style={{ marginRight: Spacing.sm }}
+            />
+          ),
+        }}
+      />
       <Screen nav padTop={false}>
         <View style={styles.header}>
           <Avatar name={client.name} size={72} />
@@ -83,7 +95,9 @@ export default function ClientDetail() {
 
         {byStudio.size ? (
           <Card tone="plain" style={{ gap: Spacing.sm, marginBottom: Spacing.xl }}>
-            <Text variant="eyebrow" color="textSecondary">Where they take your class</Text>
+            <Text variant="eyebrow" color="textSecondary">
+              Where they take your class
+            </Text>
             {[...byStudio.entries()].map(([sid, n]) => (
               <View key={sid} style={styles.row}>
                 <Icon name="location-outline" size={16} color="textSecondary" />

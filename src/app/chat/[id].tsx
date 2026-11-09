@@ -3,6 +3,7 @@ import { useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SafetyMenu } from '@/components/safety-menu';
 import { EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { timeLabel } from '@/lib/dates';
@@ -37,11 +38,21 @@ export default function ChatScreen() {
       style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
-      <Stack.Screen options={{ title: otherName }} />
-      <ScrollView
-        ref={scroll}
-        contentContainerStyle={styles.list}
-        onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}>
+      <Stack.Screen
+        options={{
+          title: otherName,
+          headerRight: () => (
+            <SafetyMenu
+              targetType="profile"
+              targetId={isInstructor ? conv.clientId : conv.instructorId}
+              personId={isInstructor ? conv.clientId : conv.instructorId}
+              personName={otherName}
+              style={{ marginRight: Spacing.sm }}
+            />
+          ),
+        }}
+      />
+      <ScrollView ref={scroll} contentContainerStyle={styles.list} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}>
         {conv.messages.length === 0 ? (
           <EmptyState icon="hand-left-outline" title={`Say hi to ${otherName.split(' ')[0]}`} body="Messages stay between the two of you." />
         ) : (
