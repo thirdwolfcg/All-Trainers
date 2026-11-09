@@ -38,7 +38,7 @@ export default function Welcome() {
           {[
             { icon: 'calendar-outline' as const, text: 'Every class, every studio, one schedule' },
             { icon: 'heart-outline' as const, text: 'Know when your instructor adds a class or gets a sub' },
-            { icon: 'musical-notes-outline' as const, text: 'Their playlists, recipes, videos and tips, all in their feed' },
+            { icon: 'musical-notes-outline' as const, text: 'Their playlists, recipes, videos and tips, right on your Home' },
             { icon: 'stats-chart-outline' as const, text: 'See your stats. Yes, all of them.' },
           ].map((p) => (
             <View key={p.text} style={styles.point}>

@@ -53,7 +53,7 @@ const clientSlides = (name?: string): Slide[] => [
   {
     icon: 'musical-notes-outline',
     title: 'Get the extras',
-    body: 'Playlists, recipes and updates from your instructors land in your Feed. Your instructors can message you too.',
+    body: 'Playlists, recipes and updates from your instructors show up right on your Home. Your instructors can message you too.',
   },
 ];
 

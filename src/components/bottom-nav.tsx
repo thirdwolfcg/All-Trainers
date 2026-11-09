@@ -20,7 +20,6 @@ export function navItems(isInstructor: boolean): Item[] {
       ]
     : [
         { label: 'Home', href: '/', icon: 'home-outline' },
-        { label: 'Feed', href: '/feed', icon: 'newspaper-outline' },
         { label: 'Discover', href: '/discover', icon: 'search-outline' },
         { label: 'Messages', href: '/messages', icon: 'chatbubbles-outline' },
         { label: 'Me', href: '/me', icon: 'person-circle-outline' },

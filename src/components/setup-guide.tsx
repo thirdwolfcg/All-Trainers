@@ -76,14 +76,6 @@ export function SetupGuide() {
             href: '/discover',
           },
           {
-            key: 'feed',
-            icon: 'newspaper-outline',
-            title: 'Check your feed',
-            why: 'Playlists, recipes and updates from everyone you follow.',
-            done: !!flags.openedFeed,
-            href: '/feed',
-          },
-          {
             key: 'birthday',
             icon: 'gift-outline',
             title: 'Share your birthday',

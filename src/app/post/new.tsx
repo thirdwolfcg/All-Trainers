@@ -95,14 +95,14 @@ export default function NewPost() {
       },
       mediaPath,
     );
-    toast('Posted. Your followers see it in their feed and on your profile.');
+    toast('Posted. Your followers see it on their Home and on your profile.');
     router.back();
   };
 
   return (
     <Screen padTop={false}>
       <Text variant="body" color="textSecondary">
-        Shows on your profile and in your followers&apos; feeds.
+        Shows on your profile and on your followers&apos; Home.
       </Text>
       {idea ? (
         <View style={styles.idea}>

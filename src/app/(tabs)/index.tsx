@@ -109,6 +109,11 @@ function ClientHome() {
     )
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 
+  const feedPosts = store.posts
+    .filter((p) => store.following.has(p.instructorId))
+    .sort((x, y) => y.createdAt.localeCompare(x.createdAt))
+    .slice(0, 30);
+
   return (
     <Screen
       eyebrow={todayEyebrow()}
@@ -275,6 +280,20 @@ function ClientHome() {
                   />
                 )}
               </View>
+
+              {/* The feed lives here now: the latest from everyone they follow. */}
+              <SectionHeader title="From your faves" />
+              {feedPosts.length ? (
+                <View style={{ marginBottom: Spacing.xxl }}>
+                  {feedPosts.map((p) => (
+                    <PostCard key={p.id} post={p} showAuthor />
+                  ))}
+                </View>
+              ) : (
+                <Text variant="small" color="textSecondary" style={{ marginBottom: Spacing.xxl }}>
+                  When your instructors post a playlist, recipe or update, it shows up here.
+                </Text>
+              )}
 
               {needsBirthday ? (
                 <Card tone="gray" style={{ gap: Spacing.sm, marginBottom: Spacing.xxl }}>
