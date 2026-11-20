@@ -4,18 +4,7 @@
  * today so the schedule always looks current.
  */
 import { addDays, startOfDay } from '@/lib/dates';
-import type {
-  AttendanceEntry,
-  SubRequest,
-  Birthday,
-  ClassSession,
-  Client,
-  Conversation,
-  Instructor,
-  Post,
-  Studio,
-  Style,
-} from '@/lib/types';
+import type { AttendanceEntry, SubRequest, Birthday, ClassSession, Client, Conversation, Instructor, Post, Story, Studio, Style } from '@/lib/types';
 
 export const ME_CLIENT_ID = 'me';
 export const ME_INSTRUCTOR_ID = 'maya';
@@ -27,7 +16,10 @@ const MINDBODY = 'https://www.mindbodyonline.com/explore';
 
 export const studios: Studio[] = [
   {
-    id: 'lumen', name: 'Lumen Reformer', neighborhood: 'LoHi', address: '1550 Boulder St',
+    id: 'lumen',
+    name: 'Lumen Reformer',
+    neighborhood: 'LoHi',
+    address: '1550 Boulder St',
     bookingLinks: [
       { platform: 'studio', url: 'https://example.com/lumen', label: 'Lumen app' },
       { platform: 'mindbody', url: MINDBODY },
@@ -35,22 +27,34 @@ export const studios: Studio[] = [
     ],
   },
   {
-    id: 'spoke', name: 'Spoke & Spin', neighborhood: 'RiNo', address: '3200 Larimer St',
+    id: 'spoke',
+    name: 'Spoke & Spin',
+    neighborhood: 'RiNo',
+    address: '3200 Larimer St',
     bookingLinks: [
       { platform: 'studio', url: 'https://example.com/spoke', label: 'Spoke & Spin app' },
       { platform: 'classpass', url: CLASSPASS },
     ],
   },
   {
-    id: 'still', name: 'Stillwater Yoga', neighborhood: 'Wash Park', address: '700 S Downing St',
+    id: 'still',
+    name: 'Stillwater Yoga',
+    neighborhood: 'Wash Park',
+    address: '700 S Downing St',
     bookingLinks: [{ platform: 'mindbody', url: MINDBODY }],
   },
   {
-    id: 'forge', name: 'The Forge', neighborhood: 'Highlands', address: '3400 W 32nd Ave',
+    id: 'forge',
+    name: 'The Forge',
+    neighborhood: 'Highlands',
+    address: '3400 W 32nd Ave',
     bookingLinks: [{ platform: 'studio', url: 'https://example.com/forge', label: 'The Forge website' }],
   },
   {
-    id: 'pointe', name: 'Pointe Barre Co.', neighborhood: 'Cherry Creek', address: '250 Columbine St',
+    id: 'pointe',
+    name: 'Pointe Barre Co.',
+    neighborhood: 'Cherry Creek',
+    address: '250 Columbine St',
     bookingLinks: [
       { platform: 'mindbody', url: MINDBODY },
       { platform: 'classpass', url: CLASSPASS },
@@ -112,11 +116,23 @@ export const instructors: Instructor[] = [
   },
 ];
 
-type Slot = { instructorId: string; studioId: string; title: string; style: Style; dayOffset: number; hour: number; minute?: number; duration?: number; status?: ClassSession['status']; note?: string };
+type Slot = {
+  instructorId: string;
+  studioId: string;
+  title: string;
+  style: Style;
+  dayOffset: number;
+  hour: number;
+  minute?: number;
+  duration?: number;
+  status?: ClassSession['status'];
+  note?: string;
+};
 
 /** What each class is about, by title. */
 const descriptions: Record<string, string> = {
-  'Reformer Flow': 'A full-body reformer class that moves from footwork to arms to core without stopping. All levels, modifications always. Grip socks required.',
+  'Reformer Flow':
+    'A full-body reformer class that moves from footwork to arms to core without stopping. All levels, modifications always. Grip socks required.',
   'Barre Burn': 'Small pulses, big shakes. Barre work for legs and glutes with a cardio finisher. Bring grip socks and water.',
   'Jumpboard Cardio': 'Reformer meets cardio. 45 minutes of jumping, low impact on the joints, high impact on the heart rate. Some reformer experience helps.',
   'Sculpt + Stretch': 'Light weights and a long stretch to end the week right. Great for beginners and sore bodies.',
@@ -142,7 +158,17 @@ const slots: Slot[] = [
   { instructorId: 'jordan', studioId: 'spoke', title: 'Throwback Ride', style: 'cycle', dayOffset: 0, hour: 18, duration: 45 },
   { instructorId: 'jordan', studioId: 'spoke', title: 'Rhythm 45', style: 'cycle', dayOffset: 2, hour: 6, duration: 45 },
   { instructorId: 'jordan', studioId: 'forge', title: 'HIIT Express', style: 'hiit', dayOffset: 3, hour: 12, duration: 30 },
-  { instructorId: 'jordan', studioId: 'spoke', title: 'Pop Diva Ride', style: 'cycle', dayOffset: 5, hour: 10, duration: 45, status: 'cancelled', note: 'Cancelled, see you next week' },
+  {
+    instructorId: 'jordan',
+    studioId: 'spoke',
+    title: 'Pop Diva Ride',
+    style: 'cycle',
+    dayOffset: 5,
+    hour: 10,
+    duration: 45,
+    status: 'cancelled',
+    note: 'Cancelled, see you next week',
+  },
   { instructorId: 'priya', studioId: 'still', title: 'Vinyasa 60', style: 'yoga', dayOffset: 1, hour: 7 },
   { instructorId: 'priya', studioId: 'still', title: 'Yin + Sound', style: 'yoga', dayOffset: 3, hour: 19, minute: 30, duration: 75 },
   { instructorId: 'priya', studioId: 'still', title: 'Candlelight Flow', style: 'yoga', dayOffset: 6, hour: 18 },
@@ -182,13 +208,71 @@ function daysAgo(n: number, now = new Date()) {
 export function buildPosts(now = new Date()): Post[] {
   const hrs = (n: number) => new Date(now.getTime() - n * 3600000).toISOString();
   return [
-    { id: 'p1', instructorId: 'maya', kind: 'note', title: 'Schedule drop', body: 'New Wednesday jumpboard class at Lumen starting this week. 45 minutes, bring water and your best attitude.', isPremium: false, createdAt: hrs(3) },
-    { id: 'p2', instructorId: 'maya', kind: 'recipe', title: 'Post-reformer protein oats', body: 'Rolled oats, a scoop of vanilla protein, cinnamon, almond milk, top with berries. Five minutes, no excuses.', isPremium: false, createdAt: hrs(26) },
-    { id: 'p3', instructorId: 'maya', kind: 'playlist', title: "This week's class playlist", body: 'All the songs from Reformer Flow, in order.', linkUrl: 'https://open.spotify.com', isPremium: true, createdAt: hrs(30) },
-    { id: 'p4', instructorId: 'maya', kind: 'note', title: 'Form check: footwork', body: 'A 3 minute breakdown of footwork on the reformer, plus the cue I give when your knees start drifting.', isPremium: true, createdAt: hrs(72) },
-    { id: 'p5', instructorId: 'jordan', kind: 'playlist', title: 'Throwback Ride setlist', body: "Britney, Usher, a little Nelly. You know what it is.", linkUrl: 'https://open.spotify.com', isPremium: true, createdAt: hrs(5) },
-    { id: 'p6', instructorId: 'jordan', kind: 'note', title: 'Saturday ride is off', body: 'Pop Diva Ride is cancelled this week. Back next Saturday with double the key changes.', isPremium: false, createdAt: hrs(20) },
-    { id: 'p7', instructorId: 'priya', kind: 'recipe', title: 'Golden milk for yin nights', body: 'Warm oat milk, turmeric, ginger, black pepper, a drizzle of honey.', isPremium: false, createdAt: hrs(40) },
+    {
+      id: 'p1',
+      instructorId: 'maya',
+      kind: 'note',
+      title: 'Schedule drop',
+      body: 'New Wednesday jumpboard class at Lumen starting this week. 45 minutes, bring water and your best attitude.',
+      isPremium: false,
+      createdAt: hrs(3),
+    },
+    {
+      id: 'p2',
+      instructorId: 'maya',
+      kind: 'recipe',
+      title: 'Post-reformer protein oats',
+      body: 'Rolled oats, a scoop of vanilla protein, cinnamon, almond milk, top with berries. Five minutes, no excuses.',
+      isPremium: false,
+      createdAt: hrs(26),
+    },
+    {
+      id: 'p3',
+      instructorId: 'maya',
+      kind: 'playlist',
+      title: "This week's class playlist",
+      body: 'All the songs from Reformer Flow, in order.',
+      linkUrl: 'https://open.spotify.com',
+      isPremium: true,
+      createdAt: hrs(30),
+    },
+    {
+      id: 'p4',
+      instructorId: 'maya',
+      kind: 'note',
+      title: 'Form check: footwork',
+      body: 'A 3 minute breakdown of footwork on the reformer, plus the cue I give when your knees start drifting.',
+      isPremium: true,
+      createdAt: hrs(72),
+    },
+    {
+      id: 'p5',
+      instructorId: 'jordan',
+      kind: 'playlist',
+      title: 'Throwback Ride setlist',
+      body: 'Britney, Usher, a little Nelly. You know what it is.',
+      linkUrl: 'https://open.spotify.com',
+      isPremium: true,
+      createdAt: hrs(5),
+    },
+    {
+      id: 'p6',
+      instructorId: 'jordan',
+      kind: 'note',
+      title: 'Saturday ride is off',
+      body: 'Pop Diva Ride is cancelled this week. Back next Saturday with double the key changes.',
+      isPremium: false,
+      createdAt: hrs(20),
+    },
+    {
+      id: 'p7',
+      instructorId: 'priya',
+      kind: 'recipe',
+      title: 'Golden milk for yin nights',
+      body: 'Warm oat milk, turmeric, ginger, black pepper, a drizzle of honey.',
+      isPremium: false,
+      createdAt: hrs(40),
+    },
   ];
 }
 
@@ -197,10 +281,46 @@ function bdayIn(days: number, now = new Date()): Birthday {
   return { month: d.getMonth() + 1, day: d.getDate() };
 }
 
+/** Sample stories, posted over the last few hours (they'd vanish after 24). */
+export function buildStories(classes: ClassSession[], now = new Date()): Story[] {
+  const hrs = (n: number) => new Date(now.getTime() - n * 3600000);
+  const story = (id: string, instructorId: string, agoHrs: number, text: string, background: Story['background'], classId?: string): Story => ({
+    id,
+    instructorId,
+    text,
+    background,
+    classId,
+    createdAt: hrs(agoHrs).toISOString(),
+    expiresAt: new Date(hrs(agoHrs).getTime() + 24 * 3600000).toISOString(),
+  });
+  const next = (who: string) => classes.find((c) => c.instructorId === who && new Date(c.startsAt) > now)?.id;
+  return [
+    story('st1', 'maya', 2, 'Two spots left in tonight’s Reformer Flow. Who’s coming? 🔥', 'plum', next('maya')),
+    story('st2', 'maya', 1, 'New playlist is up. It’s giving 2009 dance floor.', 'lilac'),
+    story('st3', 'jordan', 4, 'Throwback Ride sold out in 10 min. Waitlist is open!', 'ink', next('jordan')),
+    story('st4', 'priya', 6, 'Yin tonight. Bring socks and an open mind.', 'mint', next('priya')),
+    story('st5', 'sasha', 3, 'Who’s ready for Pop Sculpt Saturday?', 'blush', next('sasha')),
+  ];
+}
+
 export function buildMayaClients(now = new Date()): Client[] {
   return [
-    { id: 'me', name: 'Lo S.', birthday: bdayIn(48, now), followedAt: daysAgo(60, now), isPremium: true, preferences: 'Loves the jumpboard. Ask about her left shoulder.' },
-    { id: 'k1', name: 'Kendall Brooks', birthday: bdayIn(2, now), followedAt: daysAgo(120, now), isPremium: true, preferences: 'Prefers front row, right side.' },
+    {
+      id: 'me',
+      name: 'Lo S.',
+      birthday: bdayIn(48, now),
+      followedAt: daysAgo(60, now),
+      isPremium: true,
+      preferences: 'Loves the jumpboard. Ask about her left shoulder.',
+    },
+    {
+      id: 'k1',
+      name: 'Kendall Brooks',
+      birthday: bdayIn(2, now),
+      followedAt: daysAgo(120, now),
+      isPremium: true,
+      preferences: 'Prefers front row, right side.',
+    },
     { id: 'k2', name: 'Marcus Ortiz', birthday: bdayIn(0, now), followedAt: daysAgo(30, now), isPremium: false },
     { id: 'k3', name: 'Tess Nguyen', birthday: bdayIn(19, now), followedAt: daysAgo(200, now), isPremium: false, preferences: 'Training for a half marathon.' },
     { id: 'k4', name: 'Dev Patel', birthday: bdayIn(6, now), followedAt: daysAgo(14, now), isPremium: false },
@@ -214,17 +334,43 @@ export function buildMayaClients(now = new Date()): Client[] {
 export function buildAttendance(now = new Date()): AttendanceEntry[] {
   const rows: [string, string, string, number][] = [
     // clientId, instructorId, studioId, daysAgo
-    ['me', 'maya', 'lumen', 2], ['me', 'maya', 'lumen', 5], ['me', 'maya', 'pointe', 9], ['me', 'maya', 'lumen', 12],
-    ['me', 'maya', 'lumen', 16], ['me', 'maya', 'pointe', 23], ['me', 'maya', 'lumen', 30], ['me', 'maya', 'lumen', 37],
-    ['me', 'jordan', 'spoke', 3], ['me', 'jordan', 'spoke', 10], ['me', 'jordan', 'forge', 17], ['me', 'jordan', 'spoke', 24],
-    ['me', 'priya', 'still', 7], ['me', 'priya', 'still', 21],
-    ['k1', 'maya', 'lumen', 1], ['k1', 'maya', 'lumen', 4], ['k1', 'maya', 'pointe', 8], ['k1', 'maya', 'lumen', 11], ['k1', 'maya', 'lumen', 15],
-    ['k1', 'maya', 'lumen', 18], ['k1', 'maya', 'lumen', 22], ['k1', 'maya', 'lumen', 29], ['k1', 'maya', 'pointe', 36], ['k1', 'maya', 'lumen', 43],
-    ['k1', 'maya', 'lumen', 50], ['k1', 'maya', 'lumen', 57],
-    ['k2', 'maya', 'lumen', 6], ['k2', 'maya', 'lumen', 13],
-    ['k3', 'maya', 'pointe', 3], ['k3', 'maya', 'pointe', 10], ['k3', 'maya', 'lumen', 31], ['k3', 'maya', 'lumen', 45], ['k3', 'maya', 'lumen', 64],
+    ['me', 'maya', 'lumen', 2],
+    ['me', 'maya', 'lumen', 5],
+    ['me', 'maya', 'pointe', 9],
+    ['me', 'maya', 'lumen', 12],
+    ['me', 'maya', 'lumen', 16],
+    ['me', 'maya', 'pointe', 23],
+    ['me', 'maya', 'lumen', 30],
+    ['me', 'maya', 'lumen', 37],
+    ['me', 'jordan', 'spoke', 3],
+    ['me', 'jordan', 'spoke', 10],
+    ['me', 'jordan', 'forge', 17],
+    ['me', 'jordan', 'spoke', 24],
+    ['me', 'priya', 'still', 7],
+    ['me', 'priya', 'still', 21],
+    ['k1', 'maya', 'lumen', 1],
+    ['k1', 'maya', 'lumen', 4],
+    ['k1', 'maya', 'pointe', 8],
+    ['k1', 'maya', 'lumen', 11],
+    ['k1', 'maya', 'lumen', 15],
+    ['k1', 'maya', 'lumen', 18],
+    ['k1', 'maya', 'lumen', 22],
+    ['k1', 'maya', 'lumen', 29],
+    ['k1', 'maya', 'pointe', 36],
+    ['k1', 'maya', 'lumen', 43],
+    ['k1', 'maya', 'lumen', 50],
+    ['k1', 'maya', 'lumen', 57],
+    ['k2', 'maya', 'lumen', 6],
+    ['k2', 'maya', 'lumen', 13],
+    ['k3', 'maya', 'pointe', 3],
+    ['k3', 'maya', 'pointe', 10],
+    ['k3', 'maya', 'lumen', 31],
+    ['k3', 'maya', 'lumen', 45],
+    ['k3', 'maya', 'lumen', 64],
     ['k4', 'maya', 'lumen', 2],
-    ['k5', 'maya', 'lumen', 9], ['k5', 'maya', 'lumen', 16], ['k5', 'maya', 'lumen', 23],
+    ['k5', 'maya', 'lumen', 9],
+    ['k5', 'maya', 'lumen', 16],
+    ['k5', 'maya', 'lumen', 23],
     ['k7', 'maya', 'pointe', 75],
   ];
   return rows.map(([clientId, instructorId, studioId, ago], i) => ({

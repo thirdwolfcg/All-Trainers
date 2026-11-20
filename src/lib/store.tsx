@@ -15,6 +15,7 @@ import {
   buildConversations,
   buildMayaClients,
   buildPosts,
+  buildStories,
   buildSubRequests,
   instructors as sampleInstructors,
   studios as sampleStudios,
@@ -35,6 +36,8 @@ import type {
   ReportTarget,
   Role,
   SpotOffer,
+  Story,
+  StoryBackground,
   Studio,
   SubRequest,
 } from './types';
@@ -57,6 +60,18 @@ type Store = {
   refresh: () => Promise<void>;
   /** Anyone's display name by id (clients included), when we have it. */
   nameOf: (id: string) => string | undefined;
+  /** Stories that haven't expired, oldest first. */
+  stories: Story[];
+  /** One instructor's live stories, oldest first. */
+  storiesOf: (instructorId: string) => Story[];
+  /** True if I've seen every live story from this instructor. */
+  storiesSeen: (instructorId: string) => boolean;
+  markStorySeen: (storyId: string) => void;
+  /** How many people have seen one of my stories (live accounts; preview shows sample numbers). */
+  storyViews: (storyId: string) => number;
+  /** `mediaPath` is the uploaded photo's storage path, for live accounts. */
+  addStory: (s: { imageUrl?: string; text?: string; background: StoryBackground; classId?: string }, mediaPath?: string) => void;
+  deleteStory: (id: string) => void;
   /** People I've blocked. Their posts, classes, profile and messages are hidden from me. */
   blocked: Set<string>;
   isBlocked: (id: string) => boolean;
@@ -218,6 +233,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [names, setNames] = useState<Record<string, string>>({});
   const [blocked, setBlockedSet] = useState<Set<string>>(() => new Set());
+  const [stories, setStories] = useState<Story[]>(() => buildStories(buildClasses(now), now));
+  const [seenStories, setSeenStories] = useState<Set<string>>(() => new Set());
+  const [storyViewCounts, setStoryViewCounts] = useState<Record<string, number>>({ st1: 23, st2: 11 });
+  // Tick once a minute so stories drop off when they expire.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setClock(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
   const [loading, setLoading] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   // Conversations that exist in the database (new ones are saved with their first message).
@@ -249,6 +273,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setConversations(d.conversations);
       setNames(d.names);
       setBlockedSet(d.blocked);
+      setStories(d.stories);
+      setSeenStories(d.seenStories);
+      setStoryViewCounts(d.storyViewCounts);
       savedConversations.current = new Set(d.conversations.map((c) => c.id));
     } catch (e) {
       console.warn('Loading live data failed', e);
@@ -274,6 +301,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setBooked(new Set());
     setBookers({});
     setBlockedSet(new Set());
+    setStories([]);
+    setSeenStories(new Set());
+    setStoryViewCounts({});
     refresh().finally(() => !gone && setLoading(false));
     const sub = AppState.addEventListener('change', (st) => st === 'active' && refresh());
     return () => {
@@ -289,6 +319,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const visibleClasses = blocked.size ? classes.filter((c) => !blocked.has(c.instructorId)) : classes;
     const visiblePosts = blocked.size ? posts.filter((p) => !blocked.has(p.instructorId)) : posts;
     const visibleClients = blocked.size ? clients.filter((c) => !blocked.has(c.id)) : clients;
+    const liveStories = stories.filter((s) => new Date(s.expiresAt).getTime() > clock && !blocked.has(s.instructorId));
     const visibleConversations = blocked.size ? conversations.filter((c) => !blocked.has(c.instructorId) && !blocked.has(c.clientId)) : conversations;
     const studioById = new Map(studios.map((s) => [s.id, s]));
     const newId = (prefix: string) => (live ? uuid() : `${prefix}${Date.now()}-${Math.floor(Math.random() * 1000)}`);
@@ -328,6 +359,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearSyncError: () => setSyncError(null),
       refresh,
       nameOf: (id) => names[id] ?? instructorById.get(id)?.name ?? clients.find((c) => c.id === id)?.name,
+      stories: liveStories,
+      storiesOf: (id) => liveStories.filter((s) => s.instructorId === id),
+      storiesSeen: (id) => liveStories.filter((s) => s.instructorId === id).every((s) => seenStories.has(s.id)),
+      markStorySeen(storyId) {
+        if (seenStories.has(storyId)) return;
+        const s = stories.find((x) => x.id === storyId);
+        setSeenStories((prev) => new Set(prev).add(storyId));
+        if (s && s.instructorId !== meId) save(() => db.viewStory(storyId, meId), 'that');
+      },
+      storyViews: (id) => storyViewCounts[id] ?? 0,
+      addStory(p, mediaPath) {
+        const created = new Date();
+        const story: Story = {
+          ...p,
+          id: newId('st'),
+          instructorId: meId,
+          createdAt: created.toISOString(),
+          expiresAt: new Date(created.getTime() + 24 * 3600000).toISOString(),
+        };
+        setStories((prev) => [...prev, story]);
+        save(() => db.addStory(story, mediaPath), 'your story');
+      },
+      deleteStory(id) {
+        setStories((prev) => prev.filter((s) => s.id !== id));
+        save(() => db.deleteStory(id), 'that');
+      },
       blocked,
       isBlocked: (id) => blocked.has(id),
       setBlocked(id, on) {
@@ -724,6 +781,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     refresh,
     names,
     blocked,
+    stories,
+    seenStories,
+    storyViewCounts,
+    clock,
     instructors,
     studios,
     booked,

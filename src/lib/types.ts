@@ -1,6 +1,20 @@
 export type Role = 'client' | 'instructor';
 
-export type ReportTarget = 'post' | 'profile' | 'message' | 'class';
+export type StoryBackground = 'plum' | 'lilac' | 'ink' | 'blush' | 'mint';
+
+/** A story disappears 24 hours after it's posted. Either a photo or a line of text on a color, optionally linked to a class. */
+export type Story = {
+  id: string;
+  instructorId: string;
+  imageUrl?: string;
+  text?: string;
+  background: StoryBackground;
+  classId?: string;
+  createdAt: string; // ISO
+  expiresAt: string; // ISO
+};
+
+export type ReportTarget = 'post' | 'profile' | 'message' | 'class' | 'story';
 export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'impersonation' | 'safety' | 'other';
 
 export const KNOWN_STYLES = ['pilates', 'yoga', 'cycle', 'barre', 'strength', 'hiit', 'dance'] as const;

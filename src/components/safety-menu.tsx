@@ -19,7 +19,7 @@ const REASONS: { reason: ReportReason; label: string; hint: string }[] = [
   { reason: 'other', label: 'Something else', hint: 'Tell us below' },
 ];
 
-const NOUN: Record<ReportTarget, string> = { post: 'post', profile: 'profile', message: 'message', class: 'class' };
+const NOUN: Record<ReportTarget, string> = { post: 'post', profile: 'profile', message: 'message', class: 'class', story: 'story' };
 
 /**
  * The ⋯ button on posts, profiles, chats and client pages: Report (to Zomi)

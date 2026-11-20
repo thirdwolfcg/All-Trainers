@@ -128,6 +128,8 @@ function Navigator() {
         <Stack.Screen name="settings/birthday" options={{ title: 'Birthday' }} />
         <Stack.Screen name="settings/privacy" options={{ title: 'Privacy' }} />
         <Stack.Screen name="tour" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="story/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="story/new" options={{ title: 'New story' }} />
       </Stack.Protected>
     </Stack>
   );

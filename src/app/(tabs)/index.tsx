@@ -9,6 +9,7 @@ import { MyClassesPanel } from '@/components/my-classes';
 import { PostIdeaCard } from '@/components/post-idea-card';
 import { PreviewSwitch } from '@/components/preview-switch';
 import { SetupGuide } from '@/components/setup-guide';
+import { MyStoryRow, StoryTray } from '@/components/stories';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Text } from '@/components/ui';
 import { Colors, Radius, Spacing } from '@/constants/theme';
@@ -126,6 +127,7 @@ function ClientHome() {
             : `Hiii ${firstName}! Here's where your people are teaching this week.`
       }>
       <PreviewSwitch />
+      <StoryTray />
       <SetupGuide />
       <View style={styles.segment}>
         {(['week', 'mine'] as const).map((v) => (
@@ -530,6 +532,7 @@ function InstructorWeek() {
               style={{ flex: 1 }}
             />
           </View>
+          <MyStoryRow />
           <PostIdeaCard myClasses={store.classes.filter((c) => c.instructorId === me.id || c.subInstructorId === me.id)} />
         </>
       ) : null}

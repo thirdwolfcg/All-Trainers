@@ -5,6 +5,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ClassCard, PostCard, useFollowToggle } from '@/components/cards';
 import { SocialLinks } from '@/components/social-links';
 import { SafetyMenu } from '@/components/safety-menu';
+import { StoryAvatar, openStories } from '@/components/stories';
 import { Screen } from '@/components/screen';
 import { Avatar, Button, Card, EmptyState, Icon, Text } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
@@ -89,7 +90,11 @@ export default function InstructorProfile() {
             </Text>
           ) : null}
           <View style={styles.identity}>
-            <Avatar name={instructor.name} size={76} square />
+            {store.storiesOf(instructor.id).length ? (
+              <StoryAvatar instructorId={instructor.id} name={instructor.name} size={68} onPress={() => openStories(instructor.id)} />
+            ) : (
+              <Avatar name={instructor.name} size={76} square />
+            )}
             <View style={{ flex: 1, gap: 4 }}>
               <Text variant="display">{instructor.name}</Text>
               <Text variant="small" color="textSecondary">
